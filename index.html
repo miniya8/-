@@ -6,8 +6,6 @@
   <title>세미니의 멀티센터 장기1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <!-- 글로벌 실시간 접속자 감지용 MQTT WebSocket 브로커 -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap');
     
@@ -20,7 +18,6 @@
       overscroll-behavior: none;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
-    .piece-hanja { font-family: 'Noto Serif KR', serif; }
 
     @keyframes radarSweep {
       0% { transform: rotate(0deg); }
@@ -106,7 +103,7 @@
         </div>
       </div>
 
-      <!-- 내 정보 & 사운드/퇴장 -->
+      <!-- 내 정보 & 로비 나가기 -->
       <div class="flex items-center gap-1.5 flex-row-reverse text-right">
         <button id="sound-btn" onclick="toggleMute()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-xs sm:text-sm shadow transition" title="소리 켜기/끄기">
           🔊
@@ -160,6 +157,14 @@
         </div>
       </div>
 
+      <!-- 외통수 경고 팝업 배너 -->
+      <div id="deadlock-alert-banner" class="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none hidden z-[110] transition-all">
+        <div class="bg-red-950/95 border-2 border-red-500 text-rose-200 px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 animate-bounce">
+          <span class="text-xl">☠️</span>
+          <div class="text-xs font-black tracking-wide">외통수(자살수) 자리입니다! 진입할 수 없습니다!</div>
+        </div>
+      </div>
+
       <!-- 장군 배너 -->
       <div id="check-banner" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden z-40">
         <div class="bg-rose-600/90 border-4 border-yellow-300 text-yellow-200 px-6 py-2 rounded-2xl shadow-2xl title-font text-3xl font-black tracking-widest animate-bounce">
@@ -170,7 +175,7 @@
       <!-- 물리기 요청 수락 모달 -->
       <div id="undo-confirm-modal" class="absolute inset-0 z-[120] bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
         <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[280px] animate-smooth-in">
-          <div class="text-xl font-black title-font text-amber-300">↩️ 물리기 요청</div>
+          <div class="text-xl font-black title-font text-amber-300">↩️️ 물리기 요청</div>
           <p id="undo-request-msg" class="text-xs sm:text-sm font-medium text-slate-200 mt-2 break-keep leading-relaxed">
             상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?
           </p>
@@ -301,12 +306,12 @@
         <p class="text-xs text-slate-400 mt-1 font-medium">원클릭 대전 초대 & 실시간 P2P 완전판</p>
       </div>
 
-      <!-- 실시간 로비 접속 인원 확인 패널 -->
+      <!-- 실시간 온라인 접속자 패널 -->
       <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow-inner">
         <div class="flex justify-between items-center px-1">
           <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            실시간 온라인 접속자 (<span id="online-count">1</span>명)
+            실시간 로비 접속자 (<span id="online-count">1</span>명)
           </span>
           <span class="text-[9px] text-amber-400 font-medium">👉 접속자를 터치해 바로 대결하세요!</span>
         </div>
@@ -314,8 +319,14 @@
       </div>
 
       <div class="bg-slate-800/80 p-2 rounded-2xl border border-slate-700">
-        <label class="text-[11px] font-bold text-slate-300 mb-1 block">초대/식별용 닉네임 (자동 저장)</label>
-        <input id="user-nickname-input" type="text" maxlength="8" placeholder="식별용 닉네임 입력" oninput="handleNicknameChange(this.value)" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+        <label class="text-[11px] font-bold text-slate-300 mb-1 flex justify-between items-center">
+          <span>초대/식별용 닉네임</span>
+          <span class="text-[9px] text-emerald-400 font-normal">※ 미입력 시 랜덤 생성</span>
+        </label>
+        <div class="flex gap-1.5">
+          <input id="user-nickname-input" type="text" maxlength="8" placeholder="식별용 닉네임 입력" oninput="handleNicknameChange(this.value)" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+          <button onclick="assignRandomNickname()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[10px] text-amber-300 font-bold rounded-xl active:scale-95">🎲 랜덤</button>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-2 p-1 bg-slate-800/80 rounded-2xl border border-slate-700">
@@ -353,8 +364,8 @@
       <div class="border-t border-slate-800 pt-2 flex flex-col gap-2">
         <div>
           <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-bold text-slate-300">내 대장군 선택 (5인 고정)</span>
-            <span class="text-[10px] text-amber-400 font-medium">사진 클릭 선택</span>
+            <span class="text-xs font-bold text-slate-300">내 대장군 선택</span>
+            <span class="text-[10px] text-emerald-400 font-medium">※ 미선택 시 매판 랜덤 자동배정</span>
           </div>
           <div class="grid grid-cols-5 gap-1.5" id="char-selection-container"></div>
         </div>
@@ -381,7 +392,7 @@
         </div>
       </div>
 
-      <!-- COM 대결 시에만 표시되는 시작 버튼 -->
+      <!-- COM 대결 시작 버튼 -->
       <button id="start-direct-btn" onclick="startDirectGame()" class="hidden w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-2xl font-bold text-sm shadow-xl">
         대국 시작하기 (주사위 결정) 🎲
       </button>
@@ -400,7 +411,7 @@
 
       <div class="z-10">
         <h2 id="waiting-status-title" class="text-xl font-black text-emerald-300 title-font">상대방 접속 대기 중...</h2>
-        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">카카오톡 초대를 보내면 상대가 링크 클릭 시 바로 접속됩니다</p>
+        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">카톡 초대를 보내면 상대가 링크 클릭 시 바로 자동 접속됩니다</p>
       </div>
 
       <div class="z-10 w-full bg-slate-800/90 border border-slate-700 rounded-2xl py-3 px-4 shadow-inner flex flex-col gap-2">
@@ -443,7 +454,7 @@
 
   <script>
     /* ==========================================================================
-       1. 5인 실사 얼굴 이미지 캔버스 생성기
+       1. 5인 실사 대장군 얼굴 생성기
        ========================================================================== */
     const photoCanvases = {};
 
@@ -529,6 +540,25 @@
     let myChar = CHARACTERS[0];
     let oppChar = CHARACTERS[2];
     let customNickname = '';
+    let isCharManuallyPicked = false;
+
+    function assignRandomNickname() {
+      const prefixes = ['신출귀몰', '바람의', '초신성', '포진달인', '불패', '천하제일', '돌격대장', '외통수', '쾌도난마'];
+      const suffixes = ['장군', '고수', '책사', '패왕', '사령관', '기객'];
+      const randNum = Math.floor(100 + Math.random() * 900);
+      const randName = `${prefixes[Math.floor(Math.random()*prefixes.length)]}${suffixes[Math.floor(Math.random()*suffixes.length)]}_${randNum}`;
+      customNickname = randName;
+      document.getElementById('user-nickname-input').value = randName;
+      saveCurrentNickname();
+      broadcastPresence();
+    }
+
+    function pickRandomCharacter() {
+      const randIdx = Math.floor(Math.random() * CHARACTERS.length);
+      myChar = CHARACTERS[randIdx];
+      oppChar = CHARACTERS.find(c => c.id !== myChar.id) || CHARACTERS[(randIdx + 1) % CHARACTERS.length];
+      renderCharSelector();
+    }
 
     function handleNicknameChange(val) {
       customNickname = val.trim();
@@ -538,17 +568,25 @@
 
     function loadSavedNickname() {
       const savedName = localStorage.getItem('jg_saved_nickname');
-      const savedCharId = localStorage.getItem('jg_saved_char');
+      const savedCharPicked = localStorage.getItem('jg_char_picked_manual');
+
       if (savedName) {
         customNickname = savedName;
         document.getElementById('user-nickname-input').value = savedName;
+      } else {
+        assignRandomNickname();
       }
-      if (savedCharId) {
+
+      if (savedCharPicked === 'true') {
+        isCharManuallyPicked = true;
+        const savedCharId = localStorage.getItem('jg_saved_char');
         const found = CHARACTERS.find(c => c.id === savedCharId);
         if (found) {
           myChar = found;
           oppChar = CHARACTERS.find(c => c.id !== found.id) || CHARACTERS[1];
         }
+      } else {
+        pickRandomCharacter();
       }
     }
 
@@ -559,44 +597,51 @@
         localStorage.setItem('jg_saved_nickname', input);
       }
       localStorage.setItem('jg_saved_char', myChar.id);
+      localStorage.setItem('jg_char_picked_manual', isCharManuallyPicked ? 'true' : 'false');
     }
 
     /* ==========================================================================
-       실시간 글로벌 로비 브로드캐스트 (MQTT + BroadcastChannel + LocalStorage 완벽 연동)
+       실시간 글로벌 로비 브로드캐스트 엔진
        ========================================================================== */
     const myClientId = 'user_' + Math.floor(100000 + Math.random() * 900000);
-    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v3') : null;
+    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v5') : null;
     const onlinePeers = new Map();
     let pendingChallengeData = null;
+    let lobbyPeer = null;
 
-    // 공용 글로벌 WSS 브로커
-    const MQTT_TOPIC = 'semini/multicenter/janggi1/presence';
-    let mqttClient = null;
-
-    function initGlobalPresenceHub() {
+    function initGlobalLobbyNetwork() {
+      const myHubId = 'sd-jg-usr-' + myClientId;
       try {
-        mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-          clientId: 'jg_client_' + myClientId,
-          clean: true,
-          connectTimeout: 4000
+        lobbyPeer = new Peer(myHubId);
+        lobbyPeer.on('connection', (c) => {
+          c.on('data', (data) => {
+            if (data) handleIncomingPresenceMsg(data);
+          });
         });
 
-        mqttClient.on('connect', () => {
-          mqttClient.subscribe(MQTT_TOPIC, { qos: 0 });
-          broadcastPresence();
-        });
-
-        mqttClient.on('message', (topic, payload) => {
-          if (topic === MQTT_TOPIC) {
+        setInterval(() => {
+          ['sd-jg-hub-a', 'sd-jg-hub-b'].forEach(hubId => {
+            if (hubId === myHubId) return;
             try {
-              const msg = JSON.parse(payload.toString());
-              handleIncomingPresenceMsg(msg);
+              const c = lobbyPeer.connect(hubId, { reliable: false });
+              c.on('open', () => {
+                c.send({
+                  type: 'PING',
+                  data: {
+                    id: myClientId,
+                    code: isHost ? hostRoomCode : '',
+                    name: customNickname || myChar.name,
+                    char: myChar.name,
+                    status: isHost ? `방 생성중 (${hostRoomCode})` : (conn && conn.open ? '대국중' : '로비 대기중'),
+                    time: Date.now()
+                  }
+                });
+                setTimeout(() => c.close(), 1000);
+              });
             } catch(e) {}
-          }
-        });
-      } catch(err) {
-        console.warn('MQTT Hub 접속 우회:', err);
-      }
+          });
+        }, 4000);
+      } catch(e) {}
     }
 
     function handleIncomingPresenceMsg(msg) {
@@ -609,7 +654,7 @@
       } else if (msg.type === 'CHALLENGE_INVITE') {
         if (msg.targetId === myClientId) {
           pendingChallengeData = msg;
-          document.getElementById('challenge-sender-desc').innerText = `[${msg.senderName}]님이 1:1 대결을 신청했습니다! 바로 대국을 시작하시겠습니까?`;
+          document.getElementById('challenge-sender-desc').innerText = `[${msg.senderName}]님이 1:1 결투를 신청했습니다! 즉시 대기실로 입장하시겠습니까?`;
           document.getElementById('battle-challenge-modal').classList.remove('hidden');
         }
       } else if (msg.type === 'CHALLENGE_ACCEPT') {
@@ -630,19 +675,8 @@
       };
 
       const packet = { type: 'PING', data: info };
-
-      // 1. MQTT 글로벌 발행
-      if (mqttClient && mqttClient.connected) {
-        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
-      }
-
-      // 2. BroadcastChannel 발행
-      if (presenceChannel) {
-        presenceChannel.postMessage(packet);
-      }
-
-      // 3. LocalStorage 발행
-      localStorage.setItem('jg_hb_v3_' + myClientId, JSON.stringify(info));
+      if (presenceChannel) presenceChannel.postMessage(packet);
+      localStorage.setItem('jg_hb_v5_' + myClientId, JSON.stringify(info));
       updateOnlineUsersUI();
     }
 
@@ -656,12 +690,12 @@
       const now = Date.now();
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('jg_hb_v3_')) {
+        if (key && key.startsWith('jg_hb_v5_')) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
-            if (data.id !== myClientId && (now - data.time < 6000)) {
+            if (data.id !== myClientId && (now - data.time < 5000)) {
               onlinePeers.set(data.id, data);
-            } else if (now - data.time >= 6000) {
+            } else if (now - data.time >= 5000) {
               onlinePeers.delete(data.id);
               localStorage.removeItem(key);
             }
@@ -677,7 +711,7 @@
       const now = Date.now();
 
       onlinePeers.forEach((peer, id) => {
-        if (now - peer.time > 6500) onlinePeers.delete(id);
+        if (now - peer.time > 5500) onlinePeers.delete(id);
       });
 
       countEl.innerText = onlinePeers.size + 1;
@@ -723,11 +757,12 @@
         senderName: customNickname || myChar.name,
         roomCode: hostRoomCode
       };
-      if (mqttClient && mqttClient.connected) {
-        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
-      }
-      if (presenceChannel) {
-        presenceChannel.postMessage(packet);
+      if (presenceChannel) presenceChannel.postMessage(packet);
+      if (lobbyPeer) {
+        try {
+          const directConn = lobbyPeer.connect('sd-jg-usr-' + targetId);
+          directConn.on('open', () => directConn.send(packet));
+        } catch(e) {}
       }
       alert(`[${targetName}]님에게 1:1 대결 초대장을 전송했습니다!\n상대방이 수락하면 즉시 대국실로 이동합니다.`);
     }
@@ -739,12 +774,7 @@
         type: 'CHALLENGE_ACCEPT',
         targetId: pendingChallengeData.senderId
       };
-      if (mqttClient && mqttClient.connected) {
-        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
-      }
-      if (presenceChannel) {
-        presenceChannel.postMessage(packet);
-      }
+      if (presenceChannel) presenceChannel.postMessage(packet);
       joinRoomByCode(pendingChallengeData.roomCode);
     }
 
@@ -756,10 +786,10 @@
     setInterval(() => {
       broadcastPresence();
       scanLocalStoragePeers();
-    }, 2000);
+    }, 1800);
 
     /* ==========================================================================
-       카카오톡 초대 공유 시스템 (초대코드 포함 원클릭 자동입장 URL)
+       초대 공유 메시지 시스템
        ========================================================================== */
     function getInviteUrl() {
       return `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
@@ -768,31 +798,30 @@
     function getFormattedShareMessage() {
       const inviteUrl = getInviteUrl();
       const myName = customNickname || myChar.name;
-      const shareTitle = '세미니의 멀티센터 장기1';
-      return `[${shareTitle}]\n⚔️ ${myName}님이 1:1 장기 대국에 초대했습니다!\n초대코드: [${hostRoomCode}]\n\n👉 링크를 누르면 즉시 대기방으로 접속됩니다:\n${inviteUrl}`;
+      return `[세미니의 멀티센터 장기1]\n⚔️ ${myName}님이 1:1 장기 대국에 초대했습니다!\n\n👇 아래 링크를 터치하면 바로 대기방에 자동 접속됩니다:\n${inviteUrl}\n\n초대코드: ${hostRoomCode}\n(※ 링크로 접속이 안 될 경우, 로비에서 위 4자리 코드를 입력해주세요)`;
     }
 
     async function shareViaKakao() {
-      const shareText = getFormattedShareMessage();
+      const fullText = getFormattedShareMessage();
       if (navigator.share) {
         try {
           await navigator.share({
             title: '세미니의 멀티센터 장기1',
-            text: shareText
+            text: fullText
           });
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
         }
       }
-      fallbackCopy(getInviteUrl(), shareText);
+      fallbackCopy(getInviteUrl(), fullText);
     }
 
     function fallbackCopy(url, customText) {
       const fullCopyContent = customText || getFormattedShareMessage();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullCopyContent).then(() => {
-          alert('초대문구가 복사되었습니다!\n카카오톡에 붙여넣어 친구를 바로 초대하세요.');
+          alert('초대 메시지와 코드가 복사되었습니다!\n카카오톡에 붙여넣어 친구를 바로 초대하세요.');
         }).catch(() => {
           legacyExecCopy(fullCopyContent);
         });
@@ -812,9 +841,9 @@
       ta.select();
       try {
         document.execCommand('copy');
-        alert('초대문구가 복사되었습니다!\n카카오톡에 전달하세요.');
+        alert('초대 메시지와 코드가 복사되었습니다!\n카카오톡에 붙여넣어 전송하세요.');
       } catch (e) {
-        prompt('아래 문구를 복사하여 전달하세요:', text);
+        prompt('아래 문구를 복사하여 전송하세요:', text);
       }
       document.body.removeChild(ta);
     }
@@ -824,7 +853,7 @@
     }
 
     /* ==========================================================================
-       2. 사운드 시스템
+       2. 고해상도 사운드 FX 엔진 복원 및 상향
        ========================================================================== */
     let isMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -836,6 +865,24 @@
       btn.classList.toggle('bg-rose-950', isMuted);
     }
 
+    // 외통수 길 진입 시도 시 경고 부저 사운드
+    function playDeadlockWarningSound() {
+      if (isMuted) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.setValueAtTime(110, now + 0.08);
+        gain.gain.setValueAtTime(0.7, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.3);
+      } catch(e) {}
+    }
+
     function playPiecePlaceSound() {
       if (isMuted) return;
       try {
@@ -844,13 +891,71 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1600, now);
-        osc.frequency.exponentialRampToValueAtTime(320, now + 0.045);
+        osc.frequency.setValueAtTime(1800, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.05);
         gain.gain.setValueAtTime(0.85, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.055);
+        osc.start(now); osc.stop(now + 0.07);
       } catch (e) {}
+    }
+
+    // 각 기물별 고유 타격 사운드
+    function playPieceSpecificAttackSound(pieceType) {
+      if (isMuted) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+
+        if (pieceType === 'cha') {
+          // 차: 강력한 궤도 돌파 및 묵직한 타격
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.linearRampToValueAtTime(30, now + 0.45);
+          gain.gain.setValueAtTime(0.95, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.52);
+
+        } else if (pieceType === 'po') {
+          // 포: 묵직한 포격 대폭발
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(460, now);
+          osc.frequency.exponentialRampToValueAtTime(25, now + 0.35);
+          gain.gain.setValueAtTime(1.0, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.4);
+
+        } else if (pieceType === 'ma' || pieceType === 'sang') {
+          // 마/상: 돌격 말발굽 및 지축 강타음
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(500, now);
+          osc.frequency.exponentialRampToValueAtTime(90, now + 0.28);
+          gain.gain.setValueAtTime(0.85, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.32);
+
+        } else {
+          // 졸, 병, 사: 날카로운 칼날 베기
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(2400, now);
+          osc.frequency.exponentialRampToValueAtTime(350, now + 0.18);
+          gain.gain.setValueAtTime(0.85, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.22);
+        }
+      } catch(e) {}
     }
 
     function playTone(freq, type, duration, gainVal = 0.25) {
@@ -893,12 +998,12 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(60, now);
-        osc.frequency.exponentialRampToValueAtTime(8, now + 2.0);
+        osc.frequency.setValueAtTime(70, now);
+        osc.frequency.exponentialRampToValueAtTime(8, now + 2.2);
         gain.gain.setValueAtTime(1.0, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 2.2);
+        osc.start(now); osc.stop(now + 2.45);
       } catch (e) {}
     }
 
@@ -967,6 +1072,10 @@
     let oppDiceVal = 1;
 
     function startDiceRollSequence() {
+      if (!isCharManuallyPicked) {
+        pickRandomCharacter();
+      }
+
       document.getElementById('mode-modal').classList.add('hidden');
       document.getElementById('host-waiting-modal').classList.add('hidden');
       document.getElementById('mate-banner').classList.add('hidden');
@@ -1068,6 +1177,7 @@
       currentTurn = 'cho';
       selectedPos = null;
       validMoves = [];
+      invalidDeadlockMoves = [];
       lastMove = null;
       myTimeouts = 0;
       oppTimeouts = 0;
@@ -1087,7 +1197,7 @@
     }
 
     /* ==========================================================================
-       4. 장기 보드 엔진
+       4. 장기 보드 엔진 & 외통수(자살수) 필터링
        ========================================================================== */
     const ROWS = 10;
     const COLS = 9;
@@ -1100,6 +1210,7 @@
 
     let selectedPos = null;
     let validMoves = [];
+    let invalidDeadlockMoves = []; // 외통수/자살수 이동 금지 좌표 목록
     let lastMove = null;
 
     let timeLimit = 45;
@@ -1337,8 +1448,16 @@
       return false;
     }
 
+    // [핵심] 장군(왕)이 특정 자리로 이동했을 때 외통수(적에게 즉시 노출되는 자살수)인지 사전 판별
+    function isSuicideOrDeadlockMove(from, to, side) {
+      const tempB = cloneBoard(board);
+      tempB[to.r][to.c] = tempB[from.r][from.c];
+      tempB[from.r][from.c] = null;
+      return isKingInCheck(side, tempB);
+    }
+
     /* ==========================================================================
-       5. 캔버스 렌더링
+       5. 캔버스 렌더링 & 개성별 고유 일러스트 복원 엔진
        ========================================================================== */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
@@ -1347,6 +1466,7 @@
     let attackAnim = null;
     let victimAnim = null;
     let nuclearEffect = null;
+    let particles = [];
 
     function resizeCanvas() {
       const container = document.getElementById('board-container');
@@ -1375,13 +1495,15 @@
       const h = parseFloat(canvas.style.height);
       ctx.clearRect(0, 0, w, h);
 
+      // 고급 원목 장기판 그라디언트
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, '#d97706');
-      bgGrad.addColorStop(0.5, '#b45309');
-      bgGrad.addColorStop(1, '#78350f');
+      bgGrad.addColorStop(0, '#c26d0a');
+      bgGrad.addColorStop(0.5, '#92400e');
+      bgGrad.addColorStop(1, '#662208');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
 
+      // 격자선
       ctx.strokeStyle = '#451a03';
       ctx.lineWidth = 1.8;
       for (let r = 0; r < ROWS; r++) {
@@ -1397,6 +1519,7 @@
         ctx.stroke();
       }
 
+      // 궁성 대각선
       const drawPalaceX = (topR, btmR) => {
         ctx.beginPath();
         ctx.moveTo(padX + 3 * cellW, padY + topR * cellH);
@@ -1408,6 +1531,7 @@
       drawPalaceX(0, 2);
       drawPalaceX(7, 9);
 
+      // 이전 수 표시 점선
       if (lastMove) {
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
         ctx.lineWidth = 3.5;
@@ -1420,6 +1544,7 @@
         ctx.setLineDash([]);
       }
 
+      // [핵심] 이동 가능 경로 및 외통수(해골 마크 ☠️) 표시
       if (selectedPos) {
         validMoves.forEach(m => {
           const px = padX + m.c * cellW;
@@ -1439,8 +1564,34 @@
             ctx.fill();
           }
         });
+
+        // 외통수/자살수 자리: 붉은 아우라 + 해골 ☠️ 마크 렌더링
+        invalidDeadlockMoves.forEach(m => {
+          const px = padX + m.c * cellW;
+          const py = padY + m.r * cellH;
+
+          ctx.save();
+          ctx.shadowColor = '#dc2626';
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = 'rgba(220, 38, 38, 0.45)';
+          ctx.beginPath();
+          ctx.arc(px, py, Math.min(cellW, cellH) * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.font = `${Math.min(cellW, cellH) * 0.52}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('☠️', px, py);
+          ctx.restore();
+        });
       }
 
+      // 기물 렌더링
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const piece = board[r][c];
@@ -1455,7 +1606,112 @@
 
       renderAttackCinematics();
       renderVictimReaction();
+      renderParticles();
       renderNuclearExplosion();
+    }
+
+    // 각 기물별 고유 개성 일러스트 렌더링 엔진 (복원 및 상향)
+    function drawPieceIllustration(ctx, type, rad) {
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#fef08a';
+      ctx.fillStyle = '#fef08a';
+
+      if (type === 'cha') {
+        // 車: 전차 바퀴와 강철 쐐기 장갑
+        ctx.beginPath();
+        ctx.arc(0, 0, rad * 0.46, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * rad * 0.1, Math.sin(a) * rad * 0.1);
+          ctx.lineTo(Math.cos(a) * rad * 0.46, Math.sin(a) * rad * 0.46);
+          ctx.stroke();
+        }
+        ctx.fillRect(-rad * 0.45, -rad * 0.16, rad * 0.9, rad * 0.32);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-rad * 0.25, -rad * 0.08, rad * 0.5, rad * 0.16);
+
+      } else if (type === 'po') {
+        // 包: 육중한 공성포와 포구 화염
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.roundRect(-rad * 0.45, -rad * 0.2, rad * 0.65, rad * 0.4, [5]);
+        ctx.fill();
+        ctx.fillRect(-rad * 0.05, -rad * 0.12, rad * 0.48, rad * 0.24);
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.arc(rad * 0.42, 0, rad * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-rad * 0.15, rad * 0.22, rad * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (type === 'ma') {
+        // 馬: 갈기를 휘날리는 용맹한 명마
+        ctx.beginPath();
+        ctx.moveTo(-rad * 0.32, rad * 0.4);
+        ctx.lineTo(-rad * 0.2, -rad * 0.1);
+        ctx.lineTo(-rad * 0.1, -rad * 0.42);
+        ctx.lineTo(rad * 0.22, -rad * 0.22);
+        ctx.lineTo(rad * 0.32, -rad * 0.05);
+        ctx.lineTo(rad * 0.08, rad * 0.18);
+        ctx.lineTo(rad * 0.22, rad * 0.4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(rad * 0.08, -rad * 0.18, rad * 0.05, 0, Math.PI*2);
+        ctx.fill();
+
+      } else if (type === 'sang') {
+        // 象: 웅장한 돌격 코끼리의 상아와 윤곽
+        ctx.beginPath();
+        ctx.arc(0, -rad * 0.05, rad * 0.36, 0, Math.PI * 2);
+        ctx.fill();
+        // 상아
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(-rad * 0.22, rad * 0.15, rad * 0.24, 0.4, Math.PI * 0.85);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(rad * 0.22, rad * 0.15, rad * 0.24, Math.PI * 0.15, 2.7);
+        ctx.stroke();
+
+      } else if (type === 'sa') {
+        // 士: 호위무사의 방패와 교차된 성스러운 검
+        ctx.beginPath();
+        ctx.moveTo(0, -rad * 0.42);
+        ctx.lineTo(rad * 0.32, -rad * 0.2);
+        ctx.lineTo(rad * 0.22, rad * 0.32);
+        ctx.lineTo(0, rad * 0.45);
+        ctx.lineTo(-rad * 0.22, rad * 0.32);
+        ctx.lineTo(-rad * 0.32, -rad * 0.2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+      } else if (type === 'jol' || type === 'byung') {
+        // 卒 / 兵: 철모 투구와 날렵한 창촉
+        ctx.beginPath();
+        ctx.arc(0, -rad * 0.08, rad * 0.32, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(-rad * 0.28, -rad * 0.08, rad * 0.56, rad * 0.14);
+        ctx.beginPath();
+        ctx.moveTo(0, -rad * 0.45);
+        ctx.lineTo(rad * 0.1, -rad * 0.18);
+        ctx.lineTo(-rad * 0.1, -rad * 0.18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-rad * 0.05, rad * 0.06, rad * 0.1, rad * 0.32);
+      }
+
+      ctx.restore();
     }
 
     function drawCustomPiece(r, c, piece, isSelected) {
@@ -1466,18 +1722,18 @@
       const charObj = isKing ? (piece.side === mySide ? myChar : oppChar) : null;
 
       const baseRad = Math.min(cellW, cellH);
-      let radiusX = baseRad * 0.44;
-      let radiusY = baseRad * 0.44;
+      let radiusX = baseRad * 0.45;
+      let radiusY = baseRad * 0.45;
 
       if (isKing) {
-        radiusX = baseRad * 0.52;
-        radiusY = baseRad * 0.52;
+        radiusX = baseRad * 0.53;
+        radiusY = baseRad * 0.53;
         if (charObj && charObj.id === 'semini') {
           radiusX = baseRad * 0.58;
           radiusY = baseRad * 0.50;
         }
       } else if (piece.type === 'sa' || piece.type === 'jol' || piece.type === 'byung') {
-        radiusX = radiusY = baseRad * 0.38;
+        radiusX = radiusY = baseRad * 0.40;
       }
 
       ctx.save();
@@ -1485,7 +1741,7 @@
 
       if (isSelected) {
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 22;
       }
 
       let baseColor = isCho ? '#064e3b' : '#7f1d1d';
@@ -1496,6 +1752,7 @@
       ctx.fillStyle = baseColor;
       ctx.fill();
 
+      // 내부 링 입체 광택
       ctx.beginPath();
       ctx.ellipse(0, 0, radiusX * 0.88, radiusY * 0.88, 0, 0, Math.PI * 2);
       const innerGrad = ctx.createRadialGradient(-radiusX * 0.3, -radiusY * 0.3, 2, 0, 0, radiusX * 0.9);
@@ -1512,6 +1769,7 @@
       ctx.stroke();
 
       if (isKing && charObj && photoCanvases[charObj.id]) {
+        // 대장군 실사 얼굴
         const photoC = photoCanvases[charObj.id];
         const photoRad = radiusY * 0.58;
 
@@ -1523,12 +1781,12 @@
         ctx.restore();
 
         ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
         ctx.arc(0, -radiusY * 0.05, photoRad, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
         ctx.beginPath();
         ctx.roundRect(-radiusX * 0.65, radiusY * 0.44, radiusX * 1.3, radiusY * 0.44, [4]);
         ctx.fill();
@@ -1538,6 +1796,9 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(charObj.name, 0, radiusY * 0.66);
       } else {
+        // [복원] 개성별 고유 일러스트 + 한자 네임플레이트 조합
+        drawPieceIllustration(ctx, piece.type, radiusY * 0.75);
+
         let hanja = '';
         if (piece.type === 'cha') hanja = '車';
         else if (piece.type === 'po') hanja = '包';
@@ -1547,21 +1808,60 @@
         else if (piece.type === 'jol') hanja = '卒';
         else if (piece.type === 'byung') hanja = '兵';
 
-        ctx.font = `900 ${radiusY * 1.05}px 'Noto Serif KR', serif`;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.beginPath();
+        ctx.roundRect(-radiusX * 0.38, radiusY * 0.46, radiusX * 0.76, radiusY * 0.38, [3]);
+        ctx.fill();
+
+        ctx.font = `900 ${radiusY * 0.32}px 'Noto Serif KR', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = isCho ? '#022c22' : '#450a0a';
-        ctx.fillText(hanja, 1.2, 1.8);
-        ctx.fillStyle = isCho ? '#ecfdf5' : '#fef2f2';
-        ctx.fillText(hanja, 0, 0);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillText(hanja, 0, radiusY * 0.65);
       }
 
       ctx.restore();
     }
 
     /* ==========================================================================
-       6. 공격 연출
+       6. 타격 및 폭발 FX 엔진 상향 (스파크 + 충격파 링 + 파편)
        ========================================================================== */
+    function spawnExplosionParticles(x, y, count = 28) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 6.5;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 3 + Math.random() * 5,
+          color: ['#f59e0b', '#ef4444', '#f97316', '#fbbf24', '#ffffff'][Math.floor(Math.random() * 5)],
+          alpha: 1,
+          decay: 0.025 + Math.random() * 0.03
+        });
+      }
+    }
+
+    function renderParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     function triggerCinematicAttack(mover, from, to, capturedPiece, onComplete) {
       const startX = padX + from.c * cellW;
       const startY = padY + from.r * cellH;
@@ -1575,6 +1875,9 @@
         showAttackShout(kingObj.name, kingObj.shout);
       }
 
+      // 기물별 고유 공격 사운드 재생
+      playPieceSpecificAttackSound(mover.type);
+
       attackAnim = {
         type: mover.type,
         side: mover.side,
@@ -1582,7 +1885,7 @@
         from, to, capturedPiece,
         startX, startY, endX, endY,
         progress: 0,
-        speed: isKing ? 0.018 : 0.024,
+        speed: isKing ? 0.020 : 0.028,
         onComplete
       };
 
@@ -1605,6 +1908,9 @@
         const targetX = attackAnim.endX;
         const targetY = attackAnim.endY;
         const captured = attackAnim.capturedPiece;
+
+        // 화염 파편 폭발 파티클 방사
+        spawnExplosionParticles(targetX, targetY, 32);
 
         if (captured.type === 'king') {
           attackAnim = null;
@@ -1634,7 +1940,7 @@
 
     function runVictimLoop() {
       if (!victimAnim) return;
-      victimAnim.progress += 0.06;
+      victimAnim.progress += 0.055;
       if (victimAnim.progress >= 1) {
         victimAnim = null;
         drawBoard();
@@ -1653,8 +1959,18 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.globalAlpha = Math.max(0, 1 - p);
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath(); ctx.arc(0, 0, cellW * 0.45 * (1 + p * 0.3), 0, Math.PI*2); ctx.fill();
+
+      // 충격파 링 효과
+      ctx.strokeStyle = '#f97316';
+      ctx.lineWidth = 4 * (1 - p);
+      ctx.beginPath();
+      ctx.arc(0, 0, cellW * 0.65 * (1 + p * 0.8), 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(0, 0, cellW * 0.45 * (1 - p * 0.4), 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
@@ -1663,7 +1979,7 @@
         const p = attackAnim.progress;
         const curX = attackAnim.startX + (attackAnim.endX - attackAnim.startX) * p;
         const curY = attackAnim.startY + (attackAnim.endY - attackAnim.startY) * p;
-        const sz = Math.min(cellW, cellH) * 0.72;
+        const sz = Math.min(cellW, cellH) * 0.75;
 
         ctx.save();
         ctx.translate(curX, curY);
@@ -1705,7 +2021,7 @@
       const h = parseFloat(canvas.style.height);
 
       ctx.save();
-      ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p) * 0.8})`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p) * 0.85})`;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
@@ -1717,7 +2033,7 @@
     }
 
     /* ==========================================================================
-       7. 착수 및 대국 로직
+       7. 착수 및 대국 로직 (외통수 차단 & 경고음 연동)
        ========================================================================== */
     canvas.addEventListener('click', e => {
       if (isGameOver || attackAnim || nuclearEffect) return;
@@ -1734,22 +2050,57 @@
 
       const clickedPiece = board[r][c];
 
+      // 내 기물 선택 시
       if (clickedPiece && clickedPiece.side === mySide) {
         selectedPos = { r, c };
-        validMoves = getRawMoves(r, c, board);
+        const raw = getRawMoves(r, c, board);
+
+        if (clickedPiece.type === 'king') {
+          // 장군인 경우: 외통수(자살수) 경로를 분리 필터링
+          validMoves = [];
+          invalidDeadlockMoves = [];
+
+          raw.forEach(target => {
+            if (isSuicideOrDeadlockMove(selectedPos, target, mySide)) {
+              invalidDeadlockMoves.push(target); // 해골 마크 표시용
+            } else {
+              validMoves.push(target); // 정상 착수 가능 경로
+            }
+          });
+        } else {
+          validMoves = raw;
+          invalidDeadlockMoves = [];
+        }
+
         drawBoard();
         return;
       }
 
+      // 기물 선택 후 이동 시도 시
       if (selectedPos) {
+        // [핵심] 외통수(해골) 자리를 클릭했을 때: 경고음 + 경고 배너 팝업 및 이동 거부
+        const isDeadlock = invalidDeadlockMoves.some(m => m.r === r && m.c === c);
+        if (isDeadlock) {
+          playDeadlockWarningSound();
+          showDeadlockAlert();
+          return;
+        }
+
         const targetMove = validMoves.find(m => m.r === r && m.c === c);
         if (targetMove) {
           executePlayerMove(selectedPos, targetMove);
           selectedPos = null;
           validMoves = [];
+          invalidDeadlockMoves = [];
         }
       }
     });
+
+    function showDeadlockAlert() {
+      const banner = document.getElementById('deadlock-alert-banner');
+      banner.classList.remove('hidden');
+      setTimeout(() => banner.classList.add('hidden'), 1800);
+    }
 
     function executePlayerMove(from, to) {
       saveBoardSnapshot();
@@ -1852,6 +2203,7 @@
         lastMove = prev.lastMove ? { ...prev.lastMove } : null;
         selectedPos = null;
         validMoves = [];
+        invalidDeadlockMoves = [];
         resetTurnTimer();
         drawBoard();
         updateUI();
@@ -1937,6 +2289,7 @@
       savedGuestLayout = 'ms_sm';
       selectedPos = null;
       validMoves = [];
+      invalidDeadlockMoves = [];
       boardHistory = [];
       isGameOver = true;
       clearInterval(timerInterval);
@@ -1975,7 +2328,13 @@
         for (let c = 0; c < COLS; c++) {
           if (board[r][c] && board[r][c].side === aiSide) {
             const ms = getRawMoves(r, c, board);
-            ms.forEach(to => allMoves.push({ from: { r, c }, to, piece: board[r][c] }));
+            ms.forEach(to => {
+              if (board[r][c].type === 'king' && isSuicideOrDeadlockMove({ r, c }, to, aiSide)) {
+                // AI도 자살수/외통수 자리로는 이동하지 않음
+                return;
+              }
+              allMoves.push({ from: { r, c }, to, piece: board[r][c] });
+            });
           }
         }
       }
@@ -2179,6 +2538,7 @@
           isMine ? 'border-amber-400 bg-amber-950/60 scale-105 shadow-[0_0_14px_rgba(251,191,36,0.6)]' : 'border-slate-700 bg-slate-800'
         }`;
         btn.onclick = () => {
+          isCharManuallyPicked = true;
           myChar = char;
           saveCurrentNickname();
           oppChar = CHARACTERS.find(c => c.id !== char.id) || CHARACTERS[1];
@@ -2263,6 +2623,13 @@
       isHost = false;
       hostRoomCode = code;
       gameMode = 'p2p';
+
+      document.getElementById('mode-modal').classList.add('hidden');
+      document.getElementById('waiting-status-title').innerText = '호스트 대기방 연결 중...';
+      document.getElementById('waiting-status-desc').innerText = `코드 [${code}] 방에 입장하고 있습니다.`;
+      document.getElementById('host-room-code').innerText = code;
+      document.getElementById('host-waiting-modal').classList.remove('hidden');
+
       if (peer) peer.destroy();
       peer = new Peer();
 
@@ -2272,7 +2639,7 @@
       });
 
       peer.on('error', (err) => {
-        alert('방에 접속할 수 없습니다. 방 코드를 확인해주세요.');
+        alert('방에 접속할 수 없습니다. 방 코드가 만료되었거나 이미 종료된 방입니다.');
         returnToLobby();
       });
     }
@@ -2306,6 +2673,7 @@
           timeLimit = data.time;
           initBoardLayout(document.getElementById('layout-select').value, data.layout);
           document.getElementById('mode-modal').classList.add('hidden');
+          document.getElementById('waiting-status-title').innerText = '호스트와 연결되었습니다! 곧 주사위를 던집니다.';
           resizeCanvas();
           updateUI(data.nickname);
 
@@ -2433,11 +2801,10 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedNickname();
-      renderCharSelector();
       setAiDiff('expert');
       resizeCanvas();
       
-      initGlobalPresenceHub();
+      initGlobalLobbyNetwork();
       broadcastPresence();
       scanLocalStoragePeers();
 
@@ -2446,19 +2813,18 @@
 
       switchModeTab('p2p');
 
-      // 카카오톡 초대 링크(URL 파라미터 ?room=xxxx) 감지 시 자동 다이렉트 입장
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
       if (roomParam && roomParam.length === 4) {
         document.getElementById('join-code-input').value = roomParam;
         setTimeout(() => {
           joinRoomByCode(roomParam);
-        }, 500);
+        }, 300);
       }
     });
 
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('jg_hb_v3_' + myClientId);
+      localStorage.removeItem('jg_hb_v5_' + myClientId);
     });
   </script>
 </body>

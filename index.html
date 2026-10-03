@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>천하제일 전통 장기 배틀 - 얼티밋 마스터 완전판</title>
+  <title>세미니의 멀티센터 전설장기1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
@@ -29,7 +29,6 @@
       background: conic-gradient(from 0deg, rgba(16, 185, 129, 0.45) 0deg, rgba(16, 185, 129, 0) 90deg);
     }
 
-    /* scale만 부드럽게 키워 좌표 translation과 절대 충돌하지 않는 팝업 애니메이션 */
     @keyframes smoothScaleIn {
       0% { transform: scale(0.6); opacity: 0; }
       60% { transform: scale(1.03); opacity: 1; }
@@ -158,7 +157,7 @@
         </div>
       </div>
 
-      <!-- [깔끔하고 얇은 폰트 + 3배 긴 유지시간] 장군말 위치 투명 말풍선 박스 -->
+      <!-- 장군말 위치 투명 말풍선 박스 (지속시간 5초) -->
       <div id="comic-taunt-box" class="absolute pointer-events-none hidden z-[100] w-[75%] max-w-[260px] -translate-x-1/2 -translate-y-1/2 transition-all duration-300">
         <div class="relative bg-slate-950/70 backdrop-blur-md border border-amber-400/80 rounded-2xl px-3.5 py-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] animate-smooth-in text-center">
           <div id="taunt-pointer-bottom" class="absolute left-1/2 -bottom-2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-amber-400/80"></div>
@@ -167,7 +166,6 @@
           <div class="flex items-center justify-center gap-1 text-[11px] font-bold text-amber-300 tracking-tight mb-1">
             <span>🔥</span><span id="taunt-sender-name">장군</span><span>의 팩폭!</span><span>🔥</span>
           </div>
-          <!-- 얇고 정갈하며 가독성 높은 폰트 스타일 적용 -->
           <p id="taunt-content-text" class="text-xs sm:text-[13px] font-medium text-slate-100 tracking-tight leading-relaxed break-keep">
             "방구석에서 장기 둘 돈으로 컵라면이나 사 먹어라! 🍜"
           </p>
@@ -181,7 +179,7 @@
         </div>
       </div>
 
-      <!-- [완전 고정] 대국 종료 및 승패/기권 모달 (장기판 정중앙 영구 고정) -->
+      <!-- 대국 종료 모달 -->
       <div id="mate-banner" class="absolute inset-0 z-[115] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
         <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[270px] animate-smooth-in">
           <div id="mate-title-text" class="text-2xl font-black title-font text-amber-300">👑 대 국 종 료 👑</div>
@@ -207,15 +205,15 @@
     <div class="grid grid-cols-4 gap-1.5">
       <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">😏 약올리기</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
       </button>
       <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">💣 팩폭도발</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
       </button>
       <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">⏰ 재촉/극딜</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
       </button>
       <div class="flex gap-1">
         <button onclick="requestPass()" class="flex-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-2 text-xs font-bold">
@@ -228,7 +226,7 @@
     </div>
   </footer>
 
-  <!-- [초대형 고퀄리티 3D] 주사위 선후공 결정 모달 -->
+  <!-- 주사위 선후공 모달 -->
   <div id="dice-modal" class="fixed inset-0 z-[125] bg-black/90 backdrop-blur-lg hidden flex items-center justify-center p-4">
     <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 rounded-3xl p-5 max-w-sm w-full text-center shadow-[0_0_50px_rgba(245,158,11,0.3)] flex flex-col items-center gap-3 animate-smooth-in">
       <div>
@@ -237,7 +235,6 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3 w-full py-2">
-        <!-- 내 주사위 -->
         <div class="flex flex-col items-center bg-slate-800/80 p-3 rounded-2xl border border-emerald-500/40 shadow-inner">
           <span class="text-xs font-bold text-emerald-400 mb-1">나 (<span id="dice-my-name">나</span>)</span>
           <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
@@ -246,7 +243,6 @@
           <span id="dice-score-my" class="text-xs sm:text-sm font-bold text-amber-300 mt-1.5">회전 중...</span>
         </div>
 
-        <!-- 상대 주사위 -->
         <div class="flex flex-col items-center bg-slate-800/80 p-3 rounded-2xl border border-red-500/40 shadow-inner">
           <span class="text-xs font-bold text-rose-400 mb-1">상대 (<span id="dice-opp-name">상대</span>)</span>
           <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
@@ -256,7 +252,6 @@
         </div>
       </div>
 
-      <!-- 주사위 승자 진영 선택 버튼 그룹 -->
       <div id="dice-winner-control" class="hidden flex-col gap-2 w-full mt-1">
         <p class="text-xs font-bold text-emerald-300">🎉 승리! 원하는 진영(선공/후공)을 터치하세요:</p>
         <div class="grid grid-cols-2 gap-2">
@@ -275,11 +270,10 @@
   <div id="mode-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-50 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md shadow-2xl flex flex-col gap-3 my-auto">
       <div class="text-center">
-        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 천하제일 전통 장기 배틀 ⚔️</h1>
+        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 전설장기1 ⚔️</h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">리얼 원목 타격 사운드 & 초지능 COM 엔진 완전판</p>
       </div>
 
-      <!-- 실시간 로비 접속 인원 확인 패널 -->
       <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow-inner">
         <div class="flex justify-between items-center px-1">
           <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
@@ -308,7 +302,6 @@
         <button id="tab-ai" onclick="switchModeTab('ai')" class="py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">🤖 COM (컴퓨터) 대결</button>
       </div>
 
-      <!-- 방 만들기 및 참가하기 영역 -->
       <div id="p2p-subpanel" class="flex flex-col gap-2">
         <button onclick="openHostWaitingRoom()" class="w-full py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:brightness-110 active:scale-95 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2">
           <span>📡 방 만들기</span><span class="text-xs font-normal text-blue-200">(초대 링크/카톡 발급)</span>
@@ -385,7 +378,7 @@
 
       <div class="z-10">
         <h2 id="waiting-status-title" class="text-xl font-black text-emerald-300 title-font">상대방 접속 대기 중...</h2>
-        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">친구를 카톡으로 초대하거나 코드를 공유하세요</p>
+        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">카카오톡으로 대국 초대장을 바로 전송하세요</p>
       </div>
 
       <div class="z-10 w-full bg-slate-800/90 border border-slate-700 rounded-2xl py-3 px-4 shadow-inner flex flex-col gap-2">
@@ -643,7 +636,7 @@
     }, 2000);
 
     /* ==========================================================================
-       카카오톡 및 링크 공유 시스템
+       카카오톡 및 직접 메세지 연결 공유 시스템
        ========================================================================== */
     function getInviteUrl() {
       return `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
@@ -652,9 +645,29 @@
     async function shareViaKakao() {
       const inviteUrl = getInviteUrl();
       const myName = customNickname || myChar.name;
-      const shareTitle = '천하제일 전통 장기 배틀';
-      const shareText = `[천하제일 전통 장기 배틀]\n⚔️ ${myName}님이 1:1 대국에 초대했습니다!\n방 코드: [${hostRoomCode}]\n지금 바로 링크를 눌러 참가하세요! 👇`;
+      const shareTitle = '세미니의 멀티센터 전설장기1';
+      const shareText = `[${shareTitle}]\n⚔️ ${myName}님이 1:1 전설장기 대국에 초대했습니다!\n방 코드: [${hostRoomCode}]\n지금 바로 터치하여 대국에 참가하세요! 👇\n${inviteUrl}`;
 
+      // 모바일 카카오톡 앱 직접 실행 스킴
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        const kakaoAppUrl = `kakaolink://send?msg=${encodeURIComponent(shareText)}`;
+        const start = Date.now();
+        window.location.href = kakaoAppUrl;
+
+        // 카톡 미설치 또는 반응 없을 시 웹 공유/복사로 대체
+        setTimeout(() => {
+          if (Date.now() - start < 1500) {
+            triggerWebShareOrCopy(shareTitle, shareText, inviteUrl);
+          }
+        }, 800);
+        return;
+      }
+
+      triggerWebShareOrCopy(shareTitle, shareText, inviteUrl);
+    }
+
+    async function triggerWebShareOrCopy(shareTitle, shareText, inviteUrl) {
       if (navigator.share) {
         try {
           await navigator.share({
@@ -664,18 +677,17 @@
           });
           return;
         } catch (err) {
-          if (err.name !== 'AbortError') fallbackCopy(inviteUrl, shareText);
-          return;
+          if (err.name === 'AbortError') return;
         }
       }
       fallbackCopy(inviteUrl, shareText);
     }
 
     function fallbackCopy(url, customText) {
-      const fullCopyContent = customText ? `${customText}\n${url}` : url;
+      const fullCopyContent = customText || url;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullCopyContent).then(() => {
-          alert('초대 링크가 복사되었습니다!\n카카오톡 대화방에 붙여넣기 하여 친구를 초대하세요.');
+          alert('초대 메시지 및 링크가 복사되었습니다!\n카카오톡 대화방에 붙여넣어 친구를 초대하세요.');
         }).catch(() => {
           legacyExecCopy(fullCopyContent);
         });
@@ -695,7 +707,7 @@
       ta.select();
       try {
         document.execCommand('copy');
-        alert('초대 링크가 복사되었습니다!\n카카오톡 대화방에 붙여넣기 하여 전달하세요.');
+        alert('초대 메시지가 복사되었습니다!\n카카오톡에 붙여넣어 전달하세요.');
       } catch (e) {
         prompt('아래 링크를 복사하여 카카오톡에 전송하세요:', text);
       }
@@ -707,7 +719,7 @@
     }
 
     /* ==========================================================================
-       2. 프리미엄 리얼 사운드 시스템
+       2. 사운드 시스템
        ========================================================================== */
     let isMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -919,7 +931,7 @@
     }
 
     /* ==========================================================================
-       3. 초대형 정밀 3D 주사위 렌더러
+       3. 주사위 렌더러
        ========================================================================== */
     function render3DDiceFace(canvasId, value, angle = 0) {
       const c = document.getElementById(canvasId);
@@ -1134,6 +1146,7 @@
     const COLS = 9;
     let board = [];
     let currentTurn = 'cho';
+    let mySide = 'cho';
     let gameMode = 'ai';
     let aiDifficulty = 'expert';
     let isGameOver = false;
@@ -1376,7 +1389,7 @@
     }
 
     /* ==========================================================================
-       5. 캔버스 렌더링 & 위아래 최대 확장 레이아웃
+       5. 캔버스 렌더링
        ========================================================================== */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
@@ -1625,7 +1638,7 @@
     }
 
     /* ==========================================================================
-       6. 기물별 공격 연출
+       6. 공격 연출
        ========================================================================== */
     function triggerCinematicAttack(mover, from, to, capturedPiece, onComplete) {
       const startX = padX + from.c * cellW;
@@ -2249,9 +2262,6 @@
       }
     }
 
-    /* ==========================================================================
-       동기화된 승패 및 대국 종료 처리 시스템
-       ========================================================================== */
     function endGameVictory(winnerSide, reasonMsg = '') {
       if (isGameOver) return;
       isGameOver = true;
@@ -2273,7 +2283,6 @@
       let desc = reasonMsg || `${winnerName} 진영의 완전한 승리입니다!`;
       document.getElementById('mate-winner-text').innerText = desc;
       
-      // 장기판 정중앙 플로팅 모달 표시
       const banner = document.getElementById('mate-banner');
       banner.classList.remove('hidden');
 
@@ -2431,7 +2440,7 @@
     }
 
     /* ==========================================================================
-       9. 장군 위치 기반 투명 말풍선 도발 엔진 (유지시간 3배 & 얇은 폰트)
+       9. 도발 엔진 (지속시간 5초)
        ========================================================================== */
     function getKingPosition(targetSide) {
       if (!board || board.length === 0) return null;
@@ -2451,7 +2460,7 @@
       isTauntCooldown = true;
 
       const overlays = document.querySelectorAll('.cooldown-overlay');
-      let remain = 4;
+      let remain = 5;
       overlays.forEach(ov => {
         ov.classList.remove('hidden');
         ov.innerText = `${remain}s`;
@@ -2638,10 +2647,10 @@
       box.classList.remove('hidden');
       if (tauntTimeout) clearTimeout(tauntTimeout);
       
-      // [기존 2.6초의 3배] 7.8초(7800ms) 동안 충분히 유지되도록 설정
+      // 도발 말풍선 5초(5000ms) 유지
       tauntTimeout = setTimeout(() => {
         box.classList.add('hidden');
-      }, 7800);
+      }, 5000);
     }
 
     function triggerCheckBanner() {

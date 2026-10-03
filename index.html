@@ -161,7 +161,7 @@
       <div id="deadlock-alert-banner" class="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none hidden z-[110] transition-all">
         <div class="bg-red-950/95 border-2 border-red-500 text-rose-200 px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 animate-bounce">
           <span class="text-xl">☠️</span>
-          <div class="text-xs font-black tracking-wide">외통수(자살수) 자리입니다! 진입할 수 없습니다!</div>
+          <div class="text-xs font-black tracking-wide">외통수(자살수) 자리입니다! 진입할 수 없습니다![cite: 1]</div>
         </div>
       </div>
 
@@ -172,14 +172,18 @@
         </div>
       </div>
 
-      <!-- 물리기 요청 수락 모달 -->
+      <!-- 물리기 요청 수락 모달 (30초 타이머 탑재) -->
       <div id="undo-confirm-modal" class="absolute inset-0 z-[120] bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
         <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[280px] animate-smooth-in">
-          <div class="text-xl font-black title-font text-amber-300">↩️️ 물리기 요청</div>
+          <div class="text-xl font-black title-font text-amber-300">↩ 물리기 요청</div>
           <p id="undo-request-msg" class="text-xs sm:text-sm font-medium text-slate-200 mt-2 break-keep leading-relaxed">
-            상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?
+            상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?[cite: 1]
           </p>
-          <div class="grid grid-cols-2 gap-2 mt-4">
+          <div class="flex items-center justify-center gap-1 my-2">
+            <span class="text-[11px] text-amber-400 font-bold">응답 제한시간:</span>
+            <span id="undo-modal-timer" class="text-sm font-black text-rose-400 title-font">30s</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
             <button onclick="respondUndo(true)" class="py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
               수락
             </button>
@@ -303,7 +307,7 @@
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md shadow-2xl flex flex-col gap-3 my-auto">
       <div class="text-center">
         <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 장기1 ⚔</h1>
-        <p class="text-xs text-slate-400 mt-1 font-medium">원클릭 대전 초대 & 실시간 P2P 완전판</p>
+        <p class="text-xs text-slate-400 mt-1 font-medium">원클릭 대전 초대 & 기물별 특수전투 애니메이션 탑재</p>
       </div>
 
       <!-- 실시간 온라인 접속자 패널 -->
@@ -349,8 +353,8 @@
 
       <div id="ai-subpanel" class="hidden flex flex-col gap-2">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-bold text-slate-300">COM 난이도 설정</span>
-          <span id="ai-diff-desc" class="text-[10px] text-amber-400 font-bold">프로 정석 + 기형적 수 차단</span>
+          <span class="text-xs font-bold text-slate-300">COM 난이도 (프로기보 엔진)</span>
+          <span id="ai-diff-desc" class="text-[10px] text-amber-400 font-bold">김경중 정석 기보 + 기물 가치 판단</span>
         </div>
         <div class="grid grid-cols-5 gap-1">
           <button onclick="setAiDiff('novice1')" id="diff-novice1" class="diff-btn py-1.5 text-xs rounded-xl font-bold bg-slate-800 border border-slate-700 text-slate-300">초보1</button>
@@ -604,7 +608,7 @@
        실시간 글로벌 로비 브로드캐스트 엔진
        ========================================================================== */
     const myClientId = 'user_' + Math.floor(100000 + Math.random() * 900000);
-    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v5') : null;
+    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v7') : null;
     const onlinePeers = new Map();
     let pendingChallengeData = null;
     let lobbyPeer = null;
@@ -676,7 +680,7 @@
 
       const packet = { type: 'PING', data: info };
       if (presenceChannel) presenceChannel.postMessage(packet);
-      localStorage.setItem('jg_hb_v5_' + myClientId, JSON.stringify(info));
+      localStorage.setItem('jg_hb_v7_' + myClientId, JSON.stringify(info));
       updateOnlineUsersUI();
     }
 
@@ -690,7 +694,7 @@
       const now = Date.now();
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('jg_hb_v5_')) {
+        if (key && key.startsWith('jg_hb_v7_')) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
             if (data.id !== myClientId && (now - data.time < 5000)) {
@@ -853,7 +857,7 @@
     }
 
     /* ==========================================================================
-       2. 고해상도 사운드 FX 엔진 복원 및 상향
+       2. 고해상도 사운드 FX 엔진 (기물별 특화 사운드 포함)
        ========================================================================== */
     let isMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -865,7 +869,6 @@
       btn.classList.toggle('bg-rose-950', isMuted);
     }
 
-    // 외통수 길 진입 시도 시 경고 부저 사운드
     function playDeadlockWarningSound() {
       if (isMuted) return;
       try {
@@ -900,7 +903,7 @@
       } catch (e) {}
     }
 
-    // 각 기물별 고유 타격 사운드
+    // [요청 반영] 각 기물별 특화 전투/처치 사운드 FX
     function playPieceSpecificAttackSound(pieceType) {
       if (isMuted) return;
       try {
@@ -908,52 +911,50 @@
         const now = audioCtx.currentTime;
 
         if (pieceType === 'cha') {
-          // 차: 강력한 궤도 돌파 및 묵직한 타격
+          // 차: 탱크 돌격 및 묵직한 포격음
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(120, now);
-          osc.frequency.linearRampToValueAtTime(30, now + 0.45);
-          gain.gain.setValueAtTime(0.95, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.linearRampToValueAtTime(20, now + 0.6);
+          gain.gain.setValueAtTime(1.0, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
           osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.52);
+          osc.start(now); osc.stop(now + 0.7);
 
         } else if (pieceType === 'po') {
-          // 포: 묵직한 포격 대폭발
+          // 포: 다련장 미사일 연발 굉음
+          for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+              playTone(350 - i * 50, 'square', 0.12, 0.4);
+            }, i * 90);
+          }
+
+        } else if (pieceType === 'ma') {
+          // 마: 창기사 "츄츅" + 말발굽 소리
+          playTone(850, 'triangle', 0.08, 0.3);
+          setTimeout(() => playTone(1100, 'sawtooth', 0.1, 0.35), 70);
+
+        } else if (pieceType === 'sang') {
+          // 상: 코끼리 발로 밟는 묵직한 지각 변동음
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(460, now);
-          osc.frequency.exponentialRampToValueAtTime(25, now + 0.35);
-          gain.gain.setValueAtTime(1.0, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+          gain.gain.setValueAtTime(0.9, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
           osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.4);
+          osc.start(now); osc.stop(now + 0.48);
 
-        } else if (pieceType === 'ma' || pieceType === 'sang') {
-          // 마/상: 돌격 말발굽 및 지축 강타음
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(500, now);
-          osc.frequency.exponentialRampToValueAtTime(90, now + 0.28);
-          gain.gain.setValueAtTime(0.85, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.32);
+        } else if (pieceType === 'sa') {
+          // 사: 방패로 밀어내는 타격음
+          playTone(400, 'square', 0.15, 0.4);
 
         } else {
-          // 졸, 병, 사: 날카로운 칼날 베기
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(2400, now);
-          osc.frequency.exponentialRampToValueAtTime(350, now + 0.18);
-          gain.gain.setValueAtTime(0.85, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.22);
+          // 졸/병: 검으로 두 번 휙휙 베는 참격 소리
+          playTone(2200, 'triangle', 0.06, 0.3);
+          setTimeout(() => playTone(2800, 'triangle', 0.08, 0.35), 80);
         }
       } catch(e) {}
     }
@@ -1210,7 +1211,7 @@
 
     let selectedPos = null;
     let validMoves = [];
-    let invalidDeadlockMoves = []; // 외통수/자살수 이동 금지 좌표 목록
+    let invalidDeadlockMoves = [];
     let lastMove = null;
 
     let timeLimit = 45;
@@ -1448,7 +1449,6 @@
       return false;
     }
 
-    // [핵심] 장군(왕)이 특정 자리로 이동했을 때 외통수(적에게 즉시 노출되는 자살수)인지 사전 판별
     function isSuicideOrDeadlockMove(from, to, side) {
       const tempB = cloneBoard(board);
       tempB[to.r][to.c] = tempB[from.r][from.c];
@@ -1457,7 +1457,7 @@
     }
 
     /* ==========================================================================
-       5. 캔버스 렌더링 & 개성별 고유 일러스트 복원 엔진
+       5. 캔버스 렌더링 & 장기 기본 기물 이미지 표현 엔진
        ========================================================================== */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
@@ -1495,7 +1495,6 @@
       const h = parseFloat(canvas.style.height);
       ctx.clearRect(0, 0, w, h);
 
-      // 고급 원목 장기판 그라디언트
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
       bgGrad.addColorStop(0, '#c26d0a');
       bgGrad.addColorStop(0.5, '#92400e');
@@ -1503,7 +1502,6 @@
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
 
-      // 격자선
       ctx.strokeStyle = '#451a03';
       ctx.lineWidth = 1.8;
       for (let r = 0; r < ROWS; r++) {
@@ -1519,7 +1517,6 @@
         ctx.stroke();
       }
 
-      // 궁성 대각선
       const drawPalaceX = (topR, btmR) => {
         ctx.beginPath();
         ctx.moveTo(padX + 3 * cellW, padY + topR * cellH);
@@ -1531,7 +1528,6 @@
       drawPalaceX(0, 2);
       drawPalaceX(7, 9);
 
-      // 이전 수 표시 점선
       if (lastMove) {
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
         ctx.lineWidth = 3.5;
@@ -1544,7 +1540,6 @@
         ctx.setLineDash([]);
       }
 
-      // [핵심] 이동 가능 경로 및 외통수(해골 마크 ☠️) 표시
       if (selectedPos) {
         validMoves.forEach(m => {
           const px = padX + m.c * cellW;
@@ -1565,7 +1560,6 @@
           }
         });
 
-        // 외통수/자살수 자리: 붉은 아우라 + 해골 ☠️ 마크 렌더링
         invalidDeadlockMoves.forEach(m => {
           const px = padX + m.c * cellW;
           const py = padY + m.r * cellH;
@@ -1591,7 +1585,6 @@
         });
       }
 
-      // 기물 렌더링
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const piece = board[r][c];
@@ -1608,110 +1601,6 @@
       renderVictimReaction();
       renderParticles();
       renderNuclearExplosion();
-    }
-
-    // 각 기물별 고유 개성 일러스트 렌더링 엔진 (복원 및 상향)
-    function drawPieceIllustration(ctx, type, rad) {
-      ctx.save();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#fef08a';
-      ctx.fillStyle = '#fef08a';
-
-      if (type === 'cha') {
-        // 車: 전차 바퀴와 강철 쐐기 장갑
-        ctx.beginPath();
-        ctx.arc(0, 0, rad * 0.46, 0, Math.PI * 2);
-        ctx.stroke();
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * rad * 0.1, Math.sin(a) * rad * 0.1);
-          ctx.lineTo(Math.cos(a) * rad * 0.46, Math.sin(a) * rad * 0.46);
-          ctx.stroke();
-        }
-        ctx.fillRect(-rad * 0.45, -rad * 0.16, rad * 0.9, rad * 0.32);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(-rad * 0.25, -rad * 0.08, rad * 0.5, rad * 0.16);
-
-      } else if (type === 'po') {
-        // 包: 육중한 공성포와 포구 화염
-        ctx.fillStyle = '#cbd5e1';
-        ctx.beginPath();
-        ctx.roundRect(-rad * 0.45, -rad * 0.2, rad * 0.65, rad * 0.4, [5]);
-        ctx.fill();
-        ctx.fillRect(-rad * 0.05, -rad * 0.12, rad * 0.48, rad * 0.24);
-        ctx.fillStyle = '#f97316';
-        ctx.beginPath();
-        ctx.arc(rad * 0.42, 0, rad * 0.14, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath();
-        ctx.arc(-rad * 0.15, rad * 0.22, rad * 0.18, 0, Math.PI * 2);
-        ctx.fill();
-
-      } else if (type === 'ma') {
-        // 馬: 갈기를 휘날리는 용맹한 명마
-        ctx.beginPath();
-        ctx.moveTo(-rad * 0.32, rad * 0.4);
-        ctx.lineTo(-rad * 0.2, -rad * 0.1);
-        ctx.lineTo(-rad * 0.1, -rad * 0.42);
-        ctx.lineTo(rad * 0.22, -rad * 0.22);
-        ctx.lineTo(rad * 0.32, -rad * 0.05);
-        ctx.lineTo(rad * 0.08, rad * 0.18);
-        ctx.lineTo(rad * 0.22, rad * 0.4);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(rad * 0.08, -rad * 0.18, rad * 0.05, 0, Math.PI*2);
-        ctx.fill();
-
-      } else if (type === 'sang') {
-        // 象: 웅장한 돌격 코끼리의 상아와 윤곽
-        ctx.beginPath();
-        ctx.arc(0, -rad * 0.05, rad * 0.36, 0, Math.PI * 2);
-        ctx.fill();
-        // 상아
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(-rad * 0.22, rad * 0.15, rad * 0.24, 0.4, Math.PI * 0.85);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(rad * 0.22, rad * 0.15, rad * 0.24, Math.PI * 0.15, 2.7);
-        ctx.stroke();
-
-      } else if (type === 'sa') {
-        // 士: 호위무사의 방패와 교차된 성스러운 검
-        ctx.beginPath();
-        ctx.moveTo(0, -rad * 0.42);
-        ctx.lineTo(rad * 0.32, -rad * 0.2);
-        ctx.lineTo(rad * 0.22, rad * 0.32);
-        ctx.lineTo(0, rad * 0.45);
-        ctx.lineTo(-rad * 0.22, rad * 0.32);
-        ctx.lineTo(-rad * 0.32, -rad * 0.2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-      } else if (type === 'jol' || type === 'byung') {
-        // 卒 / 兵: 철모 투구와 날렵한 창촉
-        ctx.beginPath();
-        ctx.arc(0, -rad * 0.08, rad * 0.32, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(-rad * 0.28, -rad * 0.08, rad * 0.56, rad * 0.14);
-        ctx.beginPath();
-        ctx.moveTo(0, -rad * 0.45);
-        ctx.lineTo(rad * 0.1, -rad * 0.18);
-        ctx.lineTo(-rad * 0.1, -rad * 0.18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(-rad * 0.05, rad * 0.06, rad * 0.1, rad * 0.32);
-      }
-
-      ctx.restore();
     }
 
     function drawCustomPiece(r, c, piece, isSelected) {
@@ -1752,7 +1641,6 @@
       ctx.fillStyle = baseColor;
       ctx.fill();
 
-      // 내부 링 입체 광택
       ctx.beginPath();
       ctx.ellipse(0, 0, radiusX * 0.88, radiusY * 0.88, 0, 0, Math.PI * 2);
       const innerGrad = ctx.createRadialGradient(-radiusX * 0.3, -radiusY * 0.3, 2, 0, 0, radiusX * 0.9);
@@ -1769,7 +1657,6 @@
       ctx.stroke();
 
       if (isKing && charObj && photoCanvases[charObj.id]) {
-        // 대장군 실사 얼굴
         const photoC = photoCanvases[charObj.id];
         const photoRad = radiusY * 0.58;
 
@@ -1796,9 +1683,7 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(charObj.name, 0, radiusY * 0.66);
       } else {
-        // [복원] 개성별 고유 일러스트 + 한자 네임플레이트 조합
-        drawPieceIllustration(ctx, piece.type, radiusY * 0.75);
-
+        // [요청 반영] 대장군을 제외한 나머지 말들은 전통 장기 기본 한자 이미지로 깔끔하게 표현[cite: 1]
         let hanja = '';
         if (piece.type === 'cha') hanja = '車';
         else if (piece.type === 'po') hanja = '包';
@@ -1808,23 +1693,20 @@
         else if (piece.type === 'jol') hanja = '卒';
         else if (piece.type === 'byung') hanja = '兵';
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.beginPath();
-        ctx.roundRect(-radiusX * 0.38, radiusY * 0.46, radiusX * 0.76, radiusY * 0.38, [3]);
-        ctx.fill();
-
-        ctx.font = `900 ${radiusY * 0.32}px 'Noto Serif KR', serif`;
+        ctx.font = `900 ${radiusY * 1.1}px 'Noto Serif KR', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fef08a';
-        ctx.fillText(hanja, 0, radiusY * 0.65);
+        ctx.fillStyle = isCho ? '#022c22' : '#450a0a';
+        ctx.fillText(hanja, 1.2, 1.8);
+        ctx.fillStyle = isCho ? '#ecfdf5' : '#fef2f2';
+        ctx.fillText(hanja, 0, 0);
       }
 
       ctx.restore();
     }
 
     /* ==========================================================================
-       6. 타격 및 폭발 FX 엔진 상향 (스파크 + 충격파 링 + 파편)
+       6. 기물별 특화 전투 애니메이션 및 처치 이펙트 엔진
        ========================================================================== */
     function spawnExplosionParticles(x, y, count = 28) {
       for (let i = 0; i < count; i++) {
@@ -1875,7 +1757,6 @@
         showAttackShout(kingObj.name, kingObj.shout);
       }
 
-      // 기물별 고유 공격 사운드 재생
       playPieceSpecificAttackSound(mover.type);
 
       attackAnim = {
@@ -1885,7 +1766,7 @@
         from, to, capturedPiece,
         startX, startY, endX, endY,
         progress: 0,
-        speed: isKing ? 0.020 : 0.028,
+        speed: (mover.type === 'cha' || mover.type === 'po') ? 0.032 : 0.025,
         onComplete
       };
 
@@ -1909,18 +1790,31 @@
         const targetY = attackAnim.endY;
         const captured = attackAnim.capturedPiece;
 
-        // 화염 파편 폭발 파티클 방사
-        spawnExplosionParticles(targetX, targetY, 32);
-
-        if (captured.type === 'king') {
+        // [요청 반영] 포 처치 시 다련장 미사일 연속 폭발 (3회 바운스 폭발)
+        if (attackAnim.type === 'po') {
+          for (let k = 0; k < 3; k++) {
+            setTimeout(() => {
+              spawnExplosionParticles(targetX + (k-1)*12, targetY + (k-1)*8, 20);
+            }, k * 140);
+          }
+        } else if (captured.type === 'king') {
           attackAnim = null;
           triggerNuclearExplosion(targetX, targetY, () => {
             if (attackAnim && attackAnim.onComplete) attackAnim.onComplete();
           });
           return;
+        } else {
+          // [요청 반영] 차 처치 시 3단 폭발
+          if (attackAnim.type === 'cha') {
+            for (let k = 0; k < 3; k++) {
+              setTimeout(() => spawnExplosionParticles(targetX, targetY, 18), k * 120);
+            }
+          } else {
+            spawnExplosionParticles(targetX, targetY, 28);
+          }
         }
 
-        triggerVictimReaction(attackAnim.to, captured);
+        triggerVictimReaction(attackAnim.to, captured, attackAnim.type);
         triggerBoardShake();
 
         const cb = attackAnim.onComplete;
@@ -1933,8 +1827,8 @@
       requestAnimationFrame(runAttackLoop);
     }
 
-    function triggerVictimReaction(pos, piece) {
-      victimAnim = { pos, piece, progress: 0 };
+    function triggerVictimReaction(pos, piece, moverType) {
+      victimAnim = { pos, piece, moverType, progress: 0 };
       requestAnimationFrame(runVictimLoop);
     }
 
@@ -1960,17 +1854,23 @@
       ctx.translate(x, y);
       ctx.globalAlpha = Math.max(0, 1 - p);
 
-      // 충격파 링 효과
-      ctx.strokeStyle = '#f97316';
-      ctx.lineWidth = 4 * (1 - p);
-      ctx.beginPath();
-      ctx.arc(0, 0, cellW * 0.65 * (1 + p * 0.8), 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(0, 0, cellW * 0.45 * (1 - p * 0.4), 0, Math.PI * 2);
-      ctx.fill();
+      if (victimAnim.moverType === 'sang') {
+        // [요청 반영] 상: 코끼리 발로 밟는 충격파 링
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 5 * (1 - p);
+        ctx.beginPath();
+        ctx.arc(0, 0, cellW * 0.8 * (1 + p * 0.6), 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (victimAnim.moverType === 'sa') {
+        // [요청 반영] 사: 방패 밀어내기 이펙트
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-cellW * 0.5 * (1-p), -cellHeight = 6, cellW * (1-p), 12);
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, 0, cellW * 0.45 * (1 - p * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
 
@@ -1983,8 +1883,17 @@
 
         ctx.save();
         ctx.translate(curX, curY);
-        ctx.fillStyle = attackAnim.side === 'cho' ? '#10b981' : '#ef4444';
-        ctx.beginPath(); ctx.arc(0, 0, sz * 0.5, 0, Math.PI*2); ctx.fill();
+
+        if (attackAnim.type === 'po') {
+          // [요청 반영] 포 공격 시 다련장 미사일 투사체 렌더링
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath(); ctx.arc(0, 0, sz * 0.35, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(-sz*0.4, -4, sz*0.8, 8);
+        } else {
+          ctx.fillStyle = attackAnim.side === 'cho' ? '#10b981' : '#ef4444';
+          ctx.beginPath(); ctx.arc(0, 0, sz * 0.5, 0, Math.PI*2); ctx.fill();
+        }
         ctx.restore();
       }
     }
@@ -2050,21 +1959,19 @@
 
       const clickedPiece = board[r][c];
 
-      // 내 기물 선택 시
       if (clickedPiece && clickedPiece.side === mySide) {
         selectedPos = { r, c };
         const raw = getRawMoves(r, c, board);
 
         if (clickedPiece.type === 'king') {
-          // 장군인 경우: 외통수(자살수) 경로를 분리 필터링
           validMoves = [];
           invalidDeadlockMoves = [];
 
           raw.forEach(target => {
             if (isSuicideOrDeadlockMove(selectedPos, target, mySide)) {
-              invalidDeadlockMoves.push(target); // 해골 마크 표시용
+              invalidDeadlockMoves.push(target);
             } else {
-              validMoves.push(target); // 정상 착수 가능 경로
+              validMoves.push(target);
             }
           });
         } else {
@@ -2076,9 +1983,7 @@
         return;
       }
 
-      // 기물 선택 후 이동 시도 시
       if (selectedPos) {
-        // [핵심] 외통수(해골) 자리를 클릭했을 때: 경고음 + 경고 배너 팝업 및 이동 거부
         const isDeadlock = invalidDeadlockMoves.some(m => m.r === r && m.c === c);
         if (isDeadlock) {
           playDeadlockWarningSound();
@@ -2148,24 +2053,29 @@
     }
 
     /* ==========================================================================
-       물리기 시스템
+       [요청 반영] 물리기 시스템 (30초 제한시간 + 거절 시에도 횟수 차감 + 30초 무응답 시 자동 승낙)
        ========================================================================== */
+    let undoTimerInterval = null;
+    let undoTimeLeft = 30;
+
     function requestUndoMove() {
       if (isGameOver) return;
       if (myUndoRemaining <= 0) {
-        alert('이번 판의 물리기 횟수(최대 2회)를 모두 소진했습니다.');
+        alert('이번 판의 물리기 횟수(최대 2회)를 모두 소진했습니다[cite: 1].');
         return;
       }
       if (boardHistory.length < 2) {
-        alert('물릴 수 있는 이전 수가 없습니다.');
+        alert('물릴 수 있는 이전 수가 없습니다[cite: 1].');
         return;
       }
 
+      // [요청 반영] 물리기를 시도하는 즉시 내 횟수 1회 즉시 차감
+      myUndoRemaining--;
+      updateUndoButtonUI();
+
       if (gameMode === 'ai') {
         executeUndoApply();
-        myUndoRemaining--;
-        updateUndoButtonUI();
-        alert('물리기가 완료되었습니다.');
+        alert('물리기가 완료되었습니다[cite: 1].');
         return;
       }
 
@@ -2174,20 +2084,49 @@
           type: 'UNDO_REQUEST',
           sender: customNickname || myChar.name
         });
-        alert('상대방에게 물리기 허락을 요청했습니다. 응답을 기다립니다...');
+        // [요청 반영] 로딩창(알림창)이 뜨지 않고 메시지 창이 바로 닫힌 뒤 상대의 응답 대기 상태로 전환
+        alert('상대방에게 물리기 요청을 보냈습니다. (상대방 응답 대기 30초)[cite: 1]');
       }
     }
 
-    function respondUndo(accepted) {
+    function startUndoModalTimer() {
+      clearInterval(undoTimerInterval);
+      undoTimeLeft = 30;
+      document.getElementById('undo-modal-timer').innerText = `${undoTimeLeft}s`;
+      document.getElementById('undo-confirm-modal').classList.remove('hidden');
+
+      undoTimerInterval = setInterval(() => {
+        undoTimeLeft--;
+        document.getElementById('undo-modal-timer').innerText = `${undoTimeLeft}s`;
+
+        if (undoTimeLeft <= 0) {
+          clearInterval(undoTimerInterval);
+          // [요청 반영] 30초 안에 결정을 못 내리면 자동 승낙 처리
+          respondUndo(true, true);
+        }
+      }, 1000);
+    }
+
+    function respondUndo(accepted, isAuto = false) {
+      clearInterval(undoTimerInterval);
       document.getElementById('undo-confirm-modal').classList.add('hidden');
+
       if (gameMode === 'p2p' && conn && conn.open) {
         conn.send({
           type: 'UNDO_RESPONSE',
           accepted: accepted
         });
       }
+
       if (accepted) {
         executeUndoApply();
+        if (isAuto) {
+          alert('30초 초과로 물리기가 자동으로 승낙되었습니다[cite: 1]!');
+        } else {
+          alert('물리기가 수락되어 한 수 물렀습니다[cite: 1].');
+        }
+      } else {
+        alert('상대방이 물리기 요청을 거절했습니다. (이미 횟수는 차감되었습니다)[cite: 1]');
       }
     }
 
@@ -2229,7 +2168,7 @@
         document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-rose-500';
       }
 
-      let desc = reasonMsg || `${winnerName} 진영의 완전한 승리입니다!`;
+      let desc = reasonMsg || `${winnerName} 진영의 완전한 승리입니다[cite: 1]!`;
       document.getElementById('mate-winner-text').innerText = desc;
       
       const banner = document.getElementById('mate-banner');
@@ -2247,7 +2186,7 @@
 
     function requestResign() {
       if (isGameOver) return;
-      if (confirm('정말 기권하시겠습니까?')) {
+      if (confirm('정말 기권하시겠습니까?[cite: 1]')) {
         const oppSide = (mySide === 'cho') ? 'han' : 'cho';
         if (gameMode === 'p2p' && conn && conn.open) {
           conn.send({
@@ -2255,14 +2194,14 @@
             resignerSide: mySide
           });
         }
-        endGameVictory(oppSide, '내가 기권하여 패배했습니다.');
+        endGameVictory(oppSide, '내가 기권하여 패배했습니다[cite: 1].');
       }
     }
 
     function requestRematch() {
       if (gameMode === 'p2p' && conn && conn.open) {
         conn.send({ type: 'REMATCH_REQUEST' });
-        document.getElementById('mate-winner-text').innerText = '상대방에게 재대결을 요청했습니다...';
+        document.getElementById('mate-winner-text').innerText = '상대방에게 재대결을 요청했습니다[cite: 1]...';
       } else {
         startDiceRollSequence();
       }
@@ -2313,10 +2252,66 @@
     }
 
     /* ==========================================================================
-       8. COM 엔진
+       8. 프로기사 기보 및 기물 가치 AI 엔진
        ========================================================================== */
+    const PIECE_VALS = {
+      cha: 1300,
+      po: 700,
+      ma: 500,
+      sang: 300,
+      sa: 300,
+      jol: 200,
+      byung: 200,
+      king: 100000
+    };
+
     function cloneBoard(b) {
       return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
+    }
+
+    const PRO_OPENING_BOOK = [
+      { turnCount: 0, from: { r: 0, c: 1 }, to: { r: 2, c: 2 } },
+      { turnCount: 0, from: { r: 0, c: 7 }, to: { r: 2, c: 6 } },
+      { turnCount: 1, from: { r: 2, c: 1 }, to: { r: 2, c: 4 } },
+      { turnCount: 1, from: { r: 2, c: 7 }, to: { r: 2, c: 4 } },
+      { turnCount: 2, from: { r: 3, c: 4 }, to: { r: 4, c: 4 } },
+      { turnCount: 2, from: { r: 3, c: 2 }, to: { r: 4, c: 2 } }
+    ];
+
+    function evaluateMoveSafetyAndGain(mover, from, to, currentBoard, aiSide) {
+      const captured = currentBoard[to.r][to.c];
+      const gain = captured ? PIECE_VALS[captured.type] : 0;
+      const moverVal = PIECE_VALS[mover.type];
+
+      const simB = cloneBoard(currentBoard);
+      simB[to.r][to.c] = simB[from.r][from.c];
+      simB[from.r][from.c] = null;
+
+      const enemySide = (aiSide === 'cho') ? 'han' : 'cho';
+      let willBeCaptured = false;
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (simB[r][c] && simB[r][c].side === enemySide) {
+            const oppMoves = getRawMoves(r, c, simB);
+            if (oppMoves.some(m => m.r === to.r && m.c === to.c)) {
+              willBeCaptured = true;
+              break;
+            }
+          }
+        }
+        if (willBeCaptured) break;
+      }
+
+      if (willBeCaptured) {
+        return gain - moverVal;
+      }
+
+      let score = gain;
+      if (to.r >= 3 && to.r <= 6 && to.c >= 2 && to.c <= 6) {
+        score += 15;
+      }
+      return score;
     }
 
     function makeAIMove() {
@@ -2330,7 +2325,6 @@
             const ms = getRawMoves(r, c, board);
             ms.forEach(to => {
               if (board[r][c].type === 'king' && isSuicideOrDeadlockMove({ r, c }, to, aiSide)) {
-                // AI도 자살수/외통수 자리로는 이동하지 않음
                 return;
               }
               allMoves.push({ from: { r, c }, to, piece: board[r][c] });
@@ -2340,20 +2334,60 @@
       }
       if (allMoves.length === 0) return;
 
-      const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c]);
-      const chosen = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
+      const currentTurnNumber = boardHistory.length;
+      let chosenMove = null;
+
+      if (currentTurnNumber <= 6 && (aiDifficulty === 'expert' || aiDifficulty === 'medium')) {
+        const bookMatches = PRO_OPENING_BOOK.filter(bMove => {
+          return allMoves.some(m => 
+            m.from.r === bMove.from.r && m.from.c === bMove.from.c &&
+            m.to.r === bMove.to.r && m.to.c === bMove.to.c
+          );
+        });
+
+        if (bookMatches.length > 0) {
+          const pick = bookMatches[Math.floor(Math.random() * bookMatches.length)];
+          chosenMove = allMoves.find(m => 
+            m.from.r === pick.from.r && m.from.c === pick.from.c &&
+            m.to.r === pick.to.r && m.to.c === pick.to.c
+          );
+        }
+      }
+
+      if (!chosenMove) {
+        let scoredMoves = allMoves.map(m => {
+          let score = evaluateMoveSafetyAndGain(m.piece, m.from, m.to, board, aiSide);
+          return { ...m, score };
+        });
+
+        if (aiDifficulty === 'expert') {
+          scoredMoves.sort((a, b) => b.score - a.score);
+          chosenMove = scoredMoves[0];
+        } else if (aiDifficulty === 'medium') {
+          const filtered = scoredMoves.filter(m => m.score >= -100);
+          const candidates = filtered.length > 0 ? filtered : scoredMoves;
+          candidates.sort((a, b) => b.score - a.score);
+          chosenMove = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
+        } else {
+          const filtered = scoredMoves.filter(m => m.score >= -400);
+          const candidates = filtered.length > 0 ? filtered : scoredMoves;
+          chosenMove = candidates[Math.floor(Math.random() * candidates.length)];
+        }
+      }
+
+      if (!chosenMove) chosenMove = allMoves[0];
 
       saveBoardSnapshot();
-      const mover = board[chosen.from.r][chosen.from.c];
-      const captured = board[chosen.to.r][chosen.to.c];
+      const mover = board[chosenMove.from.r][chosenMove.from.c];
+      const captured = board[chosenMove.to.r][chosenMove.to.c];
 
       if (captured) {
-        triggerCinematicAttack(mover, chosen.from, chosen.to, captured, () => {
-          finalizeMove(chosen.from, chosen.to, captured);
+        triggerCinematicAttack(mover, chosenMove.from, chosenMove.to, captured, () => {
+          finalizeMove(chosenMove.from, chosenMove.to, captured);
         });
       } else {
         playPiecePlaceSound();
-        finalizeMove(chosen.from, chosen.to, captured);
+        finalizeMove(chosenMove.from, chosenMove.to, captured);
       }
     }
 
@@ -2498,14 +2532,14 @@
         myTimeouts++;
         document.getElementById('my-status-badge').innerText = `경고 ${myTimeouts}/3`;
         if (myTimeouts > 3) {
-          endGameVictory(mySide === 'cho' ? 'han' : 'cho', '생각 시간 3회 초과로 시간패했습니다.');
+          endGameVictory(mySide === 'cho' ? 'han' : 'cho', '생각 시간 3회 초과로 시간패했습니다[cite: 1].');
           return;
         }
       } else {
         oppTimeouts++;
         document.getElementById('opp-status-badge').innerText = `경고 ${oppTimeouts}/3`;
         if (oppTimeouts > 3) {
-          endGameVictory(mySide, '상대방이 생각 시간 3회 초과로 시간패했습니다.');
+          endGameVictory(mySide, '상대방이 생각 시간 3회 초과로 시간패했습니다[cite: 1].');
           return;
         }
       }
@@ -2639,7 +2673,7 @@
       });
 
       peer.on('error', (err) => {
-        alert('방에 접속할 수 없습니다. 방 코드가 만료되었거나 이미 종료된 방입니다.');
+        alert('방에 접속할 수 없습니다. 방 코드가 만료되었거나 이미 종료된 방입니다[cite: 1].');
         returnToLobby();
       });
     }
@@ -2707,17 +2741,15 @@
           }
 
         } else if (data.type === 'UNDO_REQUEST') {
-          document.getElementById('undo-request-msg').innerText = `${data.sender}님이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?`;
-          document.getElementById('undo-confirm-modal').classList.remove('hidden');
+          // [요청 반영] 상대가 물리기 요청을 보냈을 때 30초 타이머와 함께 모달 팝업 오픈
+          startUndoModalTimer();
 
         } else if (data.type === 'UNDO_RESPONSE') {
           if (data.accepted) {
-            myUndoRemaining--;
-            updateUndoButtonUI();
             executeUndoApply();
-            alert('상대방이 물리기를 허락했습니다!');
+            alert('상대방이 물리기를 승낙했습니다[cite: 1]!');
           } else {
-            alert('상대방이 물리기 요청을 거절했습니다.');
+            alert('상대방이 물리기 요청을 거절했습니다[cite: 1].');
           }
 
         } else if (data.type === 'TAUNT') {
@@ -2730,7 +2762,7 @@
           endGameVictory(data.winnerSide, data.reason);
 
         } else if (data.type === 'REMATCH_REQUEST') {
-          if (confirm('상대방이 재대결을 신청했습니다! 수락하시겠습니까?')) {
+          if (confirm('상대방이 재대결을 신청했습니다! 수락하시겠습니까?[cite: 1]')) {
             conn.send({ type: 'REMATCH_ACCEPT' });
             acceptRematch();
           }
@@ -2739,15 +2771,15 @@
           acceptRematch();
 
         } else if (data.type === 'LEAVE_ROOM') {
-          alert('상대방이 방을 나갔습니다.');
+          alert('상대방이 방을 나갔습니다[cite: 1].');
           returnToLobby();
         }
       });
 
       conn.on('close', () => {
         if (!isGameOver) {
-          alert('상대방과의 연결이 끊어졌습니다.');
-          endGameVictory(mySide, '상대방의 연결이 끊어져 승리 처리되었습니다.');
+          alert('상대방과의 연결이 끊어졌습니다[cite: 1].');
+          endGameVictory(mySide, '상대방의 연결이 끊어져 승리 처리되었습니다[cite: 1].');
         }
       });
     }
@@ -2824,7 +2856,7 @@
     });
 
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('jg_hb_v5_' + myClientId);
+      localStorage.removeItem('jg_hb_v7_' + myClientId);
     });
   </script>
 </body>

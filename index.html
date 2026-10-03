@@ -157,7 +157,7 @@
         </div>
       </div>
 
-      <!-- 장군말 위치 투명 말풍선 박스 (지속시간 5초) -->
+      <!-- [4초 지속] 장군말 위치 투명 말풍선 박스 -->
       <div id="comic-taunt-box" class="absolute pointer-events-none hidden z-[100] w-[75%] max-w-[260px] -translate-x-1/2 -translate-y-1/2 transition-all duration-300">
         <div class="relative bg-slate-950/70 backdrop-blur-md border border-amber-400/80 rounded-2xl px-3.5 py-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] animate-smooth-in text-center">
           <div id="taunt-pointer-bottom" class="absolute left-1/2 -bottom-2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-amber-400/80"></div>
@@ -176,6 +176,24 @@
       <div id="check-banner" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden z-40">
         <div class="bg-rose-600/90 border-4 border-yellow-300 text-yellow-200 px-6 py-2 rounded-2xl shadow-2xl title-font text-3xl font-black tracking-widest animate-bounce">
           ⚡ 장 군 ! ⚡
+        </div>
+      </div>
+
+      <!-- 물리기 요청 수락 모달 -->
+      <div id="undo-confirm-modal" class="absolute inset-0 z-[120] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[280px] animate-smooth-in">
+          <div class="text-xl font-black title-font text-amber-300">↩️ 물리기 요청</div>
+          <p id="undo-request-msg" class="text-xs sm:text-sm font-medium text-slate-200 mt-2 break-keep leading-relaxed">
+            상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?
+          </p>
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <button onclick="respondUndo(true)" class="py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
+              수락 (허락)
+            </button>
+            <button onclick="respondUndo(false)" class="py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl font-bold text-xs sm:text-sm transition">
+              거절
+            </button>
+          </div>
         </div>
       </div>
 
@@ -205,24 +223,27 @@
     <div class="grid grid-cols-4 gap-1.5">
       <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">😏 약올리기</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
       </button>
       <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">💣 팩폭도발</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
       </button>
       <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
         <span class="btn-label">⏰ 재촉/극딜</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">5s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
       </button>
-      <div class="flex gap-1">
-        <button onclick="requestPass()" class="flex-1 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-2 text-xs font-bold">
-          쉼
-        </button>
-        <button onclick="requestResign()" class="flex-1 bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-xl py-2 text-xs font-bold">
-          기권
-        </button>
-      </div>
+      <button id="undo-btn" onclick="requestUndoMove()" class="bg-indigo-950/80 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/70 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow">
+        ↩ 물리기 (<span id="undo-count-badge">2</span>/2)
+      </button>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5">
+      <button onclick="requestPass()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-2 text-xs font-bold">
+        한 수 쉼
+      </button>
+      <button onclick="requestResign()" class="bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-xl py-2 text-xs font-bold">
+        기권하기
+      </button>
     </div>
   </footer>
 
@@ -270,7 +291,7 @@
   <div id="mode-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-50 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md shadow-2xl flex flex-col gap-3 my-auto">
       <div class="text-center">
-        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 전설장기1 ⚔️</h1>
+        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 전설장기1 ⚔️️</h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">리얼 원목 타격 사운드 & 초지능 COM 엔진 완전판</p>
       </div>
 
@@ -304,7 +325,7 @@
 
       <div id="p2p-subpanel" class="flex flex-col gap-2">
         <button onclick="openHostWaitingRoom()" class="w-full py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:brightness-110 active:scale-95 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2">
-          <span>📡 방 만들기</span><span class="text-xs font-normal text-blue-200">(초대 링크/카톡 발급)</span>
+          <span>📡 방 만들기</span><span class="text-xs font-normal text-blue-200">(카카오톡 초대/코드 발급)</span>
         </button>
 
         <div class="flex items-center justify-between gap-2 bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700/80">
@@ -636,7 +657,7 @@
     }, 2000);
 
     /* ==========================================================================
-       카카오톡 및 직접 메세지 연결 공유 시스템
+       카카오톡 및 직접 메세지 연결 공유 시스템 (오류 원천 방지)
        ========================================================================== */
     function getInviteUrl() {
       return `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
@@ -646,28 +667,9 @@
       const inviteUrl = getInviteUrl();
       const myName = customNickname || myChar.name;
       const shareTitle = '세미니의 멀티센터 전설장기1';
-      const shareText = `[${shareTitle}]\n⚔️ ${myName}님이 1:1 전설장기 대국에 초대했습니다!\n방 코드: [${hostRoomCode}]\n지금 바로 터치하여 대국에 참가하세요! 👇\n${inviteUrl}`;
+      const shareText = `[${shareTitle}]\n⚔️ ${myName}님이 1:1 대국에 초대했습니다!\n초대코드: [${hostRoomCode}]\n링크를 터치하면 대국실로 바로 이동합니다! 👇`;
 
-      // 모바일 카카오톡 앱 직접 실행 스킴
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-        const kakaoAppUrl = `kakaolink://send?msg=${encodeURIComponent(shareText)}`;
-        const start = Date.now();
-        window.location.href = kakaoAppUrl;
-
-        // 카톡 미설치 또는 반응 없을 시 웹 공유/복사로 대체
-        setTimeout(() => {
-          if (Date.now() - start < 1500) {
-            triggerWebShareOrCopy(shareTitle, shareText, inviteUrl);
-          }
-        }, 800);
-        return;
-      }
-
-      triggerWebShareOrCopy(shareTitle, shareText, inviteUrl);
-    }
-
-    async function triggerWebShareOrCopy(shareTitle, shareText, inviteUrl) {
+      // 최신 모바일 환경에서는 navigator.share 호출 시 카카오톡이 1순위로 열려 직접 전송됩니다.
       if (navigator.share) {
         try {
           await navigator.share({
@@ -680,7 +682,9 @@
           if (err.name === 'AbortError') return;
         }
       }
-      fallbackCopy(inviteUrl, shareText);
+
+      // Web Share가 지원되지 않거나 취소/실패한 경우 복사 안내
+      fallbackCopy(inviteUrl, `${shareText}\n${inviteUrl}`);
     }
 
     function fallbackCopy(url, customText) {
@@ -707,7 +711,7 @@
       ta.select();
       try {
         document.execCommand('copy');
-        alert('초대 메시지가 복사되었습니다!\n카카오톡에 붙여넣어 전달하세요.');
+        alert('초대 메시지가 복사되었습니다!\n카카오톡 대화방에 붙여넣어 초대하세요.');
       } catch (e) {
         prompt('아래 링크를 복사하여 카카오톡에 전송하세요:', text);
       }
@@ -1128,7 +1132,11 @@
       lastMove = null;
       myTimeouts = 0;
       oppTimeouts = 0;
+      boardHistory = [];
+      myUndoRemaining = 2;
+      updateUndoButtonUI();
 
+      saveBoardSnapshot();
       resizeCanvas();
       updateUI();
       resetTurnTimer();
@@ -1167,6 +1175,32 @@
     let hostRoomCode = '';
     let savedGuestLayout = 'ms_sm';
     let isTauntCooldown = false;
+
+    // 물리기 시스템 상태
+    let boardHistory = [];
+    let myUndoRemaining = 2;
+
+    function saveBoardSnapshot() {
+      boardHistory.push({
+        board: cloneBoard(board),
+        turn: currentTurn,
+        lastMove: lastMove ? { ...lastMove } : null
+      });
+      if (boardHistory.length > 10) boardHistory.shift();
+    }
+
+    function updateUndoButtonUI() {
+      const badge = document.getElementById('undo-count-badge');
+      if (badge) badge.innerText = myUndoRemaining;
+      const btn = document.getElementById('undo-btn');
+      if (btn) {
+        if (myUndoRemaining <= 0) {
+          btn.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+          btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        }
+      }
+    }
 
     function initBoardLayout(myLayout = 'ms_sm', oppLayout = 'ms_sm') {
       board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -1389,7 +1423,7 @@
     }
 
     /* ==========================================================================
-       5. 캔버스 렌더링
+       5. 캔버스 렌더링 (기물 크기 확대)
        ========================================================================== */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
@@ -1464,12 +1498,12 @@
       drawPalaceX(7, 9);
 
       if (lastMove) {
-        ctx.strokeStyle = 'rgba(250, 204, 21, 0.75)';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
+        ctx.lineWidth = 3.5;
         ctx.setLineDash([4, 4]);
         [lastMove.from, lastMove.to].forEach(p => {
           ctx.beginPath();
-          ctx.arc(padX + p.c * cellW, padY + p.r * cellH, Math.min(cellW, cellH) * 0.44, 0, Math.PI * 2);
+          ctx.arc(padX + p.c * cellW, padY + p.r * cellH, Math.min(cellW, cellH) * 0.48, 0, Math.PI * 2);
           ctx.stroke();
         });
         ctx.setLineDash([]);
@@ -1483,14 +1517,14 @@
 
           if (isEnemy) {
             ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 3.5;
             ctx.beginPath();
-            ctx.arc(px, py, Math.min(cellW, cellH) * 0.44, 0, Math.PI * 2);
+            ctx.arc(px, py, Math.min(cellW, cellH) * 0.48, 0, Math.PI * 2);
             ctx.stroke();
           } else {
             ctx.fillStyle = '#38bdf8';
             ctx.beginPath();
-            ctx.arc(px, py, 6.5, 0, Math.PI * 2);
+            ctx.arc(px, py, 7, 0, Math.PI * 2);
             ctx.fill();
           }
         });
@@ -1521,18 +1555,19 @@
       const charObj = isKing ? (piece.side === mySide ? myChar : oppChar) : null;
 
       const baseRad = Math.min(cellW, cellH);
-      let radiusX = baseRad * 0.39;
-      let radiusY = baseRad * 0.39;
+      // 기물 크기 시각적 상향 확대 (대략 12% 증대)
+      let radiusX = baseRad * 0.44;
+      let radiusY = baseRad * 0.44;
 
       if (isKing) {
-        radiusX = baseRad * 0.48;
-        radiusY = baseRad * 0.48;
+        radiusX = baseRad * 0.52;
+        radiusY = baseRad * 0.52;
         if (charObj && charObj.id === 'semini') {
-          radiusX = baseRad * 0.54;
-          radiusY = baseRad * 0.46;
+          radiusX = baseRad * 0.58;
+          radiusY = baseRad * 0.50;
         }
       } else if (piece.type === 'sa' || piece.type === 'jol' || piece.type === 'byung') {
-        radiusX = radiusY = baseRad * 0.33;
+        radiusX = radiusY = baseRad * 0.38;
       }
 
       ctx.save();
@@ -1540,7 +1575,7 @@
 
       if (isSelected) {
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 20;
       }
 
       let baseColor = isCho ? '#064e3b' : '#7f1d1d';
@@ -1576,12 +1611,12 @@
       ctx.fill();
 
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.6;
       ctx.stroke();
 
       if (isKing && charObj && charObj.id === 'semini') {
         ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 1.6;
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
         ctx.ellipse(0, radiusY * 0.45, radiusX * 0.72, radiusY * 0.3, 0, 0, Math.PI);
         ctx.stroke();
@@ -1609,7 +1644,7 @@
         ctx.roundRect(-radiusX * 0.65, radiusY * 0.44, radiusX * 1.3, radiusY * 0.44, [4]);
         ctx.fill();
         ctx.fillStyle = '#fef08a';
-        ctx.font = `bold ${radiusY * 0.33}px 'Jua'`;
+        ctx.font = `bold ${radiusY * 0.35}px 'Jua'`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(charObj.name, 0, radiusY * 0.66);
@@ -1624,7 +1659,7 @@
         else if (piece.type === 'jol') hanja = '卒';
         else if (piece.type === 'byung') hanja = '兵';
 
-        ctx.font = `900 ${radiusY * 1.02}px 'Noto Serif KR', serif`;
+        ctx.font = `900 ${radiusY * 1.05}px 'Noto Serif KR', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -1803,7 +1838,7 @@
         const curX = attackAnim.startX + (attackAnim.endX - attackAnim.startX) * p;
         const curY = attackAnim.startY + (attackAnim.endY - attackAnim.startY) * p;
         const angle = Math.atan2(attackAnim.endY - attackAnim.startY, attackAnim.endX - attackAnim.startX);
-        const sz = Math.min(cellW, cellH) * 0.68;
+        const sz = Math.min(cellW, cellH) * 0.72;
 
         ctx.save();
         ctx.translate(curX, curY);
@@ -2219,6 +2254,7 @@
     });
 
     function executePlayerMove(from, to) {
+      saveBoardSnapshot();
       const mover = board[from.r][from.c];
       const captured = board[to.r][to.c];
 
@@ -2259,6 +2295,72 @@
 
       if (gameMode === 'ai' && currentTurn !== mySide && !isGameOver) {
         setTimeout(makeAIMove, 650);
+      }
+    }
+
+    /* ==========================================================================
+       물리기 (한 수 무르기) 파이프라인
+       ========================================================================== */
+    function requestUndoMove() {
+      if (isGameOver) return;
+      if (myUndoRemaining <= 0) {
+        alert('이번 판의 물리기 횟수(최대 2회)를 모두 소진했습니다.');
+        return;
+      }
+      if (boardHistory.length < 2) {
+        alert('물릴 수 있는 이전 수가 없습니다.');
+        return;
+      }
+
+      if (gameMode === 'ai') {
+        // AI는 즉시 수락
+        executeUndoApply();
+        myUndoRemaining--;
+        updateUndoButtonUI();
+        alert('물리기가 완료되었습니다.');
+        return;
+      }
+
+      // P2P 온라인 대전: 상대방에게 물리기 허락 요청
+      if (conn && conn.open) {
+        conn.send({
+          type: 'UNDO_REQUEST',
+          sender: customNickname || myChar.name
+        });
+        alert('상대방에게 물리기 허락을 요청했습니다. 응답을 기다립니다...');
+      }
+    }
+
+    function respondUndo(accepted) {
+      document.getElementById('undo-confirm-modal').classList.add('hidden');
+      if (gameMode === 'p2p' && conn && conn.open) {
+        conn.send({
+          type: 'UNDO_RESPONSE',
+          accepted: accepted
+        });
+      }
+      if (accepted) {
+        executeUndoApply();
+      }
+    }
+
+    function executeUndoApply() {
+      if (boardHistory.length === 0) return;
+      // 내가 둔 직전 상태로 복귀 (내 턴 직전 기록)
+      let prev = boardHistory.pop();
+      if (prev && prev.turn !== mySide && boardHistory.length > 0) {
+        prev = boardHistory.pop();
+      }
+      if (prev) {
+        board = cloneBoard(prev.board);
+        currentTurn = prev.turn;
+        lastMove = prev.lastMove ? { ...prev.lastMove } : null;
+        selectedPos = null;
+        validMoves = [];
+        resetTurnTimer();
+        drawBoard();
+        updateUI();
+        playTone(320, 'triangle', 0.2);
       }
     }
 
@@ -2337,6 +2439,7 @@
       }
       isGameOver = true;
       clearInterval(timerInterval);
+      document.getElementById('undo-confirm-modal').classList.add('hidden');
       document.getElementById('mate-banner').classList.add('hidden');
       document.getElementById('dice-modal').classList.add('hidden');
       document.getElementById('host-waiting-modal').classList.add('hidden');
@@ -2426,6 +2529,7 @@
 
       if (!chosen) chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
 
+      saveBoardSnapshot();
       const mover = board[chosen.from.r][chosen.from.c];
       const captured = board[chosen.to.r][chosen.to.c];
 
@@ -2440,7 +2544,7 @@
     }
 
     /* ==========================================================================
-       9. 도발 엔진 (지속시간 5초)
+       9. 도발 엔진 (지속시간 4초)
        ========================================================================== */
     function getKingPosition(targetSide) {
       if (!board || board.length === 0) return null;
@@ -2460,7 +2564,7 @@
       isTauntCooldown = true;
 
       const overlays = document.querySelectorAll('.cooldown-overlay');
-      let remain = 5;
+      let remain = 4;
       overlays.forEach(ov => {
         ov.classList.remove('hidden');
         ov.innerText = `${remain}s`;
@@ -2647,10 +2751,10 @@
       box.classList.remove('hidden');
       if (tauntTimeout) clearTimeout(tauntTimeout);
       
-      // 도발 말풍선 5초(5000ms) 유지
+      // 도발 말풍선 4초(4000ms) 유지
       tauntTimeout = setTimeout(() => {
         box.classList.add('hidden');
-      }, 5000);
+      }, 4000);
     }
 
     function triggerCheckBanner() {
@@ -2707,6 +2811,7 @@
 
     function requestPass() {
       if (currentTurn !== mySide || isGameOver) return;
+      saveBoardSnapshot();
       currentTurn = (currentTurn === 'cho') ? 'han' : 'cho';
       resetTurnTimer();
       drawBoard();
@@ -2879,6 +2984,7 @@
           finalizeGameStartAfterDice();
 
         } else if (data.type === 'MOVE') {
+          saveBoardSnapshot();
           const from = data.from;
           const to = data.to;
           const mover = board[from.r][from.c];
@@ -2891,6 +2997,21 @@
           } else {
             playPiecePlaceSound();
             finalizeMove(from, to, captured);
+          }
+
+        } else if (data.type === 'UNDO_REQUEST') {
+          // 물리기 요청 팝업 표출
+          document.getElementById('undo-request-msg').innerText = `${data.sender}님이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?`;
+          document.getElementById('undo-confirm-modal').classList.remove('hidden');
+
+        } else if (data.type === 'UNDO_RESPONSE') {
+          if (data.accepted) {
+            myUndoRemaining--;
+            updateUndoButtonUI();
+            executeUndoApply();
+            alert('상대방이 물리기를 허락했습니다!');
+          } else {
+            alert('상대방이 물리기 요청을 거절했습니다.');
           }
 
         } else if (data.type === 'TAUNT') {

@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>세미니의 멀티센터 전설장기1</title>
+  <title>세미니의 멀티센터 장기1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <!-- 글로벌 실시간 접속자 감지용 MQTT WebSocket 브로커 -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap');
     
@@ -146,7 +148,7 @@
         </div>
       </div>
 
-      <!-- 완전 투명 배경 도발 텍스트 -->
+      <!-- 투명 배경 도발 텍스트 -->
       <div id="comic-taunt-box" class="absolute pointer-events-none hidden z-[100] w-[80%] max-w-[280px] -translate-x-1/2 -translate-y-1/2 transition-all duration-300">
         <div class="bg-transparent text-center p-1">
           <div class="flex items-center justify-center gap-1 text-[11px] font-bold text-amber-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] mb-0.5">
@@ -295,7 +297,7 @@
   <div id="mode-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-50 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md shadow-2xl flex flex-col gap-3 my-auto">
       <div class="text-center">
-        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 전설장기1 ⚔</h1>
+        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 장기1 ⚔</h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">원클릭 대전 초대 & 실시간 P2P 완전판</p>
       </div>
 
@@ -304,7 +306,7 @@
         <div class="flex justify-between items-center px-1">
           <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            실시간 로비 접속자 (<span id="online-count">1</span>명)
+            실시간 온라인 접속자 (<span id="online-count">1</span>명)
           </span>
           <span class="text-[9px] text-amber-400 font-medium">👉 접속자를 터치해 바로 대결하세요!</span>
         </div>
@@ -410,7 +412,7 @@
             <span>💬</span> 카카오톡 초대
           </button>
           <button onclick="copyHostInviteLink()" class="py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
-            <span>📋</span> 링크 복사
+            <span>📋</span> 초대문구 복사
           </button>
         </div>
       </div>
@@ -560,12 +562,62 @@
     }
 
     /* ==========================================================================
-       실시간 로비 브로드캐스트 & 1클릭 대전 초대 시스템
+       실시간 글로벌 로비 브로드캐스트 (MQTT + BroadcastChannel + LocalStorage 완벽 연동)
        ========================================================================== */
-    const myClientId = 'user_' + Math.floor(1000 + Math.random() * 9000);
-    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v2') : null;
+    const myClientId = 'user_' + Math.floor(100000 + Math.random() * 900000);
+    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v3') : null;
     const onlinePeers = new Map();
     let pendingChallengeData = null;
+
+    // 공용 글로벌 WSS 브로커
+    const MQTT_TOPIC = 'semini/multicenter/janggi1/presence';
+    let mqttClient = null;
+
+    function initGlobalPresenceHub() {
+      try {
+        mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+          clientId: 'jg_client_' + myClientId,
+          clean: true,
+          connectTimeout: 4000
+        });
+
+        mqttClient.on('connect', () => {
+          mqttClient.subscribe(MQTT_TOPIC, { qos: 0 });
+          broadcastPresence();
+        });
+
+        mqttClient.on('message', (topic, payload) => {
+          if (topic === MQTT_TOPIC) {
+            try {
+              const msg = JSON.parse(payload.toString());
+              handleIncomingPresenceMsg(msg);
+            } catch(e) {}
+          }
+        });
+      } catch(err) {
+        console.warn('MQTT Hub 접속 우회:', err);
+      }
+    }
+
+    function handleIncomingPresenceMsg(msg) {
+      if (!msg) return;
+      if (msg.type === 'PING') {
+        if (msg.data && msg.data.id !== myClientId) {
+          onlinePeers.set(msg.data.id, msg.data);
+          updateOnlineUsersUI();
+        }
+      } else if (msg.type === 'CHALLENGE_INVITE') {
+        if (msg.targetId === myClientId) {
+          pendingChallengeData = msg;
+          document.getElementById('challenge-sender-desc').innerText = `[${msg.senderName}]님이 1:1 대결을 신청했습니다! 바로 대국을 시작하시겠습니까?`;
+          document.getElementById('battle-challenge-modal').classList.remove('hidden');
+        }
+      } else if (msg.type === 'CHALLENGE_ACCEPT') {
+        if (msg.targetId === myClientId && isHost) {
+          document.getElementById('battle-challenge-modal').classList.add('hidden');
+        }
+      }
+    }
 
     function broadcastPresence() {
       const info = {
@@ -576,32 +628,27 @@
         status: isHost ? `방 생성중 (${hostRoomCode})` : (conn && conn.open ? '대국중' : '로비 대기중'),
         time: Date.now()
       };
-      if (presenceChannel) {
-        presenceChannel.postMessage({ type: 'PING', data: info });
+
+      const packet = { type: 'PING', data: info };
+
+      // 1. MQTT 글로벌 발행
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
       }
-      localStorage.setItem('jg_hb_v2_' + myClientId, JSON.stringify(info));
+
+      // 2. BroadcastChannel 발행
+      if (presenceChannel) {
+        presenceChannel.postMessage(packet);
+      }
+
+      // 3. LocalStorage 발행
+      localStorage.setItem('jg_hb_v3_' + myClientId, JSON.stringify(info));
       updateOnlineUsersUI();
     }
 
     if (presenceChannel) {
       presenceChannel.onmessage = (e) => {
-        if (!e.data) return;
-        if (e.data.type === 'PING') {
-          if (e.data.data.id !== myClientId) {
-            onlinePeers.set(e.data.data.id, e.data.data);
-            updateOnlineUsersUI();
-          }
-        } else if (e.data.type === 'CHALLENGE_INVITE') {
-          if (e.data.targetId === myClientId) {
-            pendingChallengeData = e.data;
-            document.getElementById('challenge-sender-desc').innerText = `[${e.data.senderName}]님이 1:1 대결을 신청했습니다! 바로 대국을 시작하시겠습니까?`;
-            document.getElementById('battle-challenge-modal').classList.remove('hidden');
-          }
-        } else if (e.data.type === 'CHALLENGE_ACCEPT') {
-          if (e.data.targetId === myClientId && isHost) {
-            document.getElementById('battle-challenge-modal').classList.add('hidden');
-          }
-        }
+        if (e.data) handleIncomingPresenceMsg(e.data);
       };
     }
 
@@ -609,12 +656,12 @@
       const now = Date.now();
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('jg_hb_v2_')) {
+        if (key && key.startsWith('jg_hb_v3_')) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
-            if (data.id !== myClientId && (now - data.time < 5000)) {
+            if (data.id !== myClientId && (now - data.time < 6000)) {
               onlinePeers.set(data.id, data);
-            } else if (now - data.time >= 5000) {
+            } else if (now - data.time >= 6000) {
               onlinePeers.delete(data.id);
               localStorage.removeItem(key);
             }
@@ -630,7 +677,7 @@
       const now = Date.now();
 
       onlinePeers.forEach((peer, id) => {
-        if (now - peer.time > 5500) onlinePeers.delete(id);
+        if (now - peer.time > 6500) onlinePeers.delete(id);
       });
 
       countEl.innerText = onlinePeers.size + 1;
@@ -669,26 +716,34 @@
         return;
       }
       openHostWaitingRoom();
-      if (presenceChannel) {
-        presenceChannel.postMessage({
-          type: 'CHALLENGE_INVITE',
-          targetId: targetId,
-          senderId: myClientId,
-          senderName: customNickname || myChar.name,
-          roomCode: hostRoomCode
-        });
+      const packet = {
+        type: 'CHALLENGE_INVITE',
+        targetId: targetId,
+        senderId: myClientId,
+        senderName: customNickname || myChar.name,
+        roomCode: hostRoomCode
+      };
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
       }
-      alert(`[${targetName}]님에게 대결 초대장을 보냈습니다! 상대방이 수락하면 바로 시작됩니다.`);
+      if (presenceChannel) {
+        presenceChannel.postMessage(packet);
+      }
+      alert(`[${targetName}]님에게 1:1 대결 초대장을 전송했습니다!\n상대방이 수락하면 즉시 대국실로 이동합니다.`);
     }
 
     function acceptIncomingChallenge() {
       if (!pendingChallengeData) return;
       document.getElementById('battle-challenge-modal').classList.add('hidden');
+      const packet = {
+        type: 'CHALLENGE_ACCEPT',
+        targetId: pendingChallengeData.senderId
+      };
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(MQTT_TOPIC, JSON.stringify(packet));
+      }
       if (presenceChannel) {
-        presenceChannel.postMessage({
-          type: 'CHALLENGE_ACCEPT',
-          targetId: pendingChallengeData.senderId
-        });
+        presenceChannel.postMessage(packet);
       }
       joinRoomByCode(pendingChallengeData.roomCode);
     }
@@ -701,24 +756,28 @@
     setInterval(() => {
       broadcastPresence();
       scanLocalStoragePeers();
-    }, 1800);
+    }, 2000);
 
     /* ==========================================================================
-       카카오톡 초대 공유 시스템 (초대코드 포함 원클릭 입장)
+       카카오톡 초대 공유 시스템 (초대코드 포함 원클릭 자동입장 URL)
        ========================================================================== */
     function getInviteUrl() {
       return `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
     }
 
-    async function shareViaKakao() {
+    function getFormattedShareMessage() {
       const inviteUrl = getInviteUrl();
       const myName = customNickname || myChar.name;
-      const shareTitle = '세미니의 멀티센터 전설장기1';
-      const shareText = `[${shareTitle}]\n⚔️ ${myName}님이 1:1 대국에 초대했습니다!\n방 코드: [${hostRoomCode}]\n아래 링크를 누르면 바로 대기실로 입장합니다! 👇\n${inviteUrl}`;
+      const shareTitle = '세미니의 멀티센터 장기1';
+      return `[${shareTitle}]\n⚔️ ${myName}님이 1:1 장기 대국에 초대했습니다!\n초대코드: [${hostRoomCode}]\n\n👉 링크를 누르면 즉시 대기방으로 접속됩니다:\n${inviteUrl}`;
+    }
 
+    async function shareViaKakao() {
+      const shareText = getFormattedShareMessage();
       if (navigator.share) {
         try {
           await navigator.share({
+            title: '세미니의 멀티센터 장기1',
             text: shareText
           });
           return;
@@ -726,14 +785,14 @@
           if (err.name === 'AbortError') return;
         }
       }
-      fallbackCopy(inviteUrl, shareText);
+      fallbackCopy(getInviteUrl(), shareText);
     }
 
     function fallbackCopy(url, customText) {
-      const fullCopyContent = customText || url;
+      const fullCopyContent = customText || getFormattedShareMessage();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullCopyContent).then(() => {
-          alert('초대 메시지 및 링크가 복사되었습니다!\n카카오톡 대화방에 붙여넣어 친구를 바로 초대하세요.');
+          alert('초대문구가 복사되었습니다!\n카카오톡에 붙여넣어 친구를 바로 초대하세요.');
         }).catch(() => {
           legacyExecCopy(fullCopyContent);
         });
@@ -753,15 +812,15 @@
       ta.select();
       try {
         document.execCommand('copy');
-        alert('초대 메시지가 복사되었습니다!\n카카오톡에 전달하세요.');
+        alert('초대문구가 복사되었습니다!\n카카오톡에 전달하세요.');
       } catch (e) {
-        prompt('아래 링크를 복사하여 카카오톡에 전송하세요:', text);
+        prompt('아래 문구를 복사하여 전달하세요:', text);
       }
       document.body.removeChild(ta);
     }
 
     function copyHostInviteLink() {
-      fallbackCopy(getInviteUrl());
+      fallbackCopy(getInviteUrl(), getFormattedShareMessage());
     }
 
     /* ==========================================================================
@@ -791,108 +850,6 @@
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(now); osc.stop(now + 0.055);
-      } catch (e) {}
-    }
-
-    function playBladeSlashSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(3200, now);
-        osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
-        gain.gain.setValueAtTime(0.85, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.18);
-      } catch (e) {}
-    }
-
-    function playTankCrushSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(90, now);
-        osc.frequency.linearRampToValueAtTime(25, now + 0.65);
-        gain.gain.setValueAtTime(0.95, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.75);
-      } catch (e) {}
-    }
-
-    function playCannonExplosionSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(420, now);
-        osc.frequency.exponentialRampToValueAtTime(35, now + 0.22);
-        gain.gain.setValueAtTime(0.9, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.25);
-      } catch (e) {}
-    }
-
-    function playCavalryLanceSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(700, now);
-        osc.frequency.exponentialRampToValueAtTime(95, now + 0.28);
-        gain.gain.setValueAtTime(0.8, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.32);
-      } catch (e) {}
-    }
-
-    function playLightningZapSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(1100, now);
-        osc.frequency.linearRampToValueAtTime(120, now + 0.32);
-        gain.gain.setValueAtTime(0.75, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.36);
-      } catch (e) {}
-    }
-
-    function playShadowDaggerSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1900, now);
-        osc.frequency.exponentialRampToValueAtTime(300, now + 0.13);
-        gain.gain.setValueAtTime(0.75, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.16);
       } catch (e) {}
     }
 
@@ -946,7 +903,7 @@
     }
 
     /* ==========================================================================
-       3. 주사위 렌더러 (양방향 완벽 동기화)
+       3. 주사위 렌더러
        ========================================================================== */
     function render3DDiceFace(canvasId, value, angle = 0) {
       const c = document.getElementById(canvasId);
@@ -1130,7 +1087,7 @@
     }
 
     /* ==========================================================================
-       4. 장기 보드 엔진 & 이동 규칙
+       4. 장기 보드 엔진
        ========================================================================== */
     const ROWS = 10;
     const COLS = 9;
@@ -1389,7 +1346,6 @@
 
     let attackAnim = null;
     let victimAnim = null;
-    let explosions = [];
     let nuclearEffect = null;
 
     function resizeCanvas() {
@@ -1761,7 +1717,7 @@
     }
 
     /* ==========================================================================
-       7. 착수 및 대국 파이프라인
+       7. 착수 및 대국 로직
        ========================================================================== */
     canvas.addEventListener('click', e => {
       if (isGameOver || attackAnim || nuclearEffect) return;
@@ -1965,9 +1921,6 @@
       startDiceRollSequence();
     }
 
-    /* ==========================================================================
-       [핵심 수정] 로비로 복귀 시 방장/게스트 상태 및 URL 파라미터 완전 초기화
-       ========================================================================== */
     function returnToLobby() {
       if (conn) {
         try { conn.send({ type: 'LEAVE_ROOM' }); } catch(e){}
@@ -1979,7 +1932,6 @@
         peer = null;
       }
 
-      // 이전 방 및 역할 변수 완전 초기화
       isHost = false;
       hostRoomCode = '';
       savedGuestLayout = 'ms_sm';
@@ -1989,7 +1941,6 @@
       isGameOver = true;
       clearInterval(timerInterval);
 
-      // 주소창의 ?room=xxxx 파라미터 안전하게 제거 (다시 대기방으로 진입하지 않도록)
       if (window.history && window.history.replaceState) {
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -1997,7 +1948,6 @@
       const codeInput = document.getElementById('join-code-input');
       if (codeInput) codeInput.value = '';
 
-      // 모달 뷰 닫기 및 메인 로비 열기
       document.getElementById('undo-confirm-modal').classList.add('hidden');
       document.getElementById('mate-banner').classList.add('hidden');
       document.getElementById('dice-modal').classList.add('hidden');
@@ -2005,7 +1955,6 @@
       document.getElementById('battle-challenge-modal').classList.add('hidden');
       document.getElementById('mode-modal').classList.remove('hidden');
 
-      // 로비 복귀 시 기본 모드를 P2P 탭으로 맞추고 하단 '대국 시작하기' 버튼 숨김
       switchModeTab('p2p');
       broadcastPresence();
     }
@@ -2013,8 +1962,6 @@
     /* ==========================================================================
        8. COM 엔진
        ========================================================================== */
-    const PIECE_VALS = { cha: 130, po: 75, ma: 50, sang: 32, sa: 18, jol: 20, byung: 20, king: 100000 };
-
     function cloneBoard(b) {
       return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
     }
@@ -2052,7 +1999,7 @@
     }
 
     /* ==========================================================================
-       9. 도발 엔진 (완전 투명 배경 & 4초 지속)
+       9. 도발 엔진
        ========================================================================== */
     function getKingPosition(targetSide) {
       if (!board || board.length === 0) return null;
@@ -2221,7 +2168,7 @@
 
     /* ==========================================================================
        10. 캐릭터 및 P2P 설정
-       ========================================================================= */
+       ========================================================================== */
     function renderCharSelector() {
       const container = document.getElementById('char-selection-container');
       container.innerHTML = '';
@@ -2266,7 +2213,6 @@
       document.getElementById('p2p-subpanel').classList.toggle('hidden', tab !== 'p2p');
       document.getElementById('ai-subpanel').classList.toggle('hidden', tab !== 'ai');
       
-      // 온라인 대전 모드일 때는 '대국 시작하기' 단독 실행 버튼을 숨기고 COM 대결 시에만 노출
       const directBtn = document.getElementById('start-direct-btn');
       if (directBtn) {
         directBtn.classList.toggle('hidden', tab === 'p2p');
@@ -2326,7 +2272,7 @@
       });
 
       peer.on('error', (err) => {
-        alert('해당 방에 접속할 수 없습니다. 방 코드를 확인해주세요.');
+        alert('방에 접속할 수 없습니다. 방 코드를 확인해주세요.');
         returnToLobby();
       });
     }
@@ -2444,7 +2390,6 @@
       startDiceRollSequence();
     }
 
-    // COM 대결 전용 시작 함수 (방 생성 상태가 남아 먹통이 되는 현상 방지)
     function startDirectGame() {
       if (gameMode !== 'ai') return;
       saveCurrentNickname();
@@ -2491,16 +2436,17 @@
       renderCharSelector();
       setAiDiff('expert');
       resizeCanvas();
+      
+      initGlobalPresenceHub();
       broadcastPresence();
       scanLocalStoragePeers();
 
       render3DDiceFace('dice-canvas-my', 5, 0);
       render3DDiceFace('dice-canvas-opp', 3, 0);
 
-      // 시작 시 기본은 P2P 탭
       switchModeTab('p2p');
 
-      // 카카오톡 초대 링크로 접속 시 자동으로 방 코드를 감지하여 즉시 입장
+      // 카카오톡 초대 링크(URL 파라미터 ?room=xxxx) 감지 시 자동 다이렉트 입장
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
       if (roomParam && roomParam.length === 4) {
@@ -2512,7 +2458,7 @@
     });
 
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('jg_hb_v2_' + myClientId);
+      localStorage.removeItem('jg_hb_v3_' + myClientId);
     });
   </script>
 </body>

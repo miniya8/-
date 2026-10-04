@@ -189,7 +189,7 @@
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
       <div class="text-[10px] text-slate-300">
-        <span class="font-bold text-amber-400">조준 가이드:</span> 말을 누른 뒤 <span class="text-amber-300 font-bold">반대 방향으로 길게 당길수록</span> 강력하게 발사됩니다!
+        <span class="font-bold text-amber-400">조준 가이드:</span> 말을 누른 뒤 <span class="text-amber-300 font-bold">뒤로 길게 당겼다 손을 떼면</span> 총알처럼 발사됩니다!
       </div>
       <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
@@ -384,13 +384,13 @@
     }
 
     const PIECE_CONFIG = {
-      '楚': { name: '장군', cost: 6, radiusRatio: 0.032, mass: 5.5, border: '#34d399', ability: 'shockwave', shield: 2 },
-      '漢': { name: '장군', cost: 6, radiusRatio: 0.032, mass: 5.5, border: '#f87171', ability: 'shockwave', shield: 2 },
-      '車': { name: '차',   cost: 5, radiusRatio: 0.027, mass: 3.8, border: '#67e8f9', ability: 'charge', shield: 1 },
-      '包': { name: '포',   cost: 4, radiusRatio: 0.025, mass: 2.8, border: '#d8b4fe', ability: 'cannon', shield: 1 },
-      '馬': { name: '마',   cost: 3, radiusRatio: 0.024, mass: 2.3, border: '#fb923c', ability: 'curve', shield: 1 },
-      '象': { name: '상',   cost: 2, radiusRatio: 0.027, mass: 4.2, border: '#facc15', ability: 'shield', shield: 1 },
-      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.021, mass: 1.0, border: '#e2e8f0', ability: 'nimble', shield: 0 }
+      '楚': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#34d399', ability: 'shockwave', shield: 2 },
+      '漢': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#f87171', ability: 'shockwave', shield: 2 },
+      '車': { name: '차',   cost: 5, radiusRatio: 0.025, mass: 3.8, border: '#67e8f9', ability: 'charge', shield: 1 },
+      '包': { name: '포',   cost: 4, radiusRatio: 0.023, mass: 2.8, border: '#d8b4fe', ability: 'cannon', shield: 1 },
+      '馬': { name: '마',   cost: 3, radiusRatio: 0.022, mass: 2.3, border: '#fb923c', ability: 'curve', shield: 1 },
+      '象': { name: '상',   cost: 2, radiusRatio: 0.025, mass: 4.2, border: '#facc15', ability: 'shield', shield: 1 },
+      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.019, mass: 1.0, border: '#e2e8f0', ability: 'nimble', shield: 0 }
     };
 
     let mySide = 'cho';
@@ -482,20 +482,20 @@
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
       boardBounds = {
-        left: drawW * 0.04,
+        left: drawW * 0.03,
         top: drawH * 0.03,
-        right: drawW * 0.96,
+        right: drawW * 0.97,
         bottom: drawH * 0.97,
-        width: drawW * 0.92,
+        width: drawW * 0.94,
         height: drawH * 0.94
       };
 
       if (mySide === 'cho') {
-        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
-        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
+        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
+        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
       } else {
-        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
-        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
+        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
+        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
       }
     }
 
@@ -510,6 +510,7 @@
       }, 200);
     });
 
+    // 울퉁불퉁한 현실적인 바위산, 투명 물결 웅덩이, 회전 톱날, 이중 칼날 원본 복구
     function generateRandomMap() {
       const w = boardBounds.width;
       const h = boardBounds.height;
@@ -525,18 +526,23 @@
       currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8' });
       currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8' });
 
-      const obstacleCount = 4 + Math.floor(Math.random() * 3);
+      currentMap.walls.push({ x1: bx, y1: by + h * 0.25, x2: bx, y2: by + h * 0.35, color: '#94a3b8' });
+      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.25, x2: bx + w, y2: by + h * 0.35, color: '#94a3b8' });
+      currentMap.walls.push({ x1: bx, y1: by + h * 0.65, x2: bx, y2: by + h * 0.75, color: '#94a3b8' });
+      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.65, x2: bx + w, y2: by + h * 0.75, color: '#94a3b8' });
+
+      const obstacleCount = 5 + Math.floor(Math.random() * 3);
       const types = ['mountain', 'water_puddle', 'sawblade', 'twin_blade', 'mud'];
 
       for (let i = 0; i < obstacleCount; i++) {
         const obsType = types[Math.floor(Math.random() * types.length)];
         const ox = bx + w * (0.15 + Math.random() * 0.7);
         const oy = (Math.random() > 0.5) 
-          ? by + h * (0.34 + Math.random() * 0.12) 
-          : by + h * (0.54 + Math.random() * 0.12);
+          ? by + h * (0.33 + Math.random() * 0.13) 
+          : by + h * (0.55 + Math.random() * 0.13);
 
         if (obsType === 'mountain') {
-          const r = w * (0.028 + Math.random() * 0.012);
+          const r = w * (0.026 + Math.random() * 0.012);
           const points = [];
           const numPts = 7;
           for (let p = 0; p < numPts; p++) {
@@ -553,7 +559,7 @@
           currentMap.obstacles.push({
             type: 'sawblade',
             x: ox, y: oy,
-            r: w * 0.028,
+            r: w * 0.026,
             angle: 0,
             speed: (Math.random() > 0.5 ? 1 : -1) * 0.06
           });
@@ -584,7 +590,7 @@
         isHost = true;
         mySide = 'cho';
         setupConnectionEvents();
-        document.getElementById('host-wait-msg').innerText = '상대방이 입장했습니다!';
+        document.getElementById('host-wait-msg').innerText = '상대방이 입장했습니다! 배치를 시작하세요.';
         document.getElementById('multi-lobby-modal').classList.add('hidden');
         startTimer(40);
       });
@@ -592,7 +598,7 @@
 
     function copyRoomCode() {
       navigator.clipboard.writeText(my4DigitCode);
-      alert(`방 번호 [${my4DigitCode}] 가 복사되었습니다!`);
+      alert(`방 번호 [${my4DigitCode}] 가 복사되었습니다! 친구에게 전달하세요.`);
     }
 
     function connectWith4Digit() {
@@ -685,12 +691,12 @@
 
       document.getElementById('placement-panel').classList.remove('hidden');
       document.getElementById('battle-panel').classList.add('hidden');
-      document.getElementById('ready-btn').innerText = '배치 완료 ⚔️';
-      document.getElementById('ready-btn').className = 'px-3 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-[10px] font-black shadow transition-all';
+      document.getElementById('ready-btn').innerText = '배치 완료 & 준비 ⚔️';
+      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all';
 
       const badge = document.getElementById('game-phase-badge');
       badge.innerText = '비공개 배치';
-      badge.className = 'px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow';
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow';
       document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
 
       buyPiece('楚', true);
@@ -703,7 +709,7 @@
     function startSoloAIMode() {
       isAIMode = true;
       document.getElementById('multi-lobby-modal').classList.add('hidden');
-      document.getElementById('opp-name').innerText = 'COM';
+      document.getElementById('opp-name').innerText = '인공지능 (COM)';
       setupAIHanArmy();
       updateUI();
       startTimer(40);
@@ -716,6 +722,9 @@
       updateTimerDisplay();
 
       timerInterval = setInterval(() => {
+        // [수정] 조준 중에는 타이머에 의한 강제 발사/턴 넘김이 간섭하지 않음
+        if (isDragging && gamePhase === 'battle') return;
+
         timerRemaining--;
         updateTimerDisplay();
 
@@ -773,9 +782,9 @@
 
       const formation = [
         { type: '楚', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 },
-        { type: '車', x: bLeft + bW * 0.20, y: zTop + zH * 0.50 },
-        { type: '包', x: bLeft + bW * 0.80, y: zTop + zH * 0.75 },
-        { type: '馬', x: bLeft + bW * 0.72, y: zTop + zH * 0.45 },
+        { type: '車', x: bLeft + bW * 0.18, y: zTop + zH * 0.45 },
+        { type: '包', x: bLeft + bW * 0.82, y: zTop + zH * 0.75 },
+        { type: '馬', x: bLeft + bW * 0.75, y: zTop + zH * 0.45 },
         { type: '象', x: bLeft + bW * 0.50, y: zTop + zH * 0.28 }
       ];
 
@@ -894,7 +903,7 @@
 
       isMyReady = true;
       document.getElementById('ready-btn').innerText = '준비 완료됨 ✅';
-      document.getElementById('ready-btn').className = 'px-3 py-1 bg-slate-700 rounded-xl text-[10px] font-black shadow cursor-not-allowed';
+      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-slate-700 rounded-xl text-xs font-black shadow cursor-not-allowed';
 
       if (peerConn && peerConn.open) {
         peerConn.send({
@@ -979,7 +988,7 @@
       };
     }
 
-    // [핵심 슬링샷 조준 & 당기기 시스템]
+    // [핵심] 조준 시작: 손가락을 대고 있는 동안에는 절대 발사되지 않음
     canvas.addEventListener('pointerdown', e => {
       e.preventDefault();
       const pos = getPointerPos(e);
@@ -995,7 +1004,6 @@
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
         
-        // 내 턴일 때 기물 터치 선택 (판정 반경 넉넉히 지정)
         const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
@@ -1007,6 +1015,7 @@
       }
     }, { passive: false });
 
+    // 손가락을 당기는 동안 파워와 각도만 실시간 계산 (발사는 되지 않음)
     canvas.addEventListener('pointermove', e => {
       if (!isDragging || !selectedPiece || e.pointerId !== activePointerId) return;
       e.preventDefault();
@@ -1028,13 +1037,13 @@
           }
         });
       } else {
-        // 배틀 단계: 기물 위치는 고정되고, 손가락을 당기는 실시간 좌표만 추적
         dragCurrent = pos;
       }
     }, { passive: false });
 
-    function handlePointerRelease(e) {
-      if (!isDragging || !selectedPiece || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+    // [핵심] 오직 손가락을 뗐을 때만(pointerup) 격발
+    canvas.addEventListener('pointerup', e => {
+      if (!isDragging || !selectedPiece || e.pointerId !== activePointerId) return;
       e.preventDefault();
 
       if (canvas.hasPointerCapture(e.pointerId)) {
@@ -1042,20 +1051,16 @@
       }
 
       if (gamePhase === 'battle') {
-        // [슬링샷 역방향 탄성 물리 계산]
-        // 손가락을 기물 중심에서 뒤로 당긴 거리 벡터
         const pullDx = dragCurrent.x - selectedPiece.x;
         const pullDy = dragCurrent.y - selectedPiece.y;
         const pullDist = Math.hypot(pullDx, pullDy);
 
-        // 최소 12px 이상 의도적으로 뒤로 당겼을 때만 발사 (실수 탭/터치 오발 방지)
+        // 손가락을 12px 이상 당긴 상태에서 손을 뗐을 때만 강력 발사
         if (pullDist > 12) {
           clearInterval(timerInterval);
 
-          // 당긴 반대 방향(발사 진행 방향)의 각도
           const shootAngle = Math.atan2(-pullDy, -pullDx);
 
-          // [핵심] 당긴 거리에 비례하여 파워 축적 (최대 26까지 시원하게 증폭)
           let powerMult = 0.17;
           if (selectedPiece.ability === 'charge') powerMult = 0.24;
 
@@ -1073,7 +1078,6 @@
             selectedPiece.jumpTime = 22;
             playJumpSfx();
           } else {
-            // 강하게 당길수록 묵직하고 경쾌한 원목 타건음
             playWoodClack(Math.min(1.0, 0.4 + power * 0.03), selectedPiece.mass);
           }
 
@@ -1097,10 +1101,17 @@
       isDragging = false;
       selectedPiece = null;
       activePointerId = null;
-    }
+    }, { passive: false });
 
-    canvas.addEventListener('pointerup', handlePointerRelease, { passive: false });
-    canvas.addEventListener('pointercancel', handlePointerRelease, { passive: false });
+    // 취소 이벤트 시에는 발사되지 않고 안전하게 조준만 해제
+    canvas.addEventListener('pointercancel', e => {
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
+      isDragging = false;
+      selectedPiece = null;
+      activePointerId = null;
+    }, { passive: false });
 
     function spawnShockwave(x, y, color = '#fbbf24', maxR = 90) {
       shockwaves.push({ x, y, r: 4, maxR, color, alpha: 1.0 });
@@ -1455,6 +1466,7 @@
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
+      // 성벽 렌더링
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
@@ -1466,6 +1478,7 @@
         ctx.restore();
       });
 
+      // 현실적인 울퉁불퉁 바위산, 일렁이는 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'mountain') {
           ctx.save();
@@ -1481,6 +1494,12 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
+
+          ctx.strokeStyle = '#475569';
+          ctx.beginPath();
+          ctx.moveTo(0, 0); ctx.lineTo(obs.points[0].x * 0.7, obs.points[0].y * 0.7);
+          ctx.moveTo(0, 0); ctx.lineTo(obs.points[3].x * 0.7, obs.points[3].y * 0.7);
+          ctx.stroke();
           ctx.restore();
         } else if (obs.type === 'water_puddle') {
           ctx.save();
@@ -1491,6 +1510,11 @@
           ctx.ellipse(obs.x, obs.y, obs.rx, obs.ry, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(125, 211, 252, 0.4)';
+          ctx.beginPath();
+          ctx.ellipse(obs.x, obs.y, obs.rx * 0.55, obs.ry * 0.55, 0, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.restore();
         } else if (obs.type === 'mud') {
           ctx.save();
@@ -1498,6 +1522,10 @@
           ctx.strokeStyle = '#92400e';
           ctx.lineWidth = 1.8;
           ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#b45309';
+          ctx.font = 'bold 9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('진흙', obs.x, obs.y + 3);
           ctx.restore();
         } else if (obs.type === 'sawblade') {
           ctx.save();
@@ -1507,6 +1535,16 @@
           ctx.strokeStyle = '#f87171';
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(0, 0, obs.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+          ctx.fillStyle = '#dc2626';
+          for (let s = 0; s < 8; s++) {
+            ctx.rotate(Math.PI / 4);
+            ctx.beginPath();
+            ctx.moveTo(obs.r, -3);
+            ctx.lineTo(obs.r + 5, 0);
+            ctx.lineTo(obs.r, 3);
+            ctx.fill();
+          }
           ctx.restore();
         } else if (obs.type === 'twin_blade') {
           ctx.save();
@@ -1514,6 +1552,8 @@
           ctx.rotate(obs.angle);
           ctx.fillStyle = '#f59e0b';
           ctx.fillRect(-obs.len, -2.5, obs.len * 2, 5);
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
         }
       });
@@ -1579,6 +1619,11 @@
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           vf.r += 2.8;
+        } else if (vf.type === 'vortex') {
+          ctx.strokeStyle = 'rgba(251, 146, 60, 0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(vf.x, vf.y, 18, vf.angle, vf.angle + Math.PI); ctx.stroke();
+          vf.angle += 0.4;
         } else if (vf.type === 'shield_barrier') {
           ctx.strokeStyle = '#facc15';
           ctx.lineWidth = 2.5;
@@ -1653,23 +1698,21 @@
         ctx.restore();
       });
 
-      // [슬링샷 당기기 궤적 및 다이내믹 파워 렌더링]
+      // 슬링샷 당기기 궤적 및 다이내믹 파워 렌더링
       if (isDragging && selectedPiece && gamePhase === 'battle') {
         const pullDx = dragCurrent.x - selectedPiece.x;
         const pullDy = dragCurrent.y - selectedPiece.y;
         const pullDist = Math.hypot(pullDx, pullDy);
 
         if (pullDist > 8) {
-          // 당긴 반대 방향(탄성 발사 방향)
           const shootAngle = Math.atan2(-pullDy, -pullDx);
           const powerRatio = Math.min(1.0, (pullDist - 8) / 120);
 
-          // 파워 단계별 다이내믹 컬러 (약: 초록 -> 중: 황색 -> 강: 붉은색)
           let dynamicColor = '#34d399';
           if (powerRatio > 0.65) dynamicColor = '#ef4444';
           else if (powerRatio > 0.35) dynamicColor = '#fbbf24';
 
-          // 1. 뒤로 당기는 고무줄 탄성 라인 (손가락 위치까지 팽팽하게 표시)
+          // 뒤로 당기는 고무줄 탄성 라인
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
           ctx.lineWidth = 2.2;
@@ -1679,7 +1722,7 @@
           ctx.lineTo(dragCurrent.x, dragCurrent.y);
           ctx.stroke();
 
-          // 손가락 터치 지점 탄성 핑거 링
+          // 손가락 터치 핑거 링
           ctx.setLineDash([]);
           ctx.strokeStyle = dynamicColor;
           ctx.lineWidth = 2.5;
@@ -1688,7 +1731,7 @@
           ctx.stroke();
           ctx.restore();
 
-          // 2. 발사 방향으로 뻗어나가는 정밀 궤적선 (당긴 거리가 길수록 길고 선명해짐)
+          // 발사 진행 궤적선 & 화살촉
           ctx.save();
           ctx.strokeStyle = dynamicColor;
           ctx.fillStyle = dynamicColor;
@@ -1705,7 +1748,6 @@
           ctx.lineTo(endShootX, endShootY);
           ctx.stroke();
 
-          // 발사 궤적 끝점 조준 화살촉
           const arrowSize = 7 + powerRatio * 5;
           ctx.beginPath();
           ctx.moveTo(endShootX, endShootY);
@@ -1720,7 +1762,6 @@
           ctx.closePath();
           ctx.fill();
 
-          // 파워 게이지 텍스트 표시
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 11px "Jua"';
           ctx.textAlign = 'center';

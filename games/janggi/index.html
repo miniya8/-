@@ -171,7 +171,7 @@
     </div>
   </header>
 
-  <!-- 메인 장기판 캔버스 영역 (화면 중앙 정렬 & 동적 반응형) -->
+  <!-- 메인 장기판 캔버스 영역 -->
   <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
     <div id="board-container" class="relative rounded-2xl shadow-2xl bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950 p-1 border-2 border-amber-700/80 overflow-hidden flex items-center justify-center transition-all">
       <canvas id="boardCanvas" class="rounded-xl cursor-pointer block touch-none"></canvas>
@@ -633,10 +633,7 @@
     function generateUniqueRandomNickname() {
       const prefixes = ['질풍의', '전설의', '천하제일', '무적의', '바람의', '신궁', '패왕', '암흑의', '강철의', '신출귀몰'];
       const suffixes = ['차마', '포왕', '상대장', '사령관', '기마', '대장군', '외통수', '궁기병', '선봉장', '마스터'];
-      const p = prefixes[Math.floor(Math.random() * prefixes.length)];
-      const s = suffixes[Math.floor(Math.random() * suffixes.length)];
-      const n = Math.floor(10 + Math.random() * 90);
-      return `${p}${s}_${n}`;
+      return `${prefixes[Math.floor(Math.random() * prefixes.length)]}${suffixes[Math.floor(Math.random() * suffixes.length)]}_${Math.floor(10 + Math.random() * 90)}`;
     }
 
     function handleNicknameChange(val) {
@@ -747,9 +744,7 @@
 
     function triggerHapticWarning() {
       if (navigator.vibrate) {
-        try {
-          navigator.vibrate([100, 50, 100, 50, 150]);
-        } catch(e) {}
+        try { navigator.vibrate([100, 50, 100, 50, 150]); } catch(e) {}
       }
     }
 
@@ -802,11 +797,8 @@
       if (badge) badge.innerText = myUndoRemaining;
       const btn = document.getElementById('undo-btn');
       if (btn) {
-        if (myUndoRemaining <= 0) {
-          btn.classList.add('opacity-40', 'cursor-not-allowed');
-        } else {
-          btn.classList.remove('opacity-40', 'cursor-not-allowed');
-        }
+        btn.classList.toggle('opacity-40', myUndoRemaining <= 0);
+        btn.classList.toggle('cursor-not-allowed', myUndoRemaining <= 0);
       }
     }
 
@@ -1084,7 +1076,7 @@
     }
 
     /* ==========================================================================
-       5. 캔버스 렌더링 & 모바일 100% 핏(Fit) 엔진
+       5. 캔버스 렌더링 & 지속적 프레임 애니메이션 루프
        ========================================================================== */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
@@ -1140,6 +1132,14 @@
     }
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
+
+    // 메인 상시 렌더 루프
+    function mainRenderLoop() {
+      if (attackAnim || victimAnim || visualFxList.length > 0 || nuclearEffect) {
+        drawBoard();
+      }
+      requestAnimationFrame(mainRenderLoop);
+    }
 
     function drawBoard() {
       const w = parseFloat(canvas.style.width);
@@ -1352,7 +1352,7 @@
     }
 
     /* ==========================================================================
-       6. 초정밀 기물별 공격/이동 모션 및 12대 처치 이펙트
+       6. 초정밀 기물별 공격/이동 모션 및 12대 처치 이펙트 복구
        ========================================================================== */
     function triggerCinematicAttack(mover, from, to, capturedPiece, onComplete) {
       const startX = padX + from.c * cellW;
@@ -1416,9 +1416,10 @@
         const captured = attackAnim.capturedPiece;
 
         if (captured.type === 'king') {
+          const cb = attackAnim.onComplete;
           attackAnim = null;
           triggerNuclearExplosion(targetX, targetY, () => {
-            if (attackAnim && attackAnim.onComplete) attackAnim.onComplete();
+            if (cb) cb();
           });
           return;
         }
@@ -1451,6 +1452,7 @@
         const cb = attackAnim.onComplete;
         attackAnim = null;
         if (cb) cb();
+        drawBoard();
         return;
       }
 
@@ -1473,6 +1475,7 @@
 
       ctx.save();
 
+      // [1] 포(包) - 공성포 & 곡사포 포탄 궤적
       if (attackAnim.type === 'po') {
         ctx.save();
         ctx.translate(attackAnim.startX, attackAnim.startY);
@@ -1498,7 +1501,7 @@
         }
         ctx.restore();
 
-        const arcPeak = cellH * 3.6;
+        const arcPeak = cellH * 3.8;
         const arcY = Math.sin(p * Math.PI) * arcPeak;
         const bulletX = curX;
         const bulletY = curY - arcY;
@@ -1521,10 +1524,10 @@
         ctx.translate(bulletX, bulletY);
         ctx.fillStyle = '#09090b';
         ctx.beginPath();
-        ctx.arc(0, 0, sz * 0.26, 0, Math.PI * 2);
+        ctx.arc(0, 0, sz * 0.28, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#ea580c';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3.5;
         ctx.stroke();
 
         ctx.fillStyle = '#fef08a';
@@ -1533,6 +1536,7 @@
         ctx.fill();
         ctx.restore();
 
+      // [2] 차(車) - 돌격 중전차
       } else if (attackAnim.type === 'cha') {
         ctx.translate(curX, curY);
         ctx.rotate(angle);
@@ -1547,6 +1551,14 @@
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(-sz * 0.8, -sz * 0.52, sz * 1.5, sz * 0.24);
         ctx.fillRect(-sz * 0.8, sz * 0.28, sz * 1.5, sz * 0.24);
+
+        ctx.fillStyle = '#64748b';
+        for (let i = -3; i <= 3; i++) {
+          ctx.beginPath();
+          ctx.arc(i * (sz * 0.2), -sz * 0.4, 4, 0, Math.PI * 2);
+          ctx.arc(i * (sz * 0.2), sz * 0.4, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
         ctx.beginPath();
@@ -1564,10 +1576,18 @@
 
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(sz * 0.1, -sz * 0.08, sz * 0.75, sz * 0.16);
+        ctx.strokeStyle = '#fef08a';
+        ctx.strokeRect(sz * 0.1, -sz * 0.08, sz * 0.75, sz * 0.16);
 
+      // [3] 마(馬) - 돌격 기병 랜스
       } else if (attackAnim.type === 'ma') {
         ctx.translate(curX, curY);
         ctx.rotate(angle);
+
+        ctx.fillStyle = 'rgba(234, 179, 8, 0.4)';
+        ctx.beginPath();
+        ctx.arc(-sz * 0.5, (Math.random() - 0.5) * 10, sz * 0.25, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.fillStyle = isCho ? '#065f46' : '#991b1b';
         ctx.beginPath();
@@ -1584,7 +1604,10 @@
         ctx.lineTo(sz * 0.1, sz * 0.12);
         ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = '#e11d48';
+        ctx.stroke();
 
+      // [4] 상(象) - 거대 전투 코끼리
       } else if (attackAnim.type === 'sang') {
         ctx.translate(curX, curY);
         ctx.rotate(angle);
@@ -1597,9 +1620,31 @@
         ctx.lineWidth = 3;
         ctx.stroke();
 
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.2, -sz * 0.25);
+        ctx.quadraticCurveTo(sz * 0.7, -sz * 0.45, sz * 0.8, -sz * 0.1);
+        ctx.lineTo(sz * 0.2, -sz * 0.1);
+        ctx.moveTo(sz * 0.2, sz * 0.25);
+        ctx.quadraticCurveTo(sz * 0.7, sz * 0.45, sz * 0.8, sz * 0.1);
+        ctx.lineTo(sz * 0.2, sz * 0.1);
+        ctx.fill();
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.4, -sz * 0.4); ctx.lineTo(0, -sz * 0.6); ctx.lineTo(sz * 0.4, -sz * 0.3);
+        ctx.stroke();
+
+      // [5] 사(士) - 암영 비도
       } else if (attackAnim.type === 'sa') {
         ctx.translate(curX, curY);
         ctx.rotate(angle);
+
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.3, 0, sz * 0.4, sz * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.fillStyle = '#f8fafc';
         ctx.beginPath();
@@ -1612,6 +1657,7 @@
         ctx.lineWidth = 3;
         ctx.stroke();
 
+      // [6] 왕(대장군) - 캐릭터별 5인 전용 궁극기
       } else if (attackAnim.type === 'king' && attackAnim.kingId) {
         if (attackAnim.kingId === 'semini') {
           const jump = Math.sin(p * Math.PI) * (cellH * 3.0);
@@ -1623,6 +1669,8 @@
           ctx.fill();
           ctx.strokeStyle = '#fde047';
           ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, sz * 0.15, sz * 0.42, 0, Math.PI);
           ctx.stroke();
 
         } else if (attackAnim.kingId === 'honggu') {
@@ -1633,6 +1681,9 @@
           ctx.beginPath();
           ctx.moveTo(-sz * 0.4, sz * 0.4); ctx.lineTo(sz * 0.65, -sz * 0.4);
           ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(sz * 0.65, -sz * 0.5, sz * 0.22, 0, Math.PI, true);
+          ctx.stroke();
 
         } else if (attackAnim.kingId === 'changwon') {
           ctx.translate(curX, curY);
@@ -1641,6 +1692,12 @@
           ctx.fillRect(-sz * 0.75, -sz * 0.42, sz * 1.5, sz * 0.84);
           ctx.fillStyle = '#ef4444';
           ctx.beginPath(); ctx.arc(0, 0, sz * 0.38, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(-sz * 1.3, -sz * 0.3); ctx.lineTo(-sz * 0.75, -sz * 0.3);
+          ctx.moveTo(-sz * 1.3, sz * 0.3); ctx.lineTo(-sz * 0.75, sz * 0.3);
+          ctx.stroke();
 
         } else if (attackAnim.kingId === 'hadori') {
           ctx.translate(curX, curY);
@@ -1648,6 +1705,8 @@
           ctx.strokeStyle = '#854d0e';
           ctx.lineWidth = 8;
           ctx.beginPath(); ctx.moveTo(-sz * 0.5, 0); ctx.lineTo(sz * 0.75, 0); ctx.stroke();
+          ctx.fillStyle = '#15803d';
+          ctx.beginPath(); ctx.ellipse(sz * 0.75, 0, sz * 0.4, sz * 0.28, 0, 0, Math.PI * 2); ctx.fill();
 
         } else {
           ctx.translate(curX, curY);
@@ -1656,6 +1715,7 @@
           ctx.beginPath(); ctx.arc(0, 0, sz * 0.5, 0, Math.PI * 2); ctx.fill();
         }
 
+      // [7] 졸/병(卒/兵) - 참격 검날
       } else {
         ctx.translate(curX, curY);
         ctx.rotate(angle);
@@ -1669,7 +1729,7 @@
         ctx.fill();
 
         ctx.strokeStyle = isCho ? '#34d399' : '#f87171';
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = 4;
         ctx.stroke();
       }
 
@@ -1677,17 +1737,20 @@
     }
 
     function triggerVictimDestruction(pos, piece, effectKind) {
+      const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.2;
       victimAnim = {
         pos,
         piece,
         kind: effectKind,
         progress: 0,
-        angle: Math.PI / 4,
+        angle: angle,
         shards: [
-          { dx: -24, dy: -20, rot: -0.4, scale: 1 },
-          { dx: 24, dy: 20, rot: 0.4, scale: 1 },
-          { dx: -14, dy: 22, rot: 0.3, scale: 0.8 },
-          { dx: 18, dy: -20, rot: -0.3, scale: 0.8 }
+          { dx: -26, dy: -22, rot: -0.4, scale: 1 },
+          { dx: 26, dy: 22, rot: 0.4, scale: 1 },
+          { dx: -16, dy: 24, rot: 0.3, scale: 0.8 },
+          { dx: 20, dy: -22, rot: -0.3, scale: 0.8 },
+          { dx: -30, dy: 6, rot: 0.5, scale: 0.6 },
+          { dx: 30, dy: -6, rot: -0.5, scale: 0.6 }
         ]
       };
       requestAnimationFrame(runVictimLoop);
@@ -1695,7 +1758,7 @@
 
     function runVictimLoop() {
       if (!victimAnim) return;
-      victimAnim.progress += 0.05;
+      victimAnim.progress += 0.045;
       if (victimAnim.progress >= 1) {
         victimAnim = null;
         drawBoard();
@@ -1716,41 +1779,159 @@
 
       ctx.save();
       ctx.translate(x, y);
-      ctx.globalAlpha = Math.max(0, 1 - p);
-      victimAnim.shards.forEach(sh => {
+
+      // (1) 사선 양단 참격
+      if (victimAnim.kind === 'blade_slash') {
+        const splitDist = p * rad * 1.6;
+        ctx.globalAlpha = Math.max(0, 1 - p);
+
+        // 위쪽 반쪽
         ctx.save();
-        ctx.translate(sh.dx * p * 1.8, sh.dy * p * 1.8);
-        ctx.fillStyle = isCho ? '#047857' : '#b91c1c';
-        ctx.fillRect(-rad * 0.25, -rad * 0.25, rad * 0.5, rad * 0.5);
+        ctx.translate(-splitDist * 0.8, -splitDist * 0.5);
+        ctx.rotate(-p * 0.25);
+        ctx.beginPath();
+        ctx.arc(0, 0, rad, victimAnim.angle, victimAnim.angle + Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
+        ctx.fill();
+        ctx.strokeStyle = isCho ? '#6ee7b7' : '#fca5a5';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
         ctx.restore();
-      });
+
+        // 아래쪽 반쪽
+        ctx.save();
+        ctx.translate(splitDist * 0.8, splitDist * 0.5);
+        ctx.rotate(p * 0.25);
+        ctx.beginPath();
+        ctx.arc(0, 0, rad, victimAnim.angle + Math.PI, victimAnim.angle + Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
+        ctx.fill();
+        ctx.strokeStyle = isCho ? '#6ee7b7' : '#fca5a5';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1, (1 - p) * 6);
+        ctx.beginPath();
+        const lx = Math.cos(victimAnim.angle) * rad * 1.8;
+        const ly = Math.sin(victimAnim.angle) * rad * 1.8;
+        ctx.moveTo(-lx, -ly);
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+        ctx.restore();
+
+      // (2) 빙결 파편 산산조각
+      } else if (victimAnim.kind === 'frost_shatter') {
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        victimAnim.shards.forEach(sh => {
+          ctx.save();
+          ctx.translate(sh.dx * p * 2.0, sh.dy * p * 2.0);
+          ctx.rotate(sh.rot * p * 6);
+          ctx.scale(sh.scale * (1 - p * 0.5), sh.scale * (1 - p * 0.5));
+          ctx.fillStyle = '#bae6fd';
+          ctx.beginPath();
+          ctx.moveTo(0, -rad * 0.3); ctx.lineTo(rad * 0.25, 0); ctx.lineTo(0, rad * 0.3); ctx.lineTo(-rad * 0.25, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.restore();
+        });
+
+      // (3) 맹독 산성 용해
+      } else if (victimAnim.kind === 'poison_corrosion') {
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        ctx.fillStyle = '#15803d';
+        ctx.beginPath();
+        ctx.ellipse(0, p * rad * 0.3, rad * (1 + p * 0.4), rad * (1 - p * 0.7), 0, 0, Math.PI * 2);
+        ctx.fill();
+
+      // (4) 블랙홀 흡수 왜곡
+      } else if (victimAnim.kind === 'blackhole') {
+        ctx.rotate(p * Math.PI * 4);
+        ctx.scale(Math.max(0.01, 1 - p), Math.max(0.01, 1 - p));
+        ctx.globalAlpha = Math.max(0, 1 - p * 0.8);
+        ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
+        ctx.beginPath();
+        ctx.arc(0, 0, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+      // (5) 천상의 섬광 기둥 정화
+      } else if (victimAnim.kind === 'divine_smite') {
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(0, 0, rad * (1 + p * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+
+      // (6) 기타 파편 분쇄 공통 연출
+      } else {
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        victimAnim.shards.forEach(sh => {
+          ctx.save();
+          ctx.translate(sh.dx * p * 1.8, sh.dy * p * 1.8);
+          ctx.rotate(sh.rot * p * 5);
+          ctx.scale(sh.scale * (1 - p * 0.4), sh.scale * (1 - p * 0.4));
+          ctx.fillStyle = isCho ? '#047857' : '#b91c1c';
+          ctx.fillRect(-rad * 0.25, -rad * 0.25, rad * 0.5, rad * 0.5);
+          ctx.restore();
+        });
+      }
+
       ctx.restore();
     }
 
     function spawnVisualFx(x, y, kind) {
-      const count = 30;
+      const count = 35;
       const particles = [];
-      const pal = ['#f97316', '#38bdf8', '#fbbf24', '#f43f5e'];
+      const colors = {
+        cannon_meteor: ['#f97316', '#ea580c', '#fde047', '#451a03'],
+        lightning_strike: ['#38bdf8', '#0284c7', '#ffffff', '#e0f2fe'],
+        blade_slash: ['#f8fafc', '#94a3b8', '#38bdf8', '#ffffff'],
+        frost_shatter: ['#bae6fd', '#7dd3fc', '#ffffff', '#e0f2fe'],
+        incinerate: ['#ea580c', '#c2410c', '#facc15', '#78350f'],
+        sonic_crush: ['#e2e8f0', '#94a3b8', '#cbd5e1', '#64748b'],
+        blackhole: ['#a855f7', '#7e22ce', '#3b0764', '#c084fc'],
+        divine_smite: ['#fef08a', '#facc15', '#ffffff', '#fde047'],
+        poison_corrosion: ['#22c55e', '#16a34a', '#86efac', '#14532d'],
+        blood_moon: ['#dc2626', '#991b1b', '#450a0a', '#f87171'],
+        plasma_vaporize: ['#06b6d4', '#0891b2', '#ffffff', '#67e8f9'],
+        glass_prism: ['#f43f5e', '#a855f7', '#38bdf8', '#fbbf24']
+      };
+
+      const pal = colors[kind] || colors.blade_slash;
 
       for (let i = 0; i < count; i++) {
         const ang = Math.random() * Math.PI * 2;
-        const speed = (2 + Math.random() * 6);
+        const speed = (2 + Math.random() * 7);
         particles.push({
           x: 0, y: 0,
           vx: Math.cos(ang) * speed,
           vy: Math.sin(ang) * speed,
-          size: 2 + Math.random() * 3,
+          size: 2.5 + Math.random() * 3.5,
           color: pal[Math.floor(Math.random() * pal.length)]
         });
       }
 
-      visualFxList.push({ x, y, kind, progress: 0, alpha: 1.0, particles });
+      visualFxList.push({
+        x, y,
+        kind,
+        progress: 0,
+        alpha: 1.0,
+        particles
+      });
     }
 
     function renderVisualFx() {
       for (let i = visualFxList.length - 1; i >= 0; i--) {
         const fx = visualFxList[i];
-        fx.progress += 0.038;
+        fx.progress += 0.035;
         fx.alpha = Math.max(0, 1 - fx.progress);
 
         if (fx.progress >= 1) {
@@ -1763,6 +1944,31 @@
         ctx.translate(fx.x, fx.y);
         ctx.globalCompositeOperation = 'lighter';
 
+        if (fx.kind === 'lightning_strike') {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 4;
+          for (let j = 0; j < 3; j++) {
+            ctx.beginPath();
+            ctx.moveTo((Math.random() - 0.5) * 40, -cellH * 2.5);
+            ctx.lineTo((Math.random() - 0.5) * 20, 0);
+            ctx.stroke();
+          }
+        } else if (fx.kind === 'divine_smite') {
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(-cellW * 0.4 * (1 - fx.progress), -cellH * 3, cellW * 0.8 * (1 - fx.progress), cellH * 6);
+        } else if (fx.kind === 'blood_moon') {
+          ctx.fillStyle = '#991b1b';
+          ctx.beginPath();
+          ctx.arc(0, 0, fx.progress * cellW * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = fx.particles[0].color;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, fx.progress * cellW * 1.4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
         fx.particles.forEach(pt => {
           pt.x += pt.vx;
           pt.y += pt.vy;
@@ -1772,13 +1978,11 @@
 
         ctx.restore();
       }
-
-      if (visualFxList.length > 0) requestAnimationFrame(drawBoard);
     }
 
     function triggerNuclearExplosion(x, y, onComplete) {
       nuclearEffect = { x, y, progress: 0, onComplete };
-      playTone(60, 'sawtooth', 1.8, 1.0);
+      playTone(60, 'sawtooth', 2.0, 1.0);
 
       const container = document.getElementById('board-container');
       container.classList.add('shake-nuclear');
@@ -1789,7 +1993,7 @@
 
     function runNuclearLoop() {
       if (!nuclearEffect) return;
-      nuclearEffect.progress += 0.025;
+      nuclearEffect.progress += 0.02;
       if (nuclearEffect.progress >= 1) {
         const cb = nuclearEffect.onComplete;
         nuclearEffect = null;
@@ -1904,7 +2108,6 @@
       currentTurn = (currentTurn === 'cho') ? 'han' : 'cho';
       resetTurnTimer();
 
-      // 착수 후 외통수(Checkmate) 자동 판정
       if (isCheckmate(currentTurn, board)) {
         drawBoard();
         updateUI();
@@ -2039,15 +2242,15 @@
       if (cheerSide === 'cho') {
         badge.innerText = `🟢 [초나라 응원] 관전자 ${sender}`;
         badge.className = 'text-xs sm:text-sm font-black tracking-wider text-stroke-shout text-emerald-300';
-        msg.className = 'text-sm sm:text-base font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-cho';
+        msg.className = 'text-sm sm:text-lg font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-cho';
       } else if (cheerSide === 'han') {
         badge.innerText = `🔴 [한나라 응원] 관전자 ${sender}`;
         badge.className = 'text-xs sm:text-sm font-black tracking-wider text-stroke-shout text-red-300';
-        msg.className = 'text-sm sm:text-base font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-han';
+        msg.className = 'text-sm sm:text-lg font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-han';
       } else {
         badge.innerText = `🍿 [중립 훈수] 관전자 ${sender}`;
         badge.className = 'text-xs sm:text-sm font-black tracking-wider text-stroke-shout text-amber-300';
-        msg.className = 'text-sm sm:text-base font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-neutral';
+        msg.className = 'text-sm sm:text-lg font-black text-white mt-0.5 leading-snug break-keep text-stroke-center-neutral';
       }
 
       msg.innerText = `"${text}"`;
@@ -2821,7 +3024,7 @@
 
     function shareViaKakao() {
       const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
-      const text = `[세미니의 전설장기1]\n⚔️️ ${customNickname || myChar.name}님이 대국에 초대했습니다!\n코드: [${hostRoomCode}]\n${inviteUrl}`;
+      const text = `[세미니의 전설장기1]\n⚔ ${customNickname || myChar.name}님이 대국에 초대했습니다!\n코드: [${hostRoomCode}]\n${inviteUrl}`;
       if (navigator.share) {
         navigator.share({ title: '전설장기1 초대', text, url: inviteUrl }).catch(()=>{});
       } else {
@@ -2840,6 +3043,7 @@
       setAiDiff('expert');
       resizeCanvas();
       broadcastPresence();
+      mainRenderLoop();
 
       render3DDiceFace('dice-canvas-my', 5, 0);
       render3DDiceFace('dice-canvas-opp', 3, 0);

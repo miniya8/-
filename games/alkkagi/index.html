@@ -8,6 +8,13 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
     body {
       font-family: 'Noto Sans KR', sans-serif;
       touch-action: none;
@@ -19,102 +26,102 @@
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
   </style>
 </head>
-<body class="text-white h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden">
+<body class="text-white h-screen max-h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
 
   <!-- 상단 상태바 & 듀얼 타이머 -->
-  <header class="w-full max-w-5xl flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
+  <header class="w-full max-w-md flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-2.5 py-1 sm:py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
     <div class="flex items-center justify-between">
       <!-- 상대방 상태 -->
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-black text-xs text-red-300">한</div>
+      <div class="flex items-center gap-1.5">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-black text-xs text-red-300">한</div>
         <div class="flex flex-col">
-          <span id="opp-name" class="font-bold text-xs text-slate-100">상대방 (대기중)</span>
-          <span id="opp-pieces-count" class="text-[10px] text-red-400 font-black">배치 중 (비공개)</span>
+          <span id="opp-name" class="font-bold text-[11px] sm:text-xs text-slate-100 leading-tight">상대방 (대기중)</span>
+          <span id="opp-pieces-count" class="text-[9px] text-red-400 font-black">배치 중 (비공개)</span>
         </div>
       </div>
 
       <!-- 중앙 상태 & 타이머 -->
       <div class="flex flex-col items-center">
-        <div class="flex items-center gap-1.5">
-          <div id="game-phase-badge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
-          <div id="timer-badge" class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
+        <div class="flex items-center gap-1">
+          <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
+          <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
         </div>
-        <span id="guide-text" class="text-[9px] text-amber-300 mt-0.5">상대에게 내 배치가 보이지 않습니다. 기습 진형을 짜세요!</span>
+        <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">기습 진형을 짜세요!</span>
       </div>
 
       <!-- 내 정보 & 메인 복귀 -->
-      <div class="flex items-center gap-2 flex-row-reverse text-right">
-        <button onclick="location.href='../../index.html'" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 shadow">
+      <div class="flex items-center gap-1.5 flex-row-reverse text-right">
+        <button onclick="location.href='../../index.html'" class="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[10px] sm:text-xs font-bold text-slate-200 shadow">
           🏠 로비
         </button>
         <div class="flex flex-col">
-          <span id="my-name" class="font-bold text-xs text-slate-100">나</span>
-          <span id="my-pieces-count" class="text-[10px] text-emerald-400 font-black">남은 기물: 0</span>
+          <span id="my-name" class="font-bold text-[11px] sm:text-xs text-slate-100 leading-tight">나</span>
+          <span id="my-pieces-count" class="text-[9px] text-emerald-400 font-black">남은 기물: 0</span>
         </div>
-        <div class="w-8 h-8 rounded-full bg-emerald-950 border-2 border-emerald-500 flex items-center justify-center font-black text-xs text-emerald-300">초</div>
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-950 border-2 border-emerald-500 flex items-center justify-center font-black text-xs text-emerald-300">초</div>
       </div>
     </div>
 
     <!-- 타이머 프로그레스 바 -->
-    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+    <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
       <div id="timer-progress" class="bg-gradient-to-r from-emerald-500 to-amber-500 h-full w-full transition-all duration-300"></div>
     </div>
   </header>
 
   <!-- 4자리 간편 대기실 모달 -->
-  <div id="multi-lobby-modal" class="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
-    <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-xs w-full shadow-2xl">
-      <div class="text-center mb-4">
-        <h2 class="text-lg font-black text-amber-400 title-font">⚔️ 전설의 알까기 1:1 대전</h2>
-        <p class="text-[11px] text-slate-400 mt-0.5">숫자 4자리 코드로 간편하게 입장하세요</p>
+  <div id="multi-lobby-modal" class="fixed inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
+    <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-4 max-w-xs w-full shadow-2xl">
+      <div class="text-center mb-3">
+        <h2 class="text-base sm:text-lg font-black text-amber-400 title-font">⚔️ 전설의 알까기 1:1 대전</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5">숫자 4자리 코드로 간편하게 입장하세요</p>
       </div>
 
-      <div class="space-y-3">
+      <div class="space-y-2.5">
         <!-- 내 방 번호 -->
-        <div class="bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800 text-center">
-          <span class="text-[11px] font-bold text-emerald-400">내 4자리 방 번호 (초군 방장)</span>
-          <div class="flex items-center justify-center gap-2 mt-1.5">
-            <div id="my-room-code" class="text-xl font-black tracking-widest text-yellow-400 bg-slate-900 border border-amber-500/50 px-3 py-1 rounded-xl">----</div>
-            <button onclick="copyRoomCode()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow whitespace-nowrap">복사</button>
+        <div class="bg-slate-950/80 p-2 rounded-2xl border border-slate-800 text-center">
+          <span class="text-[10px] font-bold text-emerald-400">내 4자리 방 번호 (초군 방장)</span>
+          <div class="flex items-center justify-center gap-1.5 mt-1">
+            <div id="my-room-code" class="text-lg font-black tracking-widest text-yellow-400 bg-slate-900 border border-amber-500/50 px-2.5 py-0.5 rounded-xl">----</div>
+            <button onclick="copyRoomCode()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-[11px] font-bold text-white shadow whitespace-nowrap">복사</button>
           </div>
-          <p id="host-wait-msg" class="text-[10px] text-slate-400 mt-1">친구에게 4자리 번호를 알려주세요...</p>
+          <p id="host-wait-msg" class="text-[9px] text-slate-400 mt-1">친구에게 4자리 번호를 알려주세요...</p>
         </div>
 
         <!-- 상대 방 참가 -->
-        <div class="bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
-          <span class="text-[11px] font-bold text-cyan-400">친구 방 번호로 입장 (한군 도전자)</span>
-          <div class="flex items-center justify-between gap-2 mt-1.5">
-            <input id="join-room-code" type="number" maxlength="4" placeholder="4자리" class="w-28 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-sm font-black text-yellow-300 focus:outline-none focus:border-cyan-400 tracking-widest">
-            <button onclick="connectWith4Digit()" class="flex-1 py-1.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-black text-white shadow whitespace-nowrap">
-              입장하기 ⚔️
+        <div class="bg-slate-950/80 p-2 rounded-2xl border border-slate-800">
+          <span class="text-[10px] font-bold text-cyan-400">친구 방 번호로 입장 (한군 도전자)</span>
+          <div class="flex items-center justify-between gap-1.5 mt-1">
+            <input id="join-room-code" type="number" maxlength="4" placeholder="4자리" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1 text-center text-xs font-black text-yellow-300 focus:outline-none focus:border-cyan-400 tracking-widest">
+            <button onclick="connectWith4Digit()" class="flex-1 py-1 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-[11px] font-black text-white shadow whitespace-nowrap">
+              입장하기 ⚔️️
             </button>
           </div>
         </div>
 
         <!-- AI 플레이 -->
-        <button onclick="startSoloAIMode()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-xs font-bold text-amber-300">
+        <button onclick="startSoloAIMode()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-xs font-bold text-amber-300">
           🤖 AI와 싱글 전략전 시작
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 메인 캔버스 뷰 -->
-  <main class="relative w-full max-w-5xl flex-1 flex items-center justify-center p-1 my-1 overflow-hidden">
-    <div id="board-container" class="relative w-full h-full rounded-2xl shadow-2xl bg-neutral-950 border-4 border-neutral-800 p-1 overflow-hidden flex items-center justify-center">
+  <!-- 메인 캔버스 뷰 (모바일 100% 핏) -->
+  <main class="relative w-full flex-1 flex items-center justify-center p-1 overflow-hidden min-h-0">
+    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-neutral-950 border-2 sm:border-4 border-neutral-800 p-0.5 overflow-hidden flex items-center justify-center aspect-[9/13] max-h-full max-w-full">
       <canvas id="alkkagiCanvas" class="rounded-xl block touch-none"></canvas>
 
       <!-- 게임 종료 모달 -->
-      <div id="game-over-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border-2 border-amber-400 text-white p-6 rounded-3xl text-center max-w-xs w-full shadow-2xl">
-          <div id="over-title" class="text-2xl font-black title-font text-amber-300">👑 대승리 👑</div>
-          <p id="over-desc" class="text-xs text-slate-300 mt-2">적의 모든 말을 장외로 격추했습니다!</p>
-          <div class="flex flex-col gap-2 mt-5">
-            <button onclick="requestInstantRematch()" id="rematch-btn" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-black rounded-xl text-xs shadow tracking-wide">
+      <div id="game-over-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border-2 border-amber-400 text-white p-5 rounded-3xl text-center max-w-xs w-full shadow-2xl">
+          <div id="over-title" class="text-xl sm:text-2xl font-black title-font text-amber-300">👑 대승리 👑</div>
+          <p id="over-desc" class="text-xs text-slate-300 mt-1.5">적의 모든 말을 장외로 격추했습니다!</p>
+          <div class="flex flex-col gap-2 mt-4">
+            <button onclick="requestInstantRematch()" id="rematch-btn" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-black rounded-xl text-xs shadow tracking-wide">
               🔄 즉시 재경기 (방 유지)
             </button>
-            <button onclick="location.href='../../index.html'" class="w-full py-2 bg-slate-800 border border-slate-700 font-bold rounded-xl text-xs text-slate-300">
-              🏠 센터 메인으로 나가기
+            <button onclick="location.href='../../index.html'" class="w-full py-1.5 bg-slate-800 border border-slate-700 font-bold rounded-xl text-xs text-slate-300">
+              🏠 메인으로 나가기
             </button>
           </div>
         </div>
@@ -123,57 +130,57 @@
   </main>
 
   <!-- 하단 컨트롤 바 -->
-  <footer class="w-full max-w-5xl bg-slate-900/95 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-xl">
-    <div id="placement-panel" class="flex flex-col gap-1.5">
+  <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-1.5 z-20 flex-shrink-0 flex flex-col gap-1 shadow-xl">
+    <div id="placement-panel" class="flex flex-col gap-1">
       <div class="flex justify-between items-center px-1">
-        <div class="text-xs font-bold text-amber-300">
-          배치 포인트: <span id="budget-display" class="text-base text-yellow-400 font-black">20</span> P
+        <div class="text-[11px] font-bold text-amber-300">
+          배치 포인트: <span id="budget-display" class="text-sm text-yellow-400 font-black">20</span> P
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1">
           <!-- 자동 배치 버튼 -->
-          <button onclick="autoBalancedDeploy()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-xl text-xs font-black shadow flex items-center gap-1">
-            🎲 자동 추천 배치
+          <button onclick="autoBalancedDeploy()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-xl text-[10px] font-black shadow flex items-center gap-1">
+            🎲 자동배치
           </button>
-          <button id="ready-btn" onclick="toggleReady()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all">
-            배치 완료 & 준비 ⚔️
+          <button id="ready-btn" onclick="toggleReady()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-[10px] font-black shadow transition-all">
+            배치 완료 ⚔️
           </button>
         </div>
       </div>
 
       <!-- 6종 장기 기물 -->
       <div class="grid grid-cols-6 gap-1 text-center">
-        <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-emerald-300">장(楚/漢)</span>
-          <span class="text-[9px] text-amber-400 font-bold">6P·초중량</span>
+        <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-emerald-300">장(楚)</span>
+          <span class="text-[8px] text-amber-400 font-bold">6P</span>
         </button>
-        <button onclick="buyPiece('車')" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-cyan-300">차(車)</span>
-          <span class="text-[9px] text-amber-400 font-bold">5P·전격돌진</span>
+        <button onclick="buyPiece('車')" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-cyan-300">차(車)</span>
+          <span class="text-[8px] text-amber-400 font-bold">5P</span>
         </button>
-        <button onclick="buyPiece('包')" class="bg-slate-800 hover:bg-slate-700 border border-purple-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-purple-300">포(包)</span>
-          <span class="text-[9px] text-amber-400 font-bold">4P·도약포격</span>
+        <button onclick="buyPiece('包')" class="bg-slate-800 hover:bg-slate-700 border border-purple-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-purple-300">포(包)</span>
+          <span class="text-[8px] text-amber-400 font-bold">4P</span>
         </button>
-        <button onclick="buyPiece('馬')" class="bg-slate-800 hover:bg-slate-700 border border-orange-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-orange-300">마(馬)</span>
-          <span class="text-[9px] text-amber-400 font-bold">3P·스윙곡선</span>
+        <button onclick="buyPiece('馬')" class="bg-slate-800 hover:bg-slate-700 border border-orange-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-orange-300">마(馬)</span>
+          <span class="text-[8px] text-amber-400 font-bold">3P</span>
         </button>
-        <button onclick="buyPiece('象')" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-amber-300">상(象)</span>
-          <span class="text-[9px] text-amber-400 font-bold">2P·철벽방패</span>
+        <button onclick="buyPiece('象')" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-amber-300">상(象)</span>
+          <span class="text-[8px] text-amber-400 font-bold">2P</span>
         </button>
-        <button onclick="buyPiece('卒')" class="bg-slate-800 hover:bg-slate-700 border border-slate-500/60 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-slate-200">졸/병</span>
-          <span class="text-[9px] text-amber-400 font-bold">1P·경량탄성</span>
+        <button onclick="buyPiece('卒')" class="bg-slate-800 hover:bg-slate-700 border border-slate-500/60 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[11px] font-black text-slate-200">졸/병</span>
+          <span class="text-[8px] text-amber-400 font-bold">1P</span>
         </button>
       </div>
     </div>
 
-    <div id="battle-panel" class="hidden flex justify-between items-center px-2 py-1">
-      <div class="text-xs text-slate-300">
-        <span class="font-bold text-amber-400">전술 조언:</span> 중앙 성벽 틈새를 노려 짧은 궤적으로 정밀 타격하세요!
+    <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
+      <div class="text-[10px] text-slate-300">
+        <span class="font-bold text-amber-400">조언:</span> 기물 뒤로 당겨 손을 놓으면 발사됩니다!
       </div>
-      <div class="text-xs font-bold text-emerald-400" id="current-map-title">맵: 중앙 관문 요새</div>
+      <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
   </footer>
 
@@ -181,12 +188,10 @@
     const canvas = document.getElementById('alkkagiCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 리얼 장기판 사운드 엔진 (원목 타건 & 미끄러짐 마찰 합성)
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let lastClackTime = 0;
     let lastSlideTime = 0;
 
-    // 리얼 원목 장기알 타격음 (고역대 타격 + 장기판 내부 목재 공명 듀얼 레이어)
     function playWoodClack(intensity = 0.5, massRatio = 1.0) {
       const now = performance.now();
       if (now - lastClackTime < 38) return;
@@ -197,7 +202,6 @@
         const t = audioCtx.currentTime;
         const vol = Math.min(1.0, Math.max(0.12, intensity));
 
-        // 1. 단단한 박달나무 접촉 어택 노이즈 ('딱!' 하는 순간 임팩트)
         const bufferSize = audioCtx.sampleRate * 0.028;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -209,7 +213,6 @@
 
         const noiseFilter = audioCtx.createBiquadFilter();
         noiseFilter.type = 'bandpass';
-        // 질량이 클수록 깊은 목재음, 가벼울수록 경쾌한 맑은 목재음
         const centerFreq = Math.max(900, 1800 - massRatio * 150);
         noiseFilter.frequency.setValueAtTime(centerFreq, t);
         noiseFilter.Q.setValueAtTime(3.8, t);
@@ -223,7 +226,6 @@
         noiseGain.connect(audioCtx.destination);
         noise.start(t);
 
-        // 2. 장기판 두꺼운 나무 몸통 통울림 공명 (피치 강하 감쇠)
         const osc = audioCtx.createOscillator();
         const oscGain = audioCtx.createGain();
         osc.type = 'triangle';
@@ -242,7 +244,6 @@
       } catch(e) {}
     }
 
-    // 장기알이 전장 판 위를 미끄러질 때 나는 매끄러운 목재 마찰음
     function playSlideFriction(speed) {
       if (speed < 1.8) return;
       const now = performance.now();
@@ -369,13 +370,13 @@
     }
 
     const PIECE_CONFIG = {
-      '楚': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#34d399', ability: 'shockwave', shield: 2 },
-      '漢': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#f87171', ability: 'shockwave', shield: 2 },
-      '車': { name: '차',   cost: 5, radiusRatio: 0.025, mass: 3.8, border: '#67e8f9', ability: 'charge', shield: 1 },
-      '包': { name: '포',   cost: 4, radiusRatio: 0.023, mass: 2.8, border: '#d8b4fe', ability: 'cannon', shield: 1 },
-      '馬': { name: '마',   cost: 3, radiusRatio: 0.022, mass: 2.3, border: '#fb923c', ability: 'curve', shield: 1 },
-      '象': { name: '상',   cost: 2, radiusRatio: 0.025, mass: 4.2, border: '#facc15', ability: 'shield', shield: 1 },
-      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.019, mass: 1.0, border: '#e2e8f0', ability: 'nimble', shield: 0 }
+      '楚': { name: '장군', cost: 6, radiusRatio: 0.032, mass: 5.5, border: '#34d399', ability: 'shockwave', shield: 2 },
+      '漢': { name: '장군', cost: 6, radiusRatio: 0.032, mass: 5.5, border: '#f87171', ability: 'shockwave', shield: 2 },
+      '車': { name: '차',   cost: 5, radiusRatio: 0.027, mass: 3.8, border: '#67e8f9', ability: 'charge', shield: 1 },
+      '包': { name: '포',   cost: 4, radiusRatio: 0.025, mass: 2.8, border: '#d8b4fe', ability: 'cannon', shield: 1 },
+      '馬': { name: '마',   cost: 3, radiusRatio: 0.024, mass: 2.3, border: '#fb923c', ability: 'curve', shield: 1 },
+      '象': { name: '상',   cost: 2, radiusRatio: 0.027, mass: 4.2, border: '#facc15', ability: 'shield', shield: 1 },
+      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.021, mass: 1.0, border: '#e2e8f0', ability: 'nimble', shield: 0 }
     };
 
     let mySide = 'cho';
@@ -431,9 +432,27 @@
     }
 
     function resizeCanvas() {
+      const mainEl = document.querySelector('main');
       const container = document.getElementById('board-container');
-      const w = container.clientWidth - 8;
-      const h = container.clientHeight - 8;
+
+      const availW = mainEl.clientWidth - 8;
+      const availH = mainEl.clientHeight - 8;
+
+      const targetAspect = 9 / 13;
+      let finalW = availW;
+      let finalH = finalW / targetAspect;
+
+      if (finalH > availH) {
+        finalH = availH;
+        finalW = finalH * targetAspect;
+      }
+
+      container.style.width = `${Math.floor(finalW)}px`;
+      container.style.height = `${Math.floor(finalH)}px`;
+
+      const w = Math.floor(finalW) - 6;
+      const h = Math.floor(finalH) - 6;
+
       canvas.width = w * window.devicePixelRatio;
       canvas.height = h * window.devicePixelRatio;
       canvas.style.width = `${w}px`;
@@ -442,20 +461,20 @@
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
       boardBounds = {
-        left: w * 0.03,
+        left: w * 0.04,
         top: h * 0.03,
-        right: w * 0.97,
+        right: w * 0.96,
         bottom: h * 0.97,
-        width: w * 0.94,
+        width: w * 0.92,
         height: h * 0.94
       };
 
       if (mySide === 'cho') {
-        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
-        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
+        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
+        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
       } else {
-        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
-        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
+        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
+        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
       }
     }
     window.addEventListener('resize', () => {
@@ -478,23 +497,18 @@
       currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8' });
       currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8' });
 
-      currentMap.walls.push({ x1: bx, y1: by + h * 0.25, x2: bx, y2: by + h * 0.35, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.25, x2: bx + w, y2: by + h * 0.35, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx, y1: by + h * 0.65, x2: bx, y2: by + h * 0.75, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.65, x2: bx + w, y2: by + h * 0.75, color: '#94a3b8' });
-
-      const obstacleCount = 5 + Math.floor(Math.random() * 3);
+      const obstacleCount = 4 + Math.floor(Math.random() * 3);
       const types = ['mountain', 'water_puddle', 'sawblade', 'twin_blade', 'mud'];
 
       for (let i = 0; i < obstacleCount; i++) {
         const obsType = types[Math.floor(Math.random() * types.length)];
         const ox = bx + w * (0.15 + Math.random() * 0.7);
         const oy = (Math.random() > 0.5) 
-          ? by + h * (0.33 + Math.random() * 0.13) 
-          : by + h * (0.55 + Math.random() * 0.13);
+          ? by + h * (0.34 + Math.random() * 0.12) 
+          : by + h * (0.54 + Math.random() * 0.12);
 
         if (obsType === 'mountain') {
-          const r = w * (0.026 + Math.random() * 0.012);
+          const r = w * (0.028 + Math.random() * 0.012);
           const points = [];
           const numPts = 7;
           for (let p = 0; p < numPts; p++) {
@@ -511,7 +525,7 @@
           currentMap.obstacles.push({
             type: 'sawblade',
             x: ox, y: oy,
-            r: w * 0.026,
+            r: w * 0.028,
             angle: 0,
             speed: (Math.random() > 0.5 ? 1 : -1) * 0.06
           });
@@ -542,7 +556,7 @@
         isHost = true;
         mySide = 'cho';
         setupConnectionEvents();
-        document.getElementById('host-wait-msg').innerText = '상대방이 입장했습니다! 배치를 시작하세요.';
+        document.getElementById('host-wait-msg').innerText = '상대방이 입장했습니다!';
         document.getElementById('multi-lobby-modal').classList.add('hidden');
         startTimer(40);
       });
@@ -550,7 +564,7 @@
 
     function copyRoomCode() {
       navigator.clipboard.writeText(my4DigitCode);
-      alert(`방 번호 [${my4DigitCode}] 가 복사되었습니다! 친구에게 전달하세요.`);
+      alert(`방 번호 [${my4DigitCode}] 가 복사되었습니다!`);
     }
 
     function connectWith4Digit() {
@@ -643,12 +657,12 @@
 
       document.getElementById('placement-panel').classList.remove('hidden');
       document.getElementById('battle-panel').classList.add('hidden');
-      document.getElementById('ready-btn').innerText = '배치 완료 & 준비 ⚔️';
-      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all';
+      document.getElementById('ready-btn').innerText = '배치 완료 ⚔️';
+      document.getElementById('ready-btn').className = 'px-3 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-[10px] font-black shadow transition-all';
 
       const badge = document.getElementById('game-phase-badge');
       badge.innerText = '비공개 배치';
-      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow';
+      badge.className = 'px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow';
       document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
 
       buyPiece('楚', true);
@@ -661,7 +675,7 @@
     function startSoloAIMode() {
       isAIMode = true;
       document.getElementById('multi-lobby-modal').classList.add('hidden');
-      document.getElementById('opp-name').innerText = '인공지능 (COM)';
+      document.getElementById('opp-name').innerText = 'COM';
       setupAIHanArmy();
       updateUI();
       startTimer(40);
@@ -717,18 +731,12 @@
       onTurnSwitched();
     }
 
-    // [신규] 20점 풀 활용 스마트 자동 추천 배치 기능
     function autoBalancedDeploy() {
       if (gamePhase !== 'placement') return;
 
-      // 기존 내 말 초기화 및 20점 풀 복구
       pieces = pieces.filter(p => p.side !== mySide);
       budget = 20;
 
-      // 추천 밸런스 덱: 장군(6) + 차(5) + 포(4) + 마(3) + 상(2) = 20점 완벽 소진
-      const deployRoster = ['楚', '車', '包', '馬', '象'];
-
-      // 전략적 포메이션 좌표 계산 (전방: 상 / 중열: 차, 마 / 후방: 장군, 포)
       const bW = boardBounds.width;
       const bLeft = boardBounds.left;
       const zTop = mySpawnZone.top;
@@ -736,11 +744,11 @@
       const zH = zBottom - zTop;
 
       const formation = [
-        { type: '楚', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 }, // 후방 사령관
-        { type: '車', x: bLeft + bW * 0.18, y: zTop + zH * 0.45 }, // 좌측 돌파
-        { type: '包', x: bLeft + bW * 0.82, y: zTop + zH * 0.75 }, // 우측 후방 포격
-        { type: '馬', x: bLeft + bW * 0.75, y: zTop + zH * 0.45 }, // 우측 스윙
-        { type: '象', x: bLeft + bW * 0.50, y: zTop + zH * 0.28 }  // 전방 중앙 탱커
+        { type: '楚', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 },
+        { type: '車', x: bLeft + bW * 0.20, y: zTop + zH * 0.50 },
+        { type: '包', x: bLeft + bW * 0.80, y: zTop + zH * 0.75 },
+        { type: '馬', x: bLeft + bW * 0.72, y: zTop + zH * 0.45 },
+        { type: '象', x: bLeft + bW * 0.50, y: zTop + zH * 0.28 }
       ];
 
       formation.forEach(item => {
@@ -776,8 +784,7 @@
 
     function buyPiece(char, isFree = false) {
       if (gamePhase !== 'placement') return;
-      const typeKey = (char === '楚' || char === '漢') ? char : char;
-      const conf = PIECE_CONFIG[typeKey];
+      const conf = PIECE_CONFIG[char];
 
       if (!isFree && budget < conf.cost) {
         alert('배치 포인트가 부족합니다!');
@@ -859,7 +866,7 @@
 
       isMyReady = true;
       document.getElementById('ready-btn').innerText = '준비 완료됨 ✅';
-      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-slate-700 rounded-xl text-xs font-black shadow cursor-not-allowed';
+      document.getElementById('ready-btn').className = 'px-3 py-1 bg-slate-700 rounded-xl text-[10px] font-black shadow cursor-not-allowed';
 
       if (peerConn && peerConn.open) {
         peerConn.send({
@@ -892,8 +899,8 @@
 
         const badge = document.getElementById('game-phase-badge');
         badge.innerText = '초(청군) 차례';
-        badge.className = 'px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
-        document.getElementById('guide-text').innerText = '전투 개시! 적의 배치를 파악하고 신중히 타격하세요!';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
+        document.getElementById('guide-text').innerText = '전투 개시! 적을 향해 조준하세요!';
 
         updateUI();
         startTimer(15);
@@ -927,11 +934,11 @@
 
       if (winner === mySide) {
         title.innerText = '👑 판쓸이 대승리! 👑';
-        title.className = 'text-2xl font-black title-font text-emerald-400';
+        title.className = 'text-xl sm:text-2xl font-black title-font text-emerald-400';
         desc.innerText = '치열한 전술 끝에 적 진영을 격파했습니다!';
       } else {
         title.innerText = '💀 패배 💀';
-        title.className = 'text-2xl font-black title-font text-rose-500';
+        title.className = 'text-xl sm:text-2xl font-black title-font text-rose-500';
         desc.innerText = '아군의 모든 기물이 장외로 떨어졌습니다.';
       }
       modal.classList.remove('hidden');
@@ -997,7 +1004,7 @@
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist > 10) {
+        if (dist > 8) {
           clearInterval(timerInterval);
 
           let powerMult = 0.16;
@@ -1096,7 +1103,6 @@
       return { dist, projX, projY };
     }
 
-    // 물리 업데이트
     function updatePhysics() {
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'sawblade' || obs.type === 'twin_blade') {
@@ -1131,7 +1137,6 @@
         p.x += p.vx;
         p.y += p.vy;
 
-        // 미끄러지는 동안 매끄러운 마찰음
         const currentSpeed = Math.hypot(p.vx, p.vy);
         if (currentSpeed > 2.0 && !p.isJumping) {
           playSlideFriction(currentSpeed);
@@ -1247,7 +1252,6 @@
         }
       });
 
-      // 기물 간 탄성 충돌
       for (let i = 0; i < pieces.length; i++) {
         for (let j = i + 1; j < pieces.length; j++) {
           const p1 = pieces[i];
@@ -1325,12 +1329,12 @@
       const guide = document.getElementById('guide-text');
 
       if (currentTurn === mySide) {
-        badge.innerText = `${mySide === 'cho' ? '초(내 턴)' : '한(내 턴)'} 차례`;
-        badge.className = 'px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
-        guide.innerText = '15초 내에 짧은 궤적을 확인하며 조준하세요!';
+        badge.innerText = `${mySide === 'cho' ? '초(내 턴)' : '한(내 턴)'}`;
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
+        guide.innerText = '15초 내에 조준하여 발사하세요!';
       } else {
-        badge.innerText = '상대방 턴 진행 중...';
-        badge.className = 'px-3 py-0.5 rounded-full text-xs font-black bg-red-600 text-white shadow animate-pulse';
+        badge.innerText = '상대 턴 진행 중...';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-red-600 text-white shadow animate-pulse';
         guide.innerText = '상대방의 샷을 주시하세요.';
 
         if (isAIMode && currentTurn === 'han') {
@@ -1373,6 +1377,7 @@
     function render() {
       const w = parseFloat(canvas.style.width);
       const h = parseFloat(canvas.style.height);
+      if (!w || !h) return;
       ctx.clearRect(0, 0, w, h);
 
       ctx.save();
@@ -1387,23 +1392,23 @@
       ctx.fillStyle = currentMap.bg;
       ctx.fillRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
       ctx.lineWidth = 1;
-      for (let i = 0; i <= 16; i++) {
-        const x = boardBounds.left + (boardBounds.width / 16) * i;
+      for (let i = 0; i <= 14; i++) {
+        const x = boardBounds.left + (boardBounds.width / 14) * i;
         ctx.beginPath(); ctx.moveTo(x, boardBounds.top); ctx.lineTo(x, boardBounds.bottom); ctx.stroke();
       }
-      for (let i = 0; i <= 12; i++) {
-        const y = boardBounds.top + (boardBounds.height / 12) * i;
+      for (let i = 0; i <= 10; i++) {
+        const y = boardBounds.top + (boardBounds.height / 10) * i;
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
-        ctx.lineWidth = 5.5;
+        ctx.lineWidth = 4.5;
         ctx.shadowColor = w.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); ctx.stroke();
         ctx.restore();
@@ -1424,12 +1429,6 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-
-          ctx.strokeStyle = '#475569';
-          ctx.beginPath();
-          ctx.moveTo(0, 0); ctx.lineTo(obs.points[0].x * 0.7, obs.points[0].y * 0.7);
-          ctx.moveTo(0, 0); ctx.lineTo(obs.points[3].x * 0.7, obs.points[3].y * 0.7);
-          ctx.stroke();
           ctx.restore();
         } else if (obs.type === 'water_puddle') {
           ctx.save();
@@ -1440,22 +1439,13 @@
           ctx.ellipse(obs.x, obs.y, obs.rx, obs.ry, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-
-          ctx.strokeStyle = 'rgba(125, 211, 252, 0.4)';
-          ctx.beginPath();
-          ctx.ellipse(obs.x, obs.y, obs.rx * 0.55, obs.ry * 0.55, 0, 0, Math.PI * 2);
-          ctx.stroke();
           ctx.restore();
         } else if (obs.type === 'mud') {
           ctx.save();
           ctx.fillStyle = 'rgba(120, 53, 15, 0.45)';
           ctx.strokeStyle = '#92400e';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1.8;
           ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#b45309';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('진흙', obs.x, obs.y + 3);
           ctx.restore();
         } else if (obs.type === 'sawblade') {
           ctx.save();
@@ -1465,16 +1455,6 @@
           ctx.strokeStyle = '#f87171';
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(0, 0, obs.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-          ctx.fillStyle = '#dc2626';
-          for (let s = 0; s < 8; s++) {
-            ctx.rotate(Math.PI / 4);
-            ctx.beginPath();
-            ctx.moveTo(obs.r, -3);
-            ctx.lineTo(obs.r + 5, 0);
-            ctx.lineTo(obs.r, 3);
-            ctx.fill();
-          }
           ctx.restore();
         } else if (obs.type === 'twin_blade') {
           ctx.save();
@@ -1482,8 +1462,6 @@
           ctx.rotate(obs.angle);
           ctx.fillStyle = '#f59e0b';
           ctx.fillRect(-obs.len, -2.5, obs.len * 2, 5);
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
         }
       });
@@ -1492,13 +1470,13 @@
         ctx.save();
         ctx.fillStyle = mySide === 'cho' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
         ctx.strokeStyle = mySide === 'cho' ? '#10b981' : '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 5]);
         ctx.strokeRect(boardBounds.left, mySpawnZone.top, boardBounds.width, mySpawnZone.bottom - mySpawnZone.top);
         ctx.fillRect(boardBounds.left, mySpawnZone.top, boardBounds.width, mySpawnZone.bottom - mySpawnZone.top);
         ctx.fillStyle = mySide === 'cho' ? '#34d399' : '#f87171';
-        ctx.font = 'bold 11px "Jua"';
-        ctx.fillText(`내 진영 배치 구역 (${mySide === 'cho' ? '초군' : '한군'})`, boardBounds.left + 10, mySpawnZone.top + 18);
+        ctx.font = 'bold 10px "Jua"';
+        ctx.fillText(`내 진영 배치 구역 (${mySide === 'cho' ? '초군' : '한군'})`, boardBounds.left + 8, mySpawnZone.top + 14);
         ctx.restore();
 
         ctx.save();
@@ -1508,16 +1486,15 @@
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 4]);
         ctx.strokeRect(boardBounds.left, oppSpawnZone.top, boardBounds.width, oppSpawnZone.bottom - oppSpawnZone.top);
-
         ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 12px "Jua"';
+        ctx.font = 'bold 11px "Jua"';
         ctx.textAlign = 'center';
-        ctx.fillText('🌫️ 상대방 진영 (비공개 배치 중) 🌫️', boardBounds.left + boardBounds.width / 2, oppSpawnZone.top + (oppSpawnZone.bottom - oppSpawnZone.top) / 2);
+        ctx.fillText('🌫️ 상대방 진영 (비공개 배치) 🌫️', boardBounds.left + boardBounds.width / 2, oppSpawnZone.top + (oppSpawnZone.bottom - oppSpawnZone.top) / 2);
         ctx.restore();
       }
 
       ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
       ctx.strokeRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
       for (let i = shockwaves.length - 1; i >= 0; i--) {
@@ -1525,7 +1502,7 @@
         ctx.save();
         ctx.strokeStyle = sw.color;
         ctx.globalAlpha = sw.alpha;
-        ctx.lineWidth = 3.5 * sw.alpha;
+        ctx.lineWidth = 3 * sw.alpha;
         ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
         sw.r += 4.2;
@@ -1539,8 +1516,6 @@
         if (vf.type === 'lightning') {
           ctx.strokeStyle = vf.color;
           ctx.lineWidth = 2.5;
-          ctx.shadowColor = vf.color;
-          ctx.shadowBlur = 10;
           ctx.beginPath(); ctx.moveTo(vf.x, vf.y);
           for (let step = 0; step < 4; step++) {
             ctx.lineTo(vf.x + (Math.random() - 0.5) * 35, vf.y + (Math.random() - 0.5) * 35);
@@ -1552,16 +1527,9 @@
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           vf.r += 2.8;
-        } else if (vf.type === 'vortex') {
-          ctx.strokeStyle = 'rgba(251, 146, 60, 0.6)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(vf.x, vf.y, 18, vf.angle, vf.angle + Math.PI); ctx.stroke();
-          vf.angle += 0.4;
         } else if (vf.type === 'shield_barrier') {
           ctx.strokeStyle = '#facc15';
-          ctx.lineWidth = 3;
-          ctx.shadowColor = '#facc15';
-          ctx.shadowBlur = 8;
+          ctx.lineWidth = 2.5;
           ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.stroke();
         }
         ctx.restore();
@@ -1591,14 +1559,14 @@
         ctx.save();
         ctx.translate(p.x, p.y);
 
-        const scale = p.isJumping ? 1.4 : 1.0;
+        const scale = p.isJumping ? 1.35 : 1.0;
         ctx.scale(scale, scale);
 
         if (p.shield > 0) {
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 2.0;
+          ctx.lineWidth = 1.8;
           ctx.setLineDash([3, 3]);
-          ctx.beginPath(); ctx.arc(0, 0, p.radius + 4, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, p.radius + 3.5, 0, Math.PI * 2); ctx.stroke();
           ctx.setLineDash([]);
         }
 
@@ -1614,13 +1582,10 @@
         ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill();
 
-        ctx.lineWidth = 3.0;
+        ctx.lineWidth = 2.6;
         ctx.strokeStyle = p.border;
-        ctx.shadowColor = p.border;
-        ctx.shadowBlur = 8;
         ctx.stroke();
 
-        ctx.shadowBlur = 0;
         ctx.fillStyle = '#ffffff';
         ctx.font = `900 ${p.radius * 1.25}px 'Jua'`;
         ctx.textAlign = 'center';
@@ -1649,7 +1614,7 @@
 
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-          ctx.lineWidth = 1.8;
+          ctx.lineWidth = 1.6;
           ctx.setLineDash([4, 4]);
           ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(dragCurrent.x, dragCurrent.y); ctx.stroke();
           ctx.restore();
@@ -1657,7 +1622,7 @@
           ctx.save();
           ctx.strokeStyle = selectedPiece.border;
           ctx.fillStyle = selectedPiece.border;
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 2.2;
 
           let simX = dragStart.x;
           let simY = dragStart.y;
@@ -1683,7 +1648,7 @@
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
+          ctx.arc(simX, simY, 3, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }

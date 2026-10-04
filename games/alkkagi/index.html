@@ -418,10 +418,13 @@
     }
 
     let currentTurn = 'cho';
+    
+    // --- [개선된 당기기 / 슬링샷 시스템 상태 변수] ---
     let isDragging = false;
     let selectedPiece = null;
-    let dragStart = { x: 0, y: 0 };
-    let dragCurrent = { x: 0, y: 0 };
+    let dragStart = { x: 0, y: 0 };       // 캔버스 내 좌표
+    let dragCurrent = { x: 0, y: 0 };     // 캔버스 내 (또는 확장된) 좌표
+    let clientDragStart = { x: 0, y: 0 }; // 화면 절대 좌표
     let isSimulating = false;
     let isGameOver = false;
 
@@ -1003,8 +1006,8 @@
       modal.classList.remove('hidden');
     }
 
-    // 모바일 터치 및 마우스 완벽 통합 좌표 추출
-    function getEventPos(e) {
+    // 화면 절대 좌표 및 캔버스 기준 상대 좌표를 모두 반환
+    function getPointerCoordinates(e) {
       const rect = canvas.getBoundingClientRect();
       let clientX, clientY;
 
@@ -1020,17 +1023,20 @@
       }
 
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        canvasX: clientX - rect.left,
+        canvasY: clientY - rect.top,
+        clientX,
+        clientY
       };
     }
 
-    // [핵심] 당기기 시작: 기물 선택
+    // [당기기 시작] 기물 위에서 클릭 / 터치했을 때만 활성화
     function handleDragStart(e) {
-      const pos = getEventPos(e);
+      if (e.type === 'mousedown' && e.button !== 0) return;
+      const coords = getPointerCoordinates(e);
 
       if (gamePhase === 'placement') {
-        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
+        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - coords.canvasX, p.y - coords.canvasY) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
@@ -1039,28 +1045,29 @@
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
         
-        // 내 기물을 터치하면 슬링샷 조준 시작
-        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
+        // 내 기물을 터치하면 슬링샷 조준 시작 (두 번째 파일의 반경 감지 최적화 적용)
+        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - coords.canvasX, p.y - coords.canvasY) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
           dragStart = { x: target.x, y: target.y };
-          dragCurrent = { x: pos.x, y: pos.y };
+          dragCurrent = { x: target.x, y: target.y };
+          clientDragStart = { x: coords.clientX, y: coords.clientY };
           if (e.cancelable) e.preventDefault();
         }
       }
     }
 
-    // [핵심] 당기는 도중: 기물 범위를 아무리 벗어나도 끝까지 당겨짐 (절대 취소 안 됨)
+    // [당기는 도중] 캔버스 및 화면 전체 어디까지 나가도 절대 끊기지 않고 거리 및 벡터 계산
     function handleDragMove(e) {
       if (!isDragging || !selectedPiece) return;
       if (e.cancelable) e.preventDefault();
-      const pos = getEventPos(e);
+      const coords = getPointerCoordinates(e);
 
       if (gamePhase === 'placement') {
         const r = selectedPiece.radius;
-        selectedPiece.x = Math.max(boardBounds.left + r, Math.min(boardBounds.right - r, pos.x));
-        selectedPiece.y = Math.max(mySpawnZone.top + r, Math.min(mySpawnZone.bottom - r, pos.y));
+        selectedPiece.x = Math.max(boardBounds.left + r, Math.min(boardBounds.right - r, coords.canvasX));
+        selectedPiece.y = Math.max(mySpawnZone.top + r, Math.min(mySpawnZone.bottom - r, coords.canvasY));
 
         pieces.forEach(other => {
           if (other !== selectedPiece && other.side === mySide) {
@@ -1072,30 +1079,37 @@
             }
           }
         });
-      } else {
-        // 배틀 단계: 손가락을 당기는 실시간 좌표 반영
-        dragCurrent = pos;
+      } else if (gamePhase === 'battle') {
+        // 화면 절대 좌표의 차이를 캔버스 내 시작점에 더해 화면 밖 어디든 무제한 추적
+        const deltaX = coords.clientX - clientDragStart.x;
+        const deltaY = coords.clientY - clientDragStart.y;
+        dragCurrent = {
+          x: dragStart.x + deltaX,
+          y: dragStart.y + deltaY
+        };
       }
     }
 
-    // [핵심] 당겼다 손을 떼었을 때만 발사
+    // [당겼다 손을 뗐을 때 발사]
     function handleDragEnd(e) {
       if (!isDragging || !selectedPiece) return;
       if (e.cancelable) e.preventDefault();
 
       if (gamePhase === 'battle') {
+        // 당긴 반대 방향 벡터 계산 (두 번째 파일의 슬링샷 발사 핵심 공식 적용)
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        // 10px 이상 당겼을 때 당긴 거리에 비례하여 강력 발사
-        if (dist > 10) {
+        // 최소 6px 이상 당겼을 때 정상 발사
+        if (dist > 6) {
           if (timerInterval) clearInterval(timerInterval);
 
           let powerMult = 0.16;
           if (selectedPiece.ability === 'charge') powerMult = 0.23;
 
-          const power = Math.min(dist * powerMult, 20);
+          // 거리 비례 파워 (최대 24)
+          const power = Math.min(dist * powerMult, 24);
           const angle = Math.atan2(dy, dx);
           const vx = Math.cos(angle) * power;
           const vy = Math.sin(angle) * power;
@@ -1132,10 +1146,11 @@
       selectedPiece = null;
     }
 
-    // 모바일 터치 이벤트(Touch)와 마우스 이벤트(Mouse)를 듀얼로 완벽 등록
+    // 조준 시작은 캔버스에서, 조준 중 및 발사는 전역(window)에서 감지하여 게임판을 벗어나도 구애받지 않음
     canvas.addEventListener('touchstart', handleDragStart, { passive: false });
     window.addEventListener('touchmove', handleDragMove, { passive: false });
     window.addEventListener('touchend', handleDragEnd, { passive: false });
+    window.addEventListener('touchcancel', handleDragEnd, { passive: false });
 
     canvas.addEventListener('mousedown', handleDragStart);
     window.addEventListener('mousemove', handleDragMove);
@@ -1506,7 +1521,7 @@
         ctx.restore();
       });
 
-      // 현실적인 각진 바위산, 투명 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
+      // 지형 장애물 렌더링
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'mountain') {
           ctx.save();
@@ -1675,6 +1690,7 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
+      // 기물 렌더링
       pieces.forEach(p => {
         if (!p.alive) return;
         if (gamePhase === 'placement' && p.side !== mySide) return;
@@ -1686,6 +1702,13 @@
 
         const scale = p.isJumping ? 1.35 : 1.0;
         ctx.scale(scale, scale);
+
+        // 당겨지는 중인 선택 기물 강조 링
+        if (isDragging && selectedPiece === p) {
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, 0, p.radius + 6, 0, Math.PI * 2); ctx.stroke();
+        }
 
         if (p.shield > 0) {
           ctx.strokeStyle = '#38bdf8';
@@ -1726,30 +1749,47 @@
         ctx.restore();
       });
 
-      // [슬링샷 당기기 줄 및 점선 궤적 시뮬레이션: 손가락이 말 밖으로 나가도 끝까지 유지]
+      // [슬링샷 당기기 줄, 파워 게이지 링 및 발사 예측선]
       if (isDragging && selectedPiece && gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist > 8) {
+        if (dist > 6) {
           let powerMult = 0.16;
           if (selectedPiece.ability === 'charge') powerMult = 0.23;
-          const power = Math.min(dist * powerMult, 20);
+          const power = Math.min(dist * powerMult, 24);
           const angle = Math.atan2(dy, dx);
 
-          // 1. 뒤로 팽팽하게 당기는 고무줄 점선 줄
+          // 1. 뒤로 팽팽하게 당기는 고무줄 줄
           ctx.save();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 2.2;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
           ctx.moveTo(dragStart.x, dragStart.y);
           ctx.lineTo(dragCurrent.x, dragCurrent.y);
           ctx.stroke();
+
+          // 손가락 당김 지점의 동그라미 터치 포인트
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
+          ctx.beginPath();
+          ctx.arc(dragCurrent.x, dragCurrent.y, 7, 0, Math.PI * 2);
+          ctx.fill();
           ctx.restore();
 
-          // 2. 발사 방향 점선 예측 궤적선 (스텝별 물리 예측)
+          // 2. 파워 강도 시각적 원형 게이지
+          const powerRatio = Math.min(dist / 140, 1.0);
+          ctx.save();
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : (powerRatio > 0.4 ? '#f59e0b' : '#10b981');
+          ctx.beginPath();
+          ctx.arc(dragStart.x, dragStart.y, selectedPiece.radius + 9, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * powerRatio));
+          ctx.stroke();
+          ctx.restore();
+
+          // 3. 발사 방향 점선 예측 궤적선
           ctx.save();
           ctx.strokeStyle = selectedPiece.border;
           ctx.fillStyle = selectedPiece.border;
@@ -1763,7 +1803,7 @@
           ctx.beginPath();
           ctx.moveTo(simX, simY);
 
-          const steps = 8;
+          const steps = 9;
           for (let step = 1; step <= steps; step++) {
             if (selectedPiece.ability === 'curve') {
               simVx += -simVy * 0.045;
@@ -1778,9 +1818,9 @@
           }
           ctx.stroke();
 
-          // 궤적 끝점 에임 타겟 동그라미
+          // 궤적 끝점 조준 타겟 동그라미
           ctx.beginPath();
-          ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
+          ctx.arc(simX, simY, 4, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }

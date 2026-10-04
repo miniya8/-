@@ -25,8 +25,15 @@
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
       background: radial-gradient(circle at 50% 20%, #0b0f19, #020408);
       overscroll-behavior: none;
+    }
+    canvas {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
   </style>
@@ -46,12 +53,9 @@
       </div>
 
       <!-- 중앙 상태 & 타이머 -->
-      <div class="flex flex-col items-center">
-        <div class="flex items-center gap-1">
-          <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
-          <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
-        </div>
-        <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">기습 진형을 짜세요!</span>
+      <div class="flex items-center gap-1">
+        <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
+        <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
       </div>
 
       <!-- 내 정보 & 메인 복귀 -->
@@ -111,7 +115,7 @@
     </div>
   </div>
 
-  <!-- 메인 캔버스 뷰 (모바일 웹뷰 높이 계산에 맞춘 핏) -->
+  <!-- 메인 캔버스 뷰 -->
   <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
     <div id="board-container" class="relative rounded-2xl shadow-2xl bg-neutral-950 border-2 sm:border-4 border-neutral-800 p-0.5 overflow-hidden flex items-center justify-center">
       <canvas id="alkkagiCanvas" class="rounded-xl block touch-none"></canvas>
@@ -142,7 +146,6 @@
           배치 포인트: <span id="budget-display" class="text-sm text-yellow-400 font-black">20</span> P
         </div>
         <div class="flex items-center gap-1">
-          <!-- 자동 배치 버튼 -->
           <button onclick="autoBalancedDeploy()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-xl text-[10px] font-black shadow flex items-center gap-1">
             🎲 자동배치
           </button>
@@ -183,7 +186,7 @@
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
       <div class="text-[10px] text-slate-300">
-        <span class="font-bold text-amber-400">조언:</span> 기물 뒤로 당겨 손을 놓으면 발사됩니다!
+        <span class="font-bold text-amber-400">조언:</span> 기물을 손가락으로 누른 채 뒤로 당겼다 놓으세요!
       </div>
       <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
@@ -192,6 +195,10 @@
   <script>
     const canvas = document.getElementById('alkkagiCanvas');
     const ctx = canvas.getContext('2d');
+
+    // 컨텍스트 메뉴(길게 누르면 뜨는 복사/선택 등) 원천 차단
+    window.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let lastClackTime = 0;
@@ -411,6 +418,7 @@
     let currentTurn = 'cho';
     let isDragging = false;
     let selectedPiece = null;
+    let activePointerId = null;
     let dragStart = { x: 0, y: 0 };
     let dragCurrent = { x: 0, y: 0 };
     let isSimulating = false;
@@ -446,8 +454,8 @@
       const mainArea = document.getElementById('main-area');
       const container = document.getElementById('board-container');
 
-      const maxW = mainArea.clientWidth - 12;
-      const maxH = mainArea.clientHeight - 12;
+      const maxW = mainArea.clientWidth - 10;
+      const maxH = mainArea.clientHeight - 10;
 
       const targetRatio = 9 / 13;
       let w = maxW;
@@ -919,7 +927,6 @@
         const badge = document.getElementById('game-phase-badge');
         badge.innerText = '초(청군) 차례';
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
-        document.getElementById('guide-text').innerText = '전투 개시! 적을 향해 조준하세요!';
 
         updateUI();
         startTimer(15);
@@ -963,36 +970,46 @@
       modal.classList.remove('hidden');
     }
 
+    // 모바일 터치 좌표 정밀 추출
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      return { x: cx - rect.left, y: cy - rect.top };
+      return { 
+        x: e.clientX - rect.left, 
+        y: e.clientY - rect.top 
+      };
     }
 
+    // [핵심] Pointer Capture 및 멀티터치 제스처 간섭 차단
     canvas.addEventListener('pointerdown', e => {
+      e.preventDefault();
       const pos = getPointerPos(e);
 
       if (gamePhase === 'placement') {
-        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 1.5);
+        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.0);
         if (target) {
           isDragging = true;
           selectedPiece = target;
+          activePointerId = e.pointerId;
+          canvas.setPointerCapture(e.pointerId);
         }
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
-        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 1.5);
+        // 터치 판정 범위를 2.0배로 넓혀 작은 스마트폰 화면에서도 손가락 아래 기물이 정확히 잡히도록 보정
+        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
+          activePointerId = e.pointerId;
           dragStart = { x: target.x, y: target.y };
           dragCurrent = { x: pos.x, y: pos.y };
+          canvas.setPointerCapture(e.pointerId);
         }
       }
-    });
+    }, { passive: false });
 
-    window.addEventListener('pointermove', e => {
-      if (!isDragging || !selectedPiece) return;
+    canvas.addEventListener('pointermove', e => {
+      if (!isDragging || !selectedPiece || e.pointerId !== activePointerId) return;
+      e.preventDefault();
       const pos = getPointerPos(e);
 
       if (gamePhase === 'placement') {
@@ -1013,17 +1030,23 @@
       } else {
         dragCurrent = pos;
       }
-    });
+    }, { passive: false });
 
-    window.addEventListener('pointerup', () => {
-      if (!isDragging || !selectedPiece) return;
+    function handlePointerRelease(e) {
+      if (!isDragging || !selectedPiece || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+      e.preventDefault();
+
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
 
       if (gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist > 8) {
+        // 최소 6px 이상 슬링샷 드래그했을 때 즉시 격발
+        if (dist > 6) {
           clearInterval(timerInterval);
 
           let powerMult = 0.16;
@@ -1064,7 +1087,11 @@
 
       isDragging = false;
       selectedPiece = null;
-    });
+      activePointerId = null;
+    }
+
+    canvas.addEventListener('pointerup', handlePointerRelease, { passive: false });
+    canvas.addEventListener('pointercancel', handlePointerRelease, { passive: false });
 
     function spawnShockwave(x, y, color = '#fbbf24', maxR = 90) {
       shockwaves.push({ x, y, r: 4, maxR, color, alpha: 1.0 });
@@ -1319,7 +1346,7 @@
             p2.y += sin * (overlap + 0.5);
 
             const vx1 = p1.vx * cos + p1.vy * sin;
-            const vy1 = p1.vx * cos - p1.vx * sin;
+            const vy1 = p1.vy * cos - p1.vx * sin;
             const vx2 = p2.vx * cos + p2.vy * sin;
             const vy2 = p2.vy * cos - p2.vx * sin;
 
@@ -1345,16 +1372,13 @@
 
     function onTurnSwitched() {
       const badge = document.getElementById('game-phase-badge');
-      const guide = document.getElementById('guide-text');
 
       if (currentTurn === mySide) {
         badge.innerText = `${mySide === 'cho' ? '초(내 턴)' : '한(내 턴)'}`;
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
-        guide.innerText = '15초 내에 조준하여 발사하세요!';
       } else {
         badge.innerText = '상대 턴 진행 중...';
         badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-red-600 text-white shadow animate-pulse';
-        guide.innerText = '상대방의 샷을 주시하세요.';
 
         if (isAIMode && currentTurn === 'han') {
           setTimeout(triggerAIMove, 700);
@@ -1620,28 +1644,31 @@
         ctx.restore();
       });
 
+      // 슬링샷 조준선 렌더링
       if (isDragging && selectedPiece && gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist > 8) {
+        if (dist > 5) {
           let powerMult = 0.16;
           if (selectedPiece.ability === 'charge') powerMult = 0.23;
           const power = Math.min(dist * powerMult, 19);
           const angle = Math.atan2(dy, dx);
 
+          // 드래그 고무줄 가이드 라인
           ctx.save();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+          ctx.lineWidth = 2.0;
           ctx.setLineDash([4, 4]);
           ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(dragCurrent.x, dragCurrent.y); ctx.stroke();
           ctx.restore();
 
+          // 실제 발사 궤적 예측선
           ctx.save();
           ctx.strokeStyle = selectedPiece.border;
           ctx.fillStyle = selectedPiece.border;
-          ctx.lineWidth = 2.2;
+          ctx.lineWidth = 2.5;
 
           let simX = dragStart.x;
           let simY = dragStart.y;
@@ -1667,7 +1694,7 @@
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.arc(simX, simY, 3, 0, Math.PI * 2);
+          ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }

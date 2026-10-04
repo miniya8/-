@@ -22,24 +22,24 @@
 <body class="text-white h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden">
 
   <!-- 상단 상태바 & 듀얼 타이머 -->
-  <header class="w-full max-w-5xl flex flex-col gap-1 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
+  <header class="w-full max-w-5xl flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
     <div class="flex items-center justify-between">
       <!-- 상대방 상태 -->
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-black text-xs text-red-300">한</div>
         <div class="flex flex-col">
           <span id="opp-name" class="font-bold text-xs text-slate-100">상대방 (대기중)</span>
-          <span id="opp-pieces-count" class="text-[10px] text-red-400 font-black">남은 기물: 0</span>
+          <span id="opp-pieces-count" class="text-[10px] text-red-400 font-black">배치 중 (비공개)</span>
         </div>
       </div>
 
       <!-- 중앙 상태 & 타이머 -->
       <div class="flex flex-col items-center">
         <div class="flex items-center gap-1.5">
-          <div id="game-phase-badge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow">배치 단계</div>
+          <div id="game-phase-badge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
           <div id="timer-badge" class="px-2 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
         </div>
-        <span id="guide-text" class="text-[9px] text-amber-300 mt-0.5">기물 무게와 짧은 궤적 예측을 고려해 전술을 세우세요</span>
+        <span id="guide-text" class="text-[9px] text-amber-300 mt-0.5">상대에게 내 배치가 보이지 않습니다. 기습 진형을 짜세요!</span>
       </div>
 
       <!-- 내 정보 & 메인 복귀 -->
@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <!-- 타이머 진행 프로그레스 바 -->
+    <!-- 타이머 프로그레스 바 -->
     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
       <div id="timer-progress" class="bg-gradient-to-r from-emerald-500 to-amber-500 h-full w-full transition-all duration-300"></div>
     </div>
@@ -63,46 +63,48 @@
 
   <!-- 4자리 간편 대기실 모달 -->
   <div id="multi-lobby-modal" class="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
-    <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-sm w-full shadow-2xl">
+    <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-xs w-full shadow-2xl">
       <div class="text-center mb-4">
-        <h2 class="text-xl font-black text-amber-400 title-font">⚔️ 전설의 알까기 1:1 대전</h2>
-        <p class="text-xs text-slate-400 mt-1">숫자 4자리 코드로 간편 초대 & 방 유지 무한 재경기</p>
+        <h2 class="text-lg font-black text-amber-400 title-font">⚔️ 전설의 알까기 1:1 대전</h2>
+        <p class="text-[11px] text-slate-400 mt-0.5">숫자 4자리 코드로 간편하게 입장하세요</p>
       </div>
 
       <div class="space-y-3">
         <!-- 내 방 번호 -->
-        <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 text-center">
-          <span class="text-xs font-bold text-emerald-400">내 4자리 방 번호 (초군 방장)</span>
-          <div class="flex items-center justify-center gap-2 mt-2">
-            <div id="my-room-code" class="text-2xl font-black tracking-widest text-yellow-400 bg-slate-900 border border-amber-500/50 px-4 py-1 rounded-xl">----</div>
-            <button onclick="copyRoomCode()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow">번호 복사</button>
+        <div class="bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800 text-center">
+          <span class="text-[11px] font-bold text-emerald-400">내 4자리 방 번호 (초군 방장)</span>
+          <div class="flex items-center justify-center gap-2 mt-1.5">
+            <div id="my-room-code" class="text-xl font-black tracking-widest text-yellow-400 bg-slate-900 border border-amber-500/50 px-3 py-1 rounded-xl">----</div>
+            <button onclick="copyRoomCode()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow whitespace-nowrap">복사</button>
           </div>
-          <p id="host-wait-msg" class="text-[10px] text-slate-400 mt-1.5">친구에게 4자리 번호를 알려주세요...</p>
+          <p id="host-wait-msg" class="text-[10px] text-slate-400 mt-1">친구에게 4자리 번호를 알려주세요...</p>
         </div>
 
         <!-- 상대 방 참가 -->
-        <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
-          <span class="text-xs font-bold text-cyan-400">친구 방 번호 입력 (한군 도전자)</span>
-          <div class="flex items-center gap-2 mt-2">
-            <input id="join-room-code" type="number" maxlength="4" placeholder="4자리 숫자" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-sm font-bold text-yellow-300 focus:outline-none focus:border-cyan-400 tracking-wider">
-            <button onclick="connectWith4Digit()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-bold text-white shadow">입장</button>
+        <div class="bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
+          <span class="text-[11px] font-bold text-cyan-400">친구 방 번호로 입장 (한군 도전자)</span>
+          <div class="flex items-center justify-between gap-2 mt-1.5">
+            <input id="join-room-code" type="number" maxlength="4" placeholder="4자리" class="w-28 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-center text-sm font-black text-yellow-300 focus:outline-none focus:border-cyan-400 tracking-widest">
+            <button onclick="connectWith4Digit()" class="flex-1 py-1.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-black text-white shadow whitespace-nowrap">
+              입장하기 ⚔️
+            </button>
           </div>
         </div>
 
         <!-- AI 플레이 -->
-        <button onclick="startSoloAIMode()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-xs font-bold text-amber-300">
+        <button onclick="startSoloAIMode()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-xs font-bold text-amber-300">
           🤖 AI와 싱글 전략전 시작
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 대형 와이드 알까기 캔버스 영역 -->
+  <!-- 메인 캔버스 뷰 -->
   <main class="relative w-full max-w-5xl flex-1 flex items-center justify-center p-1 my-1 overflow-hidden">
     <div id="board-container" class="relative w-full h-full rounded-2xl shadow-2xl bg-neutral-950 border-4 border-neutral-800 p-1 overflow-hidden flex items-center justify-center">
       <canvas id="alkkagiCanvas" class="rounded-xl block touch-none"></canvas>
 
-      <!-- 게임 종료 모달 (원클릭 방 유지 즉시 재시작) -->
+      <!-- 게임 종료 모달 -->
       <div id="game-over-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border-2 border-amber-400 text-white p-6 rounded-3xl text-center max-w-xs w-full shadow-2xl">
           <div id="over-title" class="text-2xl font-black title-font text-amber-300">👑 대승리 👑</div>
@@ -121,49 +123,55 @@
   </main>
 
   <!-- 하단 컨트롤 바 -->
-  <footer class="w-full max-w-5xl bg-slate-900/90 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-xl">
+  <footer class="w-full max-w-5xl bg-slate-900/95 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-xl">
     <div id="placement-panel" class="flex flex-col gap-1.5">
       <div class="flex justify-between items-center px-1">
         <div class="text-xs font-bold text-amber-300">
-          남은 배치 포인트: <span id="budget-display" class="text-base text-yellow-400 font-black">20</span> P
+          배치 포인트: <span id="budget-display" class="text-base text-yellow-400 font-black">20</span> P
         </div>
-        <button id="ready-btn" onclick="toggleReady()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all">
-          배치 완료 & 준비 ⚔️
-        </button>
+        <div class="flex items-center gap-1.5">
+          <!-- 자동 배치 버튼 -->
+          <button onclick="autoBalancedDeploy()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-xl text-xs font-black shadow flex items-center gap-1">
+            🎲 자동 추천 배치
+          </button>
+          <button id="ready-btn" onclick="toggleReady()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all">
+            배치 완료 & 준비 ⚔️
+          </button>
+        </div>
       </div>
 
       <!-- 6종 장기 기물 -->
       <div class="grid grid-cols-6 gap-1 text-center">
-        <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-emerald-400">장(楚/漢)</span>
-          <span class="text-[9px] text-amber-400 font-bold">6P·초중량(5.5)</span>
+        <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-emerald-300">장(楚/漢)</span>
+          <span class="text-[9px] text-amber-400 font-bold">6P·초중량</span>
         </button>
-        <button onclick="buyPiece('車')" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-cyan-400">차(車)</span>
-          <span class="text-[9px] text-amber-400 font-bold">5P·전격돌진(3.8)</span>
+        <button onclick="buyPiece('車')" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-cyan-300">차(車)</span>
+          <span class="text-[9px] text-amber-400 font-bold">5P·전격돌진</span>
         </button>
-        <button onclick="buyPiece('包')" class="bg-slate-800 hover:bg-slate-700 border border-purple-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-purple-400">포(包)</span>
-          <span class="text-[9px] text-amber-400 font-bold">4P·도약포격(2.8)</span>
+        <button onclick="buyPiece('包')" class="bg-slate-800 hover:bg-slate-700 border border-purple-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-purple-300">포(包)</span>
+          <span class="text-[9px] text-amber-400 font-bold">4P·도약포격</span>
         </button>
-        <button onclick="buyPiece('馬')" class="bg-slate-800 hover:bg-slate-700 border border-orange-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-orange-400">마(馬)</span>
-          <span class="text-[9px] text-amber-400 font-bold">3P·스윙곡선(2.3)</span>
+        <button onclick="buyPiece('馬')" class="bg-slate-800 hover:bg-slate-700 border border-orange-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-orange-300">마(馬)</span>
+          <span class="text-[9px] text-amber-400 font-bold">3P·스윙곡선</span>
         </button>
-        <button onclick="buyPiece('象')" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-amber-400">상(象)</span>
-          <span class="text-[9px] text-amber-400 font-bold">2P·철벽방패(4.2)</span>
+        <button onclick="buyPiece('象')" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-amber-300">상(象)</span>
+          <span class="text-[9px] text-amber-400 font-bold">2P·철벽방패</span>
         </button>
-        <button onclick="buyPiece('卒')" class="bg-slate-800 hover:bg-slate-700 border border-slate-500/50 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-slate-300">졸/병</span>
-          <span class="text-[9px] text-amber-400 font-bold">1P·경량(1.0)</span>
+        <button onclick="buyPiece('卒')" class="bg-slate-800 hover:bg-slate-700 border border-slate-500/60 p-1 rounded-xl flex flex-col items-center">
+          <span class="text-xs font-black text-slate-200">졸/병</span>
+          <span class="text-[9px] text-amber-400 font-bold">1P·경량탄성</span>
         </button>
       </div>
     </div>
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-2 py-1">
       <div class="text-xs text-slate-300">
-        <span class="font-bold text-amber-400">전략 팁:</span> 졸로는 장군을 밀어내기 힘듭니다! 마의 곡선 궤적과 회전 톱날을 지혜롭게 활용하세요.
+        <span class="font-bold text-amber-400">전술 조언:</span> 중앙 성벽 틈새를 노려 짧은 궤적으로 정밀 타격하세요!
       </div>
       <div class="text-xs font-bold text-emerald-400" id="current-map-title">맵: 중앙 관문 요새</div>
     </div>
@@ -173,56 +181,100 @@
     const canvas = document.getElementById('alkkagiCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 리얼 나무 사운드 & 사운드 중첩 방지
+    // 리얼 장기판 사운드 엔진 (원목 타건 & 미끄러짐 마찰 합성)
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let lastSoundTime = 0;
+    let lastClackTime = 0;
+    let lastSlideTime = 0;
 
-    function playWoodClack(intensity = 0.5) {
+    // 리얼 원목 장기알 타격음 (고역대 타격 + 장기판 내부 목재 공명 듀얼 레이어)
+    function playWoodClack(intensity = 0.5, massRatio = 1.0) {
       const now = performance.now();
-      if (now - lastSoundTime < 45) return;
-      lastSoundTime = now;
+      if (now - lastClackTime < 38) return;
+      lastClackTime = now;
 
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const t = audioCtx.currentTime;
         const vol = Math.min(1.0, Math.max(0.12, intensity));
 
-        const bufferSize = audioCtx.sampleRate * 0.035;
+        // 1. 단단한 박달나무 접촉 어택 노이즈 ('딱!' 하는 순간 임팩트)
+        const bufferSize = audioCtx.sampleRate * 0.028;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.16));
         }
         const noise = audioCtx.createBufferSource();
         noise.buffer = buffer;
 
         const noiseFilter = audioCtx.createBiquadFilter();
         noiseFilter.type = 'bandpass';
-        noiseFilter.frequency.setValueAtTime(1450, t);
-        noiseFilter.Q.setValueAtTime(3.2, t);
+        // 질량이 클수록 깊은 목재음, 가벼울수록 경쾌한 맑은 목재음
+        const centerFreq = Math.max(900, 1800 - massRatio * 150);
+        noiseFilter.frequency.setValueAtTime(centerFreq, t);
+        noiseFilter.Q.setValueAtTime(3.8, t);
 
         const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(vol * 0.85, t);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+        noiseGain.gain.setValueAtTime(vol * 0.9, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.028);
 
         noise.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(audioCtx.destination);
         noise.start(t);
 
+        // 2. 장기판 두꺼운 나무 몸통 통울림 공명 (피치 강하 감쇠)
         const osc = audioCtx.createOscillator();
         const oscGain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(380, t);
-        osc.frequency.exponentialRampToValueAtTime(75, t + 0.065);
+        const startPitch = Math.max(180, 480 - massRatio * 40);
+        const endPitch = Math.max(50, 110 - massRatio * 10);
+        osc.frequency.setValueAtTime(startPitch, t);
+        osc.frequency.exponentialRampToValueAtTime(endPitch, t + 0.075);
 
-        oscGain.gain.setValueAtTime(vol * 0.7, t);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
+        oscGain.gain.setValueAtTime(vol * 0.75, t);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
 
         osc.connect(oscGain);
         oscGain.connect(audioCtx.destination);
         osc.start(t);
-        osc.stop(t + 0.07);
+        osc.stop(t + 0.08);
+      } catch(e) {}
+    }
+
+    // 장기알이 전장 판 위를 미끄러질 때 나는 매끄러운 목재 마찰음
+    function playSlideFriction(speed) {
+      if (speed < 1.8) return;
+      const now = performance.now();
+      if (now - lastSlideTime < 90) return;
+      lastSlideTime = now;
+
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const dur = 0.06;
+        const bufferSize = audioCtx.sampleRate * dur;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.25;
+        }
+        const slideNoise = audioCtx.createBufferSource();
+        slideNoise.buffer = buffer;
+
+        const slideFilter = audioCtx.createBiquadFilter();
+        slideFilter.type = 'lowpass';
+        slideFilter.frequency.setValueAtTime(650, t);
+
+        const slideGain = audioCtx.createGain();
+        const vol = Math.min(0.25, (speed / 20) * 0.2);
+        slideGain.gain.setValueAtTime(vol, t);
+        slideGain.gain.linearRampToValueAtTime(0.001, t + dur);
+
+        slideNoise.connect(slideFilter);
+        slideFilter.connect(slideGain);
+        slideGain.connect(audioCtx.destination);
+        slideNoise.start(t);
       } catch(e) {}
     }
 
@@ -316,15 +368,14 @@
       } catch(e) {}
     }
 
-    // 질량 비례 밸런스 조정: 졸은 1.0, 장군은 5.5 (졸로 장군을 쳐도 거의 밀리지 않음)
     const PIECE_CONFIG = {
-      '楚': { name: '장군', cost: 6, radiusRatio: 0.026, mass: 5.5, border: '#10b981', ability: 'shockwave', shield: 2 },
-      '漢': { name: '장군', cost: 6, radiusRatio: 0.026, mass: 5.5, border: '#ef4444', ability: 'shockwave', shield: 2 },
-      '車': { name: '차',   cost: 5, radiusRatio: 0.022, mass: 3.8, border: '#06b6d4', ability: 'charge', shield: 1 },
-      '包': { name: '포',   cost: 4, radiusRatio: 0.020, mass: 2.8, border: '#a855f7', ability: 'cannon', shield: 1 },
-      '馬': { name: '마',   cost: 3, radiusRatio: 0.019, mass: 2.3, border: '#f97316', ability: 'curve', shield: 1 },
-      '象': { name: '상',   cost: 2, radiusRatio: 0.022, mass: 4.2, border: '#eab308', ability: 'shield', shield: 1 },
-      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.016, mass: 1.0, border: '#cbd5e1', ability: 'nimble', shield: 0 }
+      '楚': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#34d399', ability: 'shockwave', shield: 2 },
+      '漢': { name: '장군', cost: 6, radiusRatio: 0.029, mass: 5.5, border: '#f87171', ability: 'shockwave', shield: 2 },
+      '車': { name: '차',   cost: 5, radiusRatio: 0.025, mass: 3.8, border: '#67e8f9', ability: 'charge', shield: 1 },
+      '包': { name: '포',   cost: 4, radiusRatio: 0.023, mass: 2.8, border: '#d8b4fe', ability: 'cannon', shield: 1 },
+      '馬': { name: '마',   cost: 3, radiusRatio: 0.022, mass: 2.3, border: '#fb923c', ability: 'curve', shield: 1 },
+      '象': { name: '상',   cost: 2, radiusRatio: 0.025, mass: 4.2, border: '#facc15', ability: 'shield', shield: 1 },
+      '卒': { name: '졸/병',cost: 1, radiusRatio: 0.019, mass: 1.0, border: '#e2e8f0', ability: 'nimble', shield: 0 }
     };
 
     let mySide = 'cho';
@@ -361,6 +412,7 @@
 
     let boardBounds = { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
     let mySpawnZone = { top: 0, bottom: 0 };
+    let oppSpawnZone = { top: 0, bottom: 0 };
 
     let currentMap = {
       name: '중앙 관문 요새',
@@ -400,8 +452,10 @@
 
       if (mySide === 'cho') {
         mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
+        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
       } else {
         mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.27 };
+        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.73, bottom: boardBounds.bottom };
       }
     }
     window.addEventListener('resize', () => {
@@ -409,7 +463,6 @@
       generateRandomMap();
     });
 
-    // 자연스러운 물/산/톱날 장애물 생성
     function generateRandomMap() {
       const w = boardBounds.width;
       const h = boardBounds.height;
@@ -419,20 +472,17 @@
       currentMap.walls = [];
       currentMap.obstacles = [];
 
-      // 1. 중앙 성벽 (관문 구멍 2개)
       const midY = by + h * 0.5;
       const segW = w / 5;
       currentMap.walls.push({ x1: bx, y1: midY, x2: bx + segW * 1.35, y2: midY, color: '#38bdf8' });
       currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8' });
       currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8' });
 
-      // 사이드 쿠션 벽
       currentMap.walls.push({ x1: bx, y1: by + h * 0.25, x2: bx, y2: by + h * 0.35, color: '#94a3b8' });
       currentMap.walls.push({ x1: bx + w, y1: by + h * 0.25, x2: bx + w, y2: by + h * 0.35, color: '#94a3b8' });
       currentMap.walls.push({ x1: bx, y1: by + h * 0.65, x2: bx, y2: by + h * 0.75, color: '#94a3b8' });
       currentMap.walls.push({ x1: bx + w, y1: by + h * 0.65, x2: bx + w, y2: by + h * 0.75, color: '#94a3b8' });
 
-      // 2. 다양한 장애물 (울퉁불퉁한 물, 산봉우리, 회전 톱날, 회전 칼날)
       const obstacleCount = 5 + Math.floor(Math.random() * 3);
       const types = ['mountain', 'water_puddle', 'sawblade', 'twin_blade', 'mud'];
 
@@ -444,7 +494,6 @@
           : by + h * (0.55 + Math.random() * 0.13);
 
         if (obsType === 'mountain') {
-          // 다각형 바위산 형태 생성 (꼭짓점 6~8개)
           const r = w * (0.026 + Math.random() * 0.012);
           const points = [];
           const numPts = 7;
@@ -455,12 +504,10 @@
           }
           currentMap.obstacles.push({ type: 'mountain', x: ox, y: oy, r, points });
         } else if (obsType === 'water_puddle') {
-          // 물결치는 연못 수로
           const rx = w * (0.05 + Math.random() * 0.02);
           const ry = h * (0.04 + Math.random() * 0.015);
           currentMap.obstacles.push({ type: 'water_puddle', x: ox, y: oy, rx, ry, r: (rx+ry)/2, waveTimer: 0 });
         } else if (obsType === 'sawblade') {
-          // 회전 원형 톱날 (닿으면 칼날 데미지 & 실드 차감)
           currentMap.obstacles.push({
             type: 'sawblade',
             x: ox, y: oy,
@@ -469,7 +516,6 @@
             speed: (Math.random() > 0.5 ? 1 : -1) * 0.06
           });
         } else if (obsType === 'twin_blade') {
-          // 회전 양날 칼날
           currentMap.obstacles.push({
             type: 'twin_blade',
             x: ox, y: oy,
@@ -483,7 +529,6 @@
       }
     }
 
-    // 4자리 P2P 연결
     let my4DigitCode = '';
     function initP2P() {
       my4DigitCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -545,7 +590,6 @@
             hitCooldown: 0
           }));
           pieces = pieces.filter(p => p.side === mySide).concat(oppPieces);
-          updateUI();
           checkStartBattle();
         } else if (data.type === 'SHOOT') {
           const shooter = pieces.find(p => p.id === data.id);
@@ -557,20 +601,18 @@
               shooter.jumpTime = 22;
               playJumpSfx();
             } else {
-              playWoodClack(0.8);
+              playWoodClack(0.85, shooter.mass);
             }
             isSimulating = true;
           }
         } else if (data.type === 'TIMEOUT_PASS') {
           forceTurnPass();
         } else if (data.type === 'REMATCH_REQUEST') {
-          // 상대방이 재경기를 누름 -> 즉시 새 맵 생성 후 배치 시작
           handleInstantRematch(data.map);
         }
       });
     }
 
-    // [핵심] 방 유지 즉시 재경기 처리
     function requestInstantRematch() {
       document.getElementById('game-over-modal').classList.add('hidden');
       generateRandomMap();
@@ -605,8 +647,9 @@
       document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all';
 
       const badge = document.getElementById('game-phase-badge');
-      badge.innerText = '진영 배치 단계';
+      badge.innerText = '비공개 배치';
       badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow';
+      document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
 
       buyPiece('楚', true);
       if (isAIMode) setupAIHanArmy();
@@ -624,7 +667,6 @@
       startTimer(40);
     }
 
-    // 타이머
     function startTimer(duration) {
       clearInterval(timerInterval);
       timerTotal = duration;
@@ -675,7 +717,63 @@
       onTurnSwitched();
     }
 
-    // 기물 구매 및 겹침 방지
+    // [신규] 20점 풀 활용 스마트 자동 추천 배치 기능
+    function autoBalancedDeploy() {
+      if (gamePhase !== 'placement') return;
+
+      // 기존 내 말 초기화 및 20점 풀 복구
+      pieces = pieces.filter(p => p.side !== mySide);
+      budget = 20;
+
+      // 추천 밸런스 덱: 장군(6) + 차(5) + 포(4) + 마(3) + 상(2) = 20점 완벽 소진
+      const deployRoster = ['楚', '車', '包', '馬', '象'];
+
+      // 전략적 포메이션 좌표 계산 (전방: 상 / 중열: 차, 마 / 후방: 장군, 포)
+      const bW = boardBounds.width;
+      const bLeft = boardBounds.left;
+      const zTop = mySpawnZone.top;
+      const zBottom = mySpawnZone.bottom;
+      const zH = zBottom - zTop;
+
+      const formation = [
+        { type: '楚', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 }, // 후방 사령관
+        { type: '車', x: bLeft + bW * 0.18, y: zTop + zH * 0.45 }, // 좌측 돌파
+        { type: '包', x: bLeft + bW * 0.82, y: zTop + zH * 0.75 }, // 우측 후방 포격
+        { type: '馬', x: bLeft + bW * 0.75, y: zTop + zH * 0.45 }, // 우측 스윙
+        { type: '象', x: bLeft + bW * 0.50, y: zTop + zH * 0.28 }  // 전방 중앙 탱커
+      ];
+
+      formation.forEach(item => {
+        const conf = PIECE_CONFIG[item.type];
+        const r = bW * conf.radiusRatio;
+        const charName = (mySide === 'cho') ? (item.type === '楚' ? '楚' : item.type) : (item.type === '楚' ? '漢' : item.type);
+
+        pieces.push({
+          id: mySide + '_' + Math.random().toString(36).substring(2, 9),
+          side: mySide,
+          char: charName,
+          x: item.x,
+          y: (mySide === 'cho') ? item.y : (boardBounds.top + (zBottom - item.y)),
+          vx: 0, vy: 0,
+          mass: conf.mass,
+          radius: r,
+          color: mySide === 'cho' ? '#064e3b' : '#7f1d1d',
+          border: conf.border,
+          ability: conf.ability,
+          shield: conf.shield,
+          isJumping: false,
+          jumpTime: 0,
+          curveTimer: 0,
+          hitCooldown: 0,
+          alive: true
+        });
+      });
+
+      budget = 0;
+      playWoodClack(0.9, 4.0);
+      updateUI();
+    }
+
     function buyPiece(char, isFree = false) {
       if (gamePhase !== 'placement') return;
       const typeKey = (char === '楚' || char === '漢') ? char : char;
@@ -719,11 +817,12 @@
         alive: true
       });
 
+      playWoodClack(0.6, conf.mass);
       updateUI();
     }
 
     function setupAIHanArmy() {
-      const aiRoster = ['漢', '車', '包', '馬', '象', '卒'];
+      const aiRoster = ['漢', '車', '包', '馬', '象'];
       aiRoster.forEach(type => {
         const conf = PIECE_CONFIG[type];
         const r = boardBounds.width * conf.radiusRatio;
@@ -794,8 +893,9 @@
         const badge = document.getElementById('game-phase-badge');
         badge.innerText = '초(청군) 차례';
         badge.className = 'px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
-        document.getElementById('guide-text').innerText = '15초 내에 기물을 조준하여 타격하세요!';
+        document.getElementById('guide-text').innerText = '전투 개시! 적의 배치를 파악하고 신중히 타격하세요!';
 
+        updateUI();
         startTimer(15);
       }
     }
@@ -804,8 +904,13 @@
       document.getElementById('budget-display').innerText = budget;
       const choCount = pieces.filter(p => p.side === 'cho' && p.alive).length;
       const hanCount = pieces.filter(p => p.side === 'han' && p.alive).length;
+
       document.getElementById('my-pieces-count').innerText = `남은 기물: ${mySide === 'cho' ? choCount : hanCount}`;
-      document.getElementById('opp-pieces-count').innerText = `남은 기물: ${mySide === 'cho' ? hanCount : choCount}`;
+      if (gamePhase === 'placement') {
+        document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
+      } else {
+        document.getElementById('opp-pieces-count').innerText = `남은 기물: ${mySide === 'cho' ? hanCount : choCount}`;
+      }
 
       if (gamePhase === 'battle' && !isGameOver) {
         if (choCount === 0) endGame('han');
@@ -832,7 +937,6 @@
       modal.classList.remove('hidden');
     }
 
-    // 터치/마우스 조작
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -896,11 +1000,10 @@
         if (dist > 10) {
           clearInterval(timerInterval);
 
-          // 파워 계산: 차는 0.34, 일반은 0.22 (경박한 초고속 튕김 억제)
-          let powerMult = 0.22;
-          if (selectedPiece.ability === 'charge') powerMult = 0.32;
+          let powerMult = 0.16;
+          if (selectedPiece.ability === 'charge') powerMult = 0.23;
 
-          const power = Math.min(dist * powerMult, 26);
+          const power = Math.min(dist * powerMult, 19);
           const angle = Math.atan2(dy, dx);
           const vx = Math.cos(angle) * power;
           const vy = Math.sin(angle) * power;
@@ -913,7 +1016,7 @@
             selectedPiece.jumpTime = 22;
             playJumpSfx();
           } else {
-            playWoodClack(0.7);
+            playWoodClack(0.75, selectedPiece.mass);
           }
 
           if (selectedPiece.ability === 'curve') {
@@ -937,7 +1040,6 @@
       selectedPiece = null;
     });
 
-    // 이펙트
     function spawnShockwave(x, y, color = '#fbbf24', maxR = 90) {
       shockwaves.push({ x, y, r: 4, maxR, color, alpha: 1.0 });
     }
@@ -966,7 +1068,7 @@
         visualEffects.push({ type: 'lightning', x: hitX, y: hitY, color: '#38bdf8', life: 12 });
         spawnHitParticles(hitX, hitY, '#67e8f9', 18, 1.4);
         triggerShake(5);
-        playWoodClack(0.9);
+        playWoodClack(0.95, p.mass);
       } else if (p.ability === 'cannon') {
         visualEffects.push({ type: 'explosion', x: hitX, y: hitY, r: 8, maxR: 45, color: '#a855f7', life: 14 });
         playExplosionSfx(0.8);
@@ -976,10 +1078,10 @@
         spawnHitParticles(hitX, hitY, '#fb923c', 14);
       } else if (p.ability === 'shield') {
         visualEffects.push({ type: 'shield_barrier', x: hitX, y: hitY, r: p.radius * 2.5, life: 12 });
-        playWoodClack(0.85);
+        playWoodClack(0.85, p.mass);
       } else {
         spawnHitParticles(hitX, hitY, '#cbd5e1', 12, 1.1);
-        playWoodClack(0.5);
+        playWoodClack(0.5, p.mass);
       }
     }
 
@@ -994,9 +1096,8 @@
       return { dist, projX, projY };
     }
 
-    // 물리 엔진 시뮬레이션
+    // 물리 업데이트
     function updatePhysics() {
-      // 톱날 및 칼날 장애물 회전
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'sawblade' || obs.type === 'twin_blade') {
           obs.angle = (obs.angle + obs.speed) % (Math.PI * 2);
@@ -1021,7 +1122,6 @@
           }
         }
 
-        // 마(馬) 곡선 궤적 스윙 가속
         if (p.curveTimer > 0) {
           p.curveTimer--;
           p.vx += -p.vy * 0.045;
@@ -1031,11 +1131,15 @@
         p.x += p.vx;
         p.y += p.vy;
 
+        // 미끄러지는 동안 매끄러운 마찰음
+        const currentSpeed = Math.hypot(p.vx, p.vy);
+        if (currentSpeed > 2.0 && !p.isJumping) {
+          playSlideFriction(currentSpeed);
+        }
+
         let currentFriction = 0.983;
 
-        // 포 체공 중이 아닐 때만 지형/벽 충돌
         if (!p.isJumping) {
-          // 1. 벽 반사
           currentMap.walls.forEach(w => {
             const { dist, projX, projY } = pointToSegmentDistance(p.x, p.y, w.x1, w.y1, w.x2, w.y2);
             if (dist < p.radius + 3) {
@@ -1049,16 +1153,14 @@
               p.vy = (p.vy - 2 * dot * ny) * 0.82;
 
               if (Math.hypot(p.vx, p.vy) > 0.8) {
-                playWoodClack(0.65);
+                playWoodClack(0.7, p.mass);
                 spawnHitParticles(projX, projY, w.color, 6);
                 triggerShake(2);
               }
             }
           });
 
-          // 2. 고유 장애물 충돌
           currentMap.obstacles.forEach(obs => {
-            // 산/바위산 (단단한 다각형 충돌)
             if (obs.type === 'mountain') {
               const dist = Math.hypot(p.x - obs.x, p.y - obs.y);
               if (dist < obs.r + p.radius) {
@@ -1070,42 +1172,32 @@
                 p.vx = (p.vx - 2 * dot * nx) * 0.78;
                 p.vy = (p.vy - 2 * dot * ny) * 0.78;
                 if (Math.hypot(p.vx, p.vy) > 0.8) {
-                  playWoodClack(0.6);
+                  playWoodClack(0.65, p.mass);
                   spawnHitParticles(p.x, p.y, '#94a3b8', 6);
                 }
               }
-            }
-            // 물 웅덩이 (물결 미끄러짐)
-            else if (obs.type === 'water_puddle') {
+            } else if (obs.type === 'water_puddle') {
               if (Math.hypot(p.x - obs.x, p.y - obs.y) < obs.r + p.radius) {
                 currentFriction = 0.997;
                 p.vx += (Math.random() - 0.5) * 0.18;
               }
-            }
-            // 진흙 (강한 감속)
-            else if (obs.type === 'mud') {
+            } else if (obs.type === 'mud') {
               if (Math.hypot(p.x - obs.x, p.y - obs.y) < obs.r + p.radius) {
                 currentFriction = 0.91;
               }
-            }
-            // [위험 장애물 1] 회전 톱날 (닿으면 튕겨나가며 실드 차감/피해)
-            else if (obs.type === 'sawblade') {
+            } else if (obs.type === 'sawblade') {
               const dist = Math.hypot(p.x - obs.x, p.y - obs.y);
               if (dist < obs.r + p.radius) {
                 const nx = (p.x - obs.x) / dist;
                 const ny = (p.y - obs.y) / dist;
-                p.vx = nx * 9.5;
-                p.vy = ny * 9.5;
-
-                // 칼날 데미지: 실드 1개 삭감
+                p.vx = nx * 8.0;
+                p.vy = ny * 8.0;
                 if (p.shield > 0) p.shield--;
                 playSlashDamageSfx();
                 spawnHitParticles(p.x, p.y, '#ef4444', 16, 1.5);
                 triggerShake(6);
               }
-            }
-            // [위험 장애물 2] 회전 양날 칼날
-            else if (obs.type === 'twin_blade') {
+            } else if (obs.type === 'twin_blade') {
               const x2 = obs.x + Math.cos(obs.angle) * obs.len;
               const y2 = obs.y + Math.sin(obs.angle) * obs.len;
               const x1 = obs.x - Math.cos(obs.angle) * obs.len;
@@ -1114,8 +1206,8 @@
               const { dist, projX, projY } = pointToSegmentDistance(p.x, p.y, x1, y1, x2, y2);
               if (dist < p.radius + 4) {
                 const pushAngle = obs.angle + Math.PI / 2;
-                p.vx += Math.cos(pushAngle) * 8.5;
-                p.vy += Math.sin(pushAngle) * 8.5;
+                p.vx += Math.cos(pushAngle) * 7.5;
+                p.vy += Math.sin(pushAngle) * 7.5;
                 playSlashDamageSfx();
                 spawnShockwave(projX, projY, '#f59e0b', 35);
                 triggerShake(4);
@@ -1134,7 +1226,6 @@
           p.vx = 0; p.vy = 0;
         }
 
-        // 장외 낙사 처리 & 배리어 보호
         if (p.x < boardBounds.left || p.x > boardBounds.right || p.y < boardBounds.top || p.y > boardBounds.bottom) {
           if (p.shield > 0) {
             p.shield--;
@@ -1156,7 +1247,7 @@
         }
       });
 
-      // 기물 간 탄성 충돌 (체급/질량 차이에 따른 운동량 법칙 적용)
+      // 기물 간 탄성 충돌
       for (let i = 0; i < pieces.length; i++) {
         for (let j = i + 1; j < pieces.length; j++) {
           const p1 = pieces[i];
@@ -1176,6 +1267,7 @@
             if (relSpd > 0.8 && p1.hitCooldown === 0 && p2.hitCooldown === 0) {
               triggerPieceSpecialEffect(p1, hitX, hitY);
               triggerPieceSpecialEffect(p2, hitX, hitY);
+              playWoodClack(relSpd * 0.14, Math.max(p1.mass, p2.mass));
               p1.hitCooldown = 6;
               p2.hitCooldown = 6;
             }
@@ -1186,8 +1278,8 @@
                   const td = Math.hypot(target.x - hitX, target.y - hitY);
                   if (td < 110) {
                     const ang = Math.atan2(target.y - hitY, target.x - hitX);
-                    target.vx += Math.cos(ang) * 4.2;
-                    target.vy += Math.sin(ang) * 4.2;
+                    target.vx += Math.cos(ang) * 3.5;
+                    target.vy += Math.sin(ang) * 3.5;
                   }
                 }
               });
@@ -1197,7 +1289,6 @@
             const sin = Math.sin(angle);
             const cos = Math.cos(angle);
 
-            // 겹침 보정
             const overlap = (p1.radius + p2.radius - dist) / 2;
             p1.x -= cos * (overlap + 0.5);
             p1.y -= sin * (overlap + 0.5);
@@ -1209,7 +1300,6 @@
             const vx2 = p2.vx * cos + p2.vy * sin;
             const vy2 = p2.vy * cos - p2.vx * sin;
 
-            // [핵심] 질량 보존 방정식: 가벼운 졸이 무거운 장군을 쳐도 거의 안 밀림
             const m1 = p1.mass;
             const m2 = p2.mass;
             const vx1F = ((m1 - m2) * vx1 + 2 * m2 * vx2) / (m1 + m2);
@@ -1265,7 +1355,7 @@
       });
 
       const angle = Math.atan2(target.y - shooter.y, target.x - shooter.x) + (Math.random() - 0.5) * 0.15;
-      const power = 16 + Math.random() * 8;
+      const power = 13 + Math.random() * 5;
       shooter.vx = Math.cos(angle) * power;
       shooter.vy = Math.sin(angle) * power;
 
@@ -1274,13 +1364,12 @@
         shooter.jumpTime = 22;
         playJumpSfx();
       } else {
-        playWoodClack(0.8);
+        playWoodClack(0.85, shooter.mass);
       }
       clearInterval(timerInterval);
       isSimulating = true;
     }
 
-    // 메인 렌더링 파이프라인
     function render() {
       const w = parseFloat(canvas.style.width);
       const h = parseFloat(canvas.style.height);
@@ -1295,7 +1384,6 @@
         if (shakeIntensity < 0.2) shakeIntensity = 0;
       }
 
-      // 1. 경기장 바닥
       ctx.fillStyle = currentMap.bg;
       ctx.fillRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
@@ -1310,7 +1398,6 @@
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
-      // 2. 중앙 관문 성벽
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
@@ -1322,9 +1409,7 @@
         ctx.restore();
       });
 
-      // 3. 디테일한 개별 장애물 렌더링
       currentMap.obstacles.forEach(obs => {
-        // [산/바위산] 다각형 크랙 및 입체 음영 렌더링
         if (obs.type === 'mountain') {
           ctx.save();
           ctx.translate(obs.x, obs.y);
@@ -1340,16 +1425,13 @@
           ctx.fill();
           ctx.stroke();
 
-          // 바위산 내부 크랙 선
           ctx.strokeStyle = '#475569';
           ctx.beginPath();
           ctx.moveTo(0, 0); ctx.lineTo(obs.points[0].x * 0.7, obs.points[0].y * 0.7);
           ctx.moveTo(0, 0); ctx.lineTo(obs.points[3].x * 0.7, obs.points[3].y * 0.7);
           ctx.stroke();
           ctx.restore();
-        }
-        // [물 웅덩이] 울퉁불퉁한 물결 및 수로 파동
-        else if (obs.type === 'water_puddle') {
+        } else if (obs.type === 'water_puddle') {
           ctx.save();
           ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
           ctx.strokeStyle = '#38bdf8';
@@ -1359,15 +1441,12 @@
           ctx.fill();
           ctx.stroke();
 
-          // 잔잔한 물결 동심원
           ctx.strokeStyle = 'rgba(125, 211, 252, 0.4)';
           ctx.beginPath();
           ctx.ellipse(obs.x, obs.y, obs.rx * 0.55, obs.ry * 0.55, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
-        }
-        // [진흙]
-        else if (obs.type === 'mud') {
+        } else if (obs.type === 'mud') {
           ctx.save();
           ctx.fillStyle = 'rgba(120, 53, 15, 0.45)';
           ctx.strokeStyle = '#92400e';
@@ -1378,9 +1457,7 @@
           ctx.textAlign = 'center';
           ctx.fillText('진흙', obs.x, obs.y + 3);
           ctx.restore();
-        }
-        // [회전 원형 톱날]
-        else if (obs.type === 'sawblade') {
+        } else if (obs.type === 'sawblade') {
           ctx.save();
           ctx.translate(obs.x, obs.y);
           ctx.rotate(obs.angle);
@@ -1389,7 +1466,6 @@
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(0, 0, obs.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-          // 톱니바퀴 톱날 8개 돌출 렌더링
           ctx.fillStyle = '#dc2626';
           for (let s = 0; s < 8; s++) {
             ctx.rotate(Math.PI / 4);
@@ -1400,9 +1476,7 @@
             ctx.fill();
           }
           ctx.restore();
-        }
-        // [회전 양날 칼날]
-        else if (obs.type === 'twin_blade') {
+        } else if (obs.type === 'twin_blade') {
           ctx.save();
           ctx.translate(obs.x, obs.y);
           ctx.rotate(obs.angle);
@@ -1414,10 +1488,9 @@
         }
       });
 
-      // 배치 구역 표시
       if (gamePhase === 'placement') {
         ctx.save();
-        ctx.fillStyle = mySide === 'cho' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+        ctx.fillStyle = mySide === 'cho' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
         ctx.strokeStyle = mySide === 'cho' ? '#10b981' : '#ef4444';
         ctx.lineWidth = 2;
         ctx.setLineDash([6, 6]);
@@ -1427,14 +1500,26 @@
         ctx.font = 'bold 11px "Jua"';
         ctx.fillText(`내 진영 배치 구역 (${mySide === 'cho' ? '초군' : '한군'})`, boardBounds.left + 10, mySpawnZone.top + 18);
         ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+        ctx.fillRect(boardBounds.left, oppSpawnZone.top, boardBounds.width, oppSpawnZone.bottom - oppSpawnZone.top);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(boardBounds.left, oppSpawnZone.top, boardBounds.width, oppSpawnZone.bottom - oppSpawnZone.top);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 12px "Jua"';
+        ctx.textAlign = 'center';
+        ctx.fillText('🌫️ 상대방 진영 (비공개 배치 중) 🌫️', boardBounds.left + boardBounds.width / 2, oppSpawnZone.top + (oppSpawnZone.bottom - oppSpawnZone.top) / 2);
+        ctx.restore();
       }
 
-      // 장외 낙사 경계선
       ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
       ctx.lineWidth = 3;
       ctx.strokeRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
-      // 충격파 링
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         const sw = shockwaves[i];
         ctx.save();
@@ -1448,7 +1533,6 @@
         if (sw.alpha <= 0 || sw.r >= sw.maxR) shockwaves.splice(i, 1);
       }
 
-      // 특수 비주얼 이펙트
       for (let i = visualEffects.length - 1; i >= 0; i--) {
         const vf = visualEffects[i];
         ctx.save();
@@ -1485,7 +1569,6 @@
         if (vf.life <= 0) visualEffects.splice(i, 1);
       }
 
-      // 파티클
       for (let i = particles.length - 1; i >= 0; i--) {
         const pt = particles[i];
         ctx.save();
@@ -1499,9 +1582,10 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
-      // 기물 렌더링
       pieces.forEach(p => {
         if (!p.alive) return;
+        if (gamePhase === 'placement' && p.side !== mySide) return;
+
         const isCho = (p.side === 'cho');
 
         ctx.save();
@@ -1510,33 +1594,35 @@
         const scale = p.isJumping ? 1.4 : 1.0;
         ctx.scale(scale, scale);
 
-        // 배리어 실드 링
         if (p.shield > 0) {
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 1.8;
+          ctx.lineWidth = 2.0;
           ctx.setLineDash([3, 3]);
-          ctx.beginPath(); ctx.arc(0, 0, p.radius + 3.5, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, p.radius + 4, 0, Math.PI * 2); ctx.stroke();
           ctx.setLineDash([]);
         }
 
-        if (p.isJumping) {
-          ctx.shadowColor = '#a855f7';
-          ctx.shadowBlur = 20;
+        const grad = ctx.createRadialGradient(-p.radius * 0.3, -p.radius * 0.3, p.radius * 0.1, 0, 0, p.radius);
+        if (isCho) {
+          grad.addColorStop(0, '#059669');
+          grad.addColorStop(1, '#064e3b');
         } else {
-          ctx.shadowColor = p.border;
-          ctx.shadowBlur = (p.ability === 'shockwave' || p.ability === 'charge') ? 10 : 4;
+          grad.addColorStop(0, '#dc2626');
+          grad.addColorStop(1, '#7f1d1d');
         }
 
-        ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
+        ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill();
 
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 3.0;
         ctx.strokeStyle = p.border;
+        ctx.shadowColor = p.border;
+        ctx.shadowBlur = 8;
         ctx.stroke();
 
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#ffffff';
-        ctx.font = `900 ${p.radius * 1.15}px 'Jua'`;
+        ctx.font = `900 ${p.radius * 1.25}px 'Jua'`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(p.char, 0, 1.2);
@@ -1550,19 +1636,17 @@
         ctx.restore();
       });
 
-      // [핵심] 짧은 궤적 예측선 (일반 직진, 포의 포물선 도약, 마의 곡선 스윙 가이드)
       if (isDragging && selectedPiece && gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
         if (dist > 8) {
-          let powerMult = 0.22;
-          if (selectedPiece.ability === 'charge') powerMult = 0.32;
-          const power = Math.min(dist * powerMult, 26);
+          let powerMult = 0.16;
+          if (selectedPiece.ability === 'charge') powerMult = 0.23;
+          const power = Math.min(dist * powerMult, 19);
           const angle = Math.atan2(dy, dx);
 
-          // 당기는 슬링샷 고무줄 점선
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
           ctx.lineWidth = 1.8;
@@ -1570,7 +1654,6 @@
           ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(dragCurrent.x, dragCurrent.y); ctx.stroke();
           ctx.restore();
 
-          // 8~10스텝 짧은 전방 궤적 시뮬레이션
           ctx.save();
           ctx.strokeStyle = selectedPiece.border;
           ctx.fillStyle = selectedPiece.border;
@@ -1584,27 +1667,21 @@
           ctx.beginPath();
           ctx.moveTo(simX, simY);
 
-          const steps = 9;
+          const steps = 8;
           for (let step = 1; step <= steps; step++) {
-            // 마(馬)의 경우 궤적이 측면으로 휘어지는 곡선 궤적 가이드 렌더링
             if (selectedPiece.ability === 'curve') {
               simVx += -simVy * 0.045;
               simVy += simVx * 0.045;
             }
-
             simX += simVx;
             simY += simVy;
-
-            // 포(包)의 경우 점선 및 중간 고도 표시
             if (selectedPiece.ability === 'cannon') {
               ctx.setLineDash([3, 3]);
             }
-
             ctx.lineTo(simX, simY);
           }
           ctx.stroke();
 
-          // 궤적 끝점 소형 원형 타겟
           ctx.beginPath();
           ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
           ctx.fill();

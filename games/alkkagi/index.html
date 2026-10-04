@@ -8,14 +8,19 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
-    html, body {
+    html {
       width: 100%;
       height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
+      background-color: #020408;
     }
     body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
       touch-action: none;
       user-select: none;
@@ -26,7 +31,7 @@
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
   </style>
 </head>
-<body class="text-white h-screen max-h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
+<body id="app-root" class="text-white flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
 
   <!-- 상단 상태바 & 듀얼 타이머 -->
   <header class="w-full max-w-md flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-2.5 py-1 sm:py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
@@ -93,7 +98,7 @@
           <div class="flex items-center justify-between gap-1.5 mt-1">
             <input id="join-room-code" type="number" maxlength="4" placeholder="4자리" class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1 text-center text-xs font-black text-yellow-300 focus:outline-none focus:border-cyan-400 tracking-widest">
             <button onclick="connectWith4Digit()" class="flex-1 py-1 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-[11px] font-black text-white shadow whitespace-nowrap">
-              입장하기 ⚔️️
+              입장하기 ⚔️
             </button>
           </div>
         </div>
@@ -106,9 +111,9 @@
     </div>
   </div>
 
-  <!-- 메인 캔버스 뷰 (모바일 100% 핏) -->
-  <main class="relative w-full flex-1 flex items-center justify-center p-1 overflow-hidden min-h-0">
-    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-neutral-950 border-2 sm:border-4 border-neutral-800 p-0.5 overflow-hidden flex items-center justify-center aspect-[9/13] max-h-full max-w-full">
+  <!-- 메인 캔버스 뷰 (모바일 웹뷰 높이 계산에 맞춘 핏) -->
+  <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
+    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-neutral-950 border-2 sm:border-4 border-neutral-800 p-0.5 overflow-hidden flex items-center justify-center">
       <canvas id="alkkagiCanvas" class="rounded-xl block touch-none"></canvas>
 
       <!-- 게임 종료 모달 -->
@@ -359,7 +364,7 @@
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(500, t);
-        osc.frequency.linearRampToValueAtTime(950, t + 0.25);
+        osc.linearRampToValueAtTime(950, t + 0.25);
         gain.gain.setValueAtTime(0.6, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
         osc.connect(gain);
@@ -431,42 +436,49 @@
       document.getElementById('my-name').innerText = nick;
     }
 
+    function fitScreenHeight() {
+      const vh = window.innerHeight;
+      document.getElementById('app-root').style.height = `${vh}px`;
+    }
+
     function resizeCanvas() {
-      const mainEl = document.querySelector('main');
+      fitScreenHeight();
+      const mainArea = document.getElementById('main-area');
       const container = document.getElementById('board-container');
 
-      const availW = mainEl.clientWidth - 8;
-      const availH = mainEl.clientHeight - 8;
+      const maxW = mainArea.clientWidth - 12;
+      const maxH = mainArea.clientHeight - 12;
 
-      const targetAspect = 9 / 13;
-      let finalW = availW;
-      let finalH = finalW / targetAspect;
+      const targetRatio = 9 / 13;
+      let w = maxW;
+      let h = w / targetRatio;
 
-      if (finalH > availH) {
-        finalH = availH;
-        finalW = finalH * targetAspect;
+      if (h > maxH) {
+        h = maxH;
+        w = h * targetRatio;
       }
 
-      container.style.width = `${Math.floor(finalW)}px`;
-      container.style.height = `${Math.floor(finalH)}px`;
+      container.style.width = `${Math.floor(w)}px`;
+      container.style.height = `${Math.floor(h)}px`;
 
-      const w = Math.floor(finalW) - 6;
-      const h = Math.floor(finalH) - 6;
+      const drawW = Math.floor(w - 6);
+      const drawH = Math.floor(h - 6);
 
-      canvas.width = w * window.devicePixelRatio;
-      canvas.height = h * window.devicePixelRatio;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
+      canvas.width = drawW * window.devicePixelRatio;
+      canvas.height = drawH * window.devicePixelRatio;
+      canvas.style.width = `${drawW}px`;
+      canvas.style.height = `${drawH}px`;
+
       ctx.resetTransform();
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
       boardBounds = {
-        left: w * 0.04,
-        top: h * 0.03,
-        right: w * 0.96,
-        bottom: h * 0.97,
-        width: w * 0.92,
-        height: h * 0.94
+        left: drawW * 0.04,
+        top: drawH * 0.03,
+        right: drawW * 0.96,
+        bottom: drawH * 0.97,
+        width: drawW * 0.92,
+        height: drawH * 0.94
       };
 
       if (mySide === 'cho') {
@@ -477,9 +489,16 @@
         oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
       }
     }
+
     window.addEventListener('resize', () => {
       resizeCanvas();
       generateRandomMap();
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        resizeCanvas();
+        generateRandomMap();
+      }, 200);
     });
 
     function generateRandomMap() {
@@ -1300,7 +1319,7 @@
             p2.y += sin * (overlap + 0.5);
 
             const vx1 = p1.vx * cos + p1.vy * sin;
-            const vy1 = p1.vy * cos - p1.vx * sin;
+            const vy1 = p1.vx * cos - p1.vx * sin;
             const vx2 = p2.vx * cos + p2.vy * sin;
             const vy2 = p2.vy * cos - p2.vx * sin;
 

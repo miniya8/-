@@ -3,208 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>복불복 핀볼 룸 - 세미니의 놀이터</title>
+  <title>✨ 세미니의 놀이터^^* 🎈</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
-    
-    html, body {
-      height: 100%;
-      height: 100dvh;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+    body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: #09090b;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
       user-select: none;
       -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
-
-    /* 모달 팝업 애니메이션 */
-    @keyframes modal-scale {
-      0% { transform: scale(0.9); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    .neon-card:hover {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
+      border-color: rgba(245, 158, 11, 0.8);
     }
-    .pop-anim {
-      animation: modal-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    /* 반짝반짝 무지개 샤인 애니메이션 */
+    @keyframes rainbow-sparkle {
+      0% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+      }
+      50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.85));
+      }
+      100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+      }
+    }
+
+    .sparkle-text {
+      background: linear-gradient(90deg, #fbbf24, #f43f5e, #ec4899, #8b5cf6, #38bdf8, #34d399, #fbbf24);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-sparkle 4s ease infinite;
+    }
+
+    /* 앙증맞은 통통 튀는 모션 */
+    @keyframes cute-bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(8deg); }
+    }
+    .bounce-cute {
+      display: inline-block;
+      animation: cute-bounce 2s ease-in-out infinite;
     }
   </style>
 </head>
-<body class="text-white flex flex-col justify-between relative w-full h-full">
+<body class="text-white min-h-screen flex flex-col items-center justify-between p-3 sm:p-6">
 
-  <!-- 상단 헤더 (터치 우선권 z-50 지정) -->
-  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 shadow-lg relative z-50">
-    <div class="flex items-center gap-2">
-      <button onclick="location.href='../../index.html'" class="px-2.5 py-1.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1">
-        <span>◀</span> 로비
-      </button>
-      <h1 class="text-base sm:text-lg font-black text-rose-400 title-font flex items-center gap-1">
-        <span>🎰</span> 복불복 핀볼
-      </h1>
+  <!-- 상단 헤더 & 통합 프로필 -->
+  <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl shadow-inner">
+        <span class="bounce-cute">🎪</span>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black title-font tracking-wide flex items-center gap-1.5">
+          <span class="text-amber-300">✨</span>
+          <span class="sparkle-text">세미니의 놀이터^^*</span>
+          <span class="bounce-cute text-xl sm:text-2xl">🎈</span>
+        </h1>
+        <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+          <span>💖 신나고 유쾌한 보드게임 & 파티 플레이 공간 🍭</span>
+        </p>
+      </div>
     </div>
 
-    <!-- 터치 보장 버튼 세트 -->
-    <div class="flex items-center gap-2">
-      <!-- 1. 단톡방 초대 버튼 -->
-      <button type="button" onclick="openInviteModal(event)" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow transition flex items-center gap-1">
-        <span>📤</span> 초대 링크
-      </button>
-
-      <!-- 2. 카카오톡 화면공유 버튼 -->
-      <button type="button" onclick="openShareModal(event)" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
-        <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-          <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.87 1.88 5.38 4.72 6.74-.21.78-.76 2.81-.87 3.24-.14.54.2.53.42.38.17-.11 2.76-1.87 3.86-2.63.61.08 1.24.13 1.87.13 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
-        </svg>
-        <span>카톡 화면공유</span>
-      </button>
+    <!-- 통합 닉네임 설정 -->
+    <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-2xl border border-slate-700 w-full sm:w-auto">
+      <span class="text-xs font-bold text-amber-300">내 닉네임:</span>
+      <input id="hub-nickname-input" type="text" maxlength="8" oninput="saveNickname(this.value)" onchange="saveNickname(this.value)" class="bg-transparent border-b border-amber-400/50 text-xs font-bold text-white focus:outline-none focus:border-amber-400 w-28 sm:w-32 px-1">
+      <span class="text-[10px] text-emerald-400 font-bold">● 영구저장</span>
     </div>
   </header>
 
-  <!-- 메인 핀볼 웹뷰 영역 -->
-  <main class="w-full flex-1 relative bg-slate-950 overflow-hidden z-10">
-    <iframe 
-      id="pinball-frame"
-      src="https://lazygyu.github.io/roulette/" 
-      class="w-full h-full border-0 block"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-      loading="eager">
-    </iframe>
+  <!-- 메인 게임 선택 카드 그리드 -->
+  <main class="w-full max-w-5xl my-6 flex-1 flex flex-col justify-center">
+    <div class="text-center mb-6">
+      <h2 class="text-2xl sm:text-3xl font-black text-slate-100 title-font flex items-center justify-center gap-2">
+        <span>⭐</span> 플레이할 놀이를 골라보세요! <span>🧸</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">친구와 1:1 대결을 하거나 쫄깃한 복불복 핀볼을 즐겨보세요 🥳</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      
+      <!-- 1. 전설장기 1 카드 -->
+      <div onclick="goToGame('janggi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-4xl group-hover:scale-110 transition-transform">⚔️</span>
+            <span class="px-2.5 py-1 bg-emerald-950 border border-emerald-500 text-emerald-300 text-[11px] font-black rounded-xl">온라인 P2P / COM</span>
+          </div>
+          <h3 class="text-xl font-black text-amber-400 title-font">전설장기 1</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            탱크 돌진, 곡사 포격 모션 및 12대 초화려 킬 이펙트 탑재! 외통수 자동 판정과 관전자 훈수 지원.
+          </p>
+        </div>
+        <div class="mt-5 flex items-center justify-between text-xs font-bold text-amber-300 pt-3 border-t border-slate-800">
+          <span>대국실 입장하기</span>
+          <span class="group-hover:translate-x-1 transition-transform">👉</span>
+        </div>
+      </div>
+
+      <!-- 2. 전설의 알까기 카드 -->
+      <div onclick="goToGame('alkkagi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-4xl group-hover:scale-110 transition-transform">💥</span>
+            <span class="px-2.5 py-1 bg-purple-950 border border-purple-500 text-purple-300 text-[11px] font-black rounded-xl">신규 오픈 배틀</span>
+          </div>
+          <h3 class="text-xl font-black text-purple-400 title-font">전설의 알까기</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            슬링샷 드래그 물리 조준 & 바둑판 밖으로 장기알 날려버리기! 당구식 탄성 충돌과 장외 낙사 이펙트.
+          </p>
+        </div>
+        <div class="mt-5 flex items-center justify-between text-xs font-bold text-purple-300 pt-3 border-t border-slate-800">
+          <span>알까기판 입장하기</span>
+          <span class="group-hover:translate-x-1 transition-transform">👉</span>
+        </div>
+      </div>
+
+      <!-- 3. 복불복 핀볼 룰렛 카드 (터치 시 rd.dsms.kr 로 즉시 이동) -->
+      <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-4xl group-hover:scale-110 transition-transform">🎰</span>
+            <span class="px-2.5 py-1 bg-rose-950 border border-rose-500 text-rose-300 text-[11px] font-black rounded-xl">벌칙 / 내기 추첨</span>
+          </div>
+          <h3 class="text-xl font-black text-rose-400 title-font">복불복 핀볼</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            구슬 낙하 물리 핀볼 게임! 핸드폰 브라우저로 바로 접속하여 게임을 진행합니다.
+          </p>
+        </div>
+        <div class="mt-5 flex items-center justify-between text-xs font-bold text-rose-300 pt-3 border-t border-slate-800">
+          <span>핀볼판 바로가기</span>
+          <span class="group-hover:translate-x-1 transition-transform">👉</span>
+        </div>
+      </div>
+
+    </div>
   </main>
 
-  <!-- 하단 바 -->
-  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0 relative z-30">
-    <div class="flex items-center gap-1.5 truncate">
-      <span class="w-2 h-2 rounded-full bg-[#FEE500] shrink-0"></span>
-      <span class="truncate">단톡방 페이스톡 화면공유를 켜면 이 화면이 실시간 생중계됩니다!</span>
+  <!-- 하단 상태바 -->
+  <footer class="w-full max-w-5xl bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="font-bold text-slate-300">놀이터 상태: 친구 맞이 준비 완료! 🎉</span>
     </div>
-    <button type="button" onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2 hover:underline">
-      새로고침 🔄
-    </button>
+    <span>© 2026 세미니의 놀이터. All rights reserved.</span>
   </footer>
 
-  <!-- 1. 단톡방 초대 모달 (최상위 계층 z-[999]) -->
-  <div id="invite-modal" class="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
-    <div class="w-full max-w-xs bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-center pop-anim space-y-3">
-      <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-2xl">
-        📋
-      </div>
-      <div>
-        <h3 class="text-base font-black text-white title-font">초대 주소 복사 완료!</h3>
-        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-          카카오톡 단톡방 입력창에 <strong>길게 눌러 붙여넣기</strong> 해주세요.
-        </p>
-      </div>
-      <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] text-amber-400 break-all select-all font-mono" id="invite-url-box">
-        -
-      </div>
-      <button type="button" onclick="closeModal('invite-modal')" class="w-full py-2.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl transition">
-        확인
-      </button>
-    </div>
-  </div>
-
-  <!-- 2. 카톡 화면공유 가이드 & 실행 모달 (최상위 계층 z-[999]) -->
-  <div id="share-modal" class="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
-    <div class="w-full max-w-xs bg-slate-900 border border-[#FEE500]/60 rounded-3xl p-5 shadow-2xl text-left pop-anim space-y-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-[#FEE500] text-[#191919] flex items-center justify-center font-black text-xl shrink-0">
-          💬
-        </div>
-        <div>
-          <h3 class="text-base font-black text-white title-font">카톡 화면공유 방법</h3>
-          <p class="text-[11px] text-slate-400">핸드폰 화면을 실시간 생중계합니다</p>
-        </div>
-      </div>
-
-      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs text-slate-300">
-        <div class="flex items-start gap-2">
-          <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
-          <span>친구들과 있는 <strong>카카오톡 단톡방</strong> 열기</span>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
-          <span>하단 <strong>[+]</strong> 누르고 <strong>[페이스톡]</strong> 연결</span>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
-          <span>통화 화면 아래 <strong>[화면공유]</strong> 아이콘 터치</span>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">4</span>
-          <span><strong>이 핀볼 화면으로 돌아와 구슬 발사!</strong></span>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <button type="button" onclick="closeModal('share-modal')" class="flex-1 py-2.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl transition">
-          닫기
-        </button>
-        <!-- 에러 없이 카카오톡 앱을 안전하게 실행하는 버튼 -->
-        <button type="button" onclick="launchKakaoAppSafe()" class="flex-1 py-2.5 bg-[#FEE500] active:bg-[#E5CB00] text-[#191919] text-xs font-black rounded-xl shadow transition flex items-center justify-center gap-1">
-          <span>카톡 열기</span> 💬
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // 1. 단톡방 초대 링크 복사
-    function openInviteModal(e) {
-      if (e) e.preventDefault();
-      const url = window.location.href;
-      document.getElementById('invite-url-box').innerText = url;
-
-      // 클립보드 복사
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(url).catch(() => fallbackCopy(url));
-      } else {
-        fallbackCopy(url);
+    function loadSavedNickname() {
+      let saved = localStorage.getItem('jg_permanent_nickname');
+      if (!saved) {
+        const prefixes = ['질풍의', '전설의', '천하제일', '무적의', '바람의', '신궁', '패왕', '귀여운'];
+        const suffixes = ['차마', '포왕', '알까기왕', '슬링샷', '대장군', '마스터', '장인'];
+        saved = `${prefixes[Math.floor(Math.random() * prefixes.length)]}${suffixes[Math.floor(Math.random() * suffixes.length)]}_${Math.floor(10 + Math.random() * 90)}`;
+        localStorage.setItem('jg_permanent_nickname', saved);
       }
-
-      document.getElementById('invite-modal').style.display = 'flex';
+      document.getElementById('hub-nickname-input').value = saved;
     }
 
-    function fallbackCopy(text) {
-      const temp = document.createElement('textarea');
-      temp.value = text;
-      temp.style.position = 'fixed';
-      temp.style.top = '-9999px';
-      document.body.appendChild(temp);
-      temp.select();
-      try { document.execCommand('copy'); } catch (err) {}
-      document.body.removeChild(temp);
-    }
-
-    // 2. 카카오톡 화면공유 모달 열기
-    function openShareModal(e) {
-      if (e) e.preventDefault();
-      document.getElementById('share-modal').style.display = 'flex';
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
-    }
-
-    // 3. 에러 없는 안전한 카카오톡 앱 실행 로직
-    function launchKakaoAppSafe() {
-      closeModal('share-modal');
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      
-      if (isAndroid) {
-        // 안드로이드(갤럭시 폴드 등): 오류 없이 카카오톡 앱 메인을 실행하는 공식 안드로이드 인텐트
-        window.location.href = "intent://launch#Intent;scheme=kakaotalk;package=com.kakao.talk;end";
-      } else {
-        // iOS (아이폰): 카카오톡 메인 스킴
-        window.location.href = "kakaotalk://";
+    function saveNickname(val) {
+      const trimmed = (val || '').trim();
+      if (trimmed) {
+        localStorage.setItem('jg_permanent_nickname', trimmed);
+        localStorage.setItem('jg_nick_is_custom', 'true');
       }
     }
 
-    function reloadPinball() {
-      const frame = document.getElementById('pinball-frame');
-      frame.src = frame.src;
+    // 게임 이동 함수: pinball 선택 시 외부 링크로 바로 접속
+    function goToGame(game) {
+      if (game === 'janggi') {
+        window.location.href = 'games/janggi/index.html';
+      } else if (game === 'alkkagi') {
+        window.location.href = 'games/alkkagi/index.html';
+      } else if (game === 'pinball') {
+        window.location.href = 'https://rd.dsms.kr/';
+      }
     }
+
+    window.addEventListener('DOMContentLoaded', loadSavedNickname);
   </script>
 </body>
 </html>

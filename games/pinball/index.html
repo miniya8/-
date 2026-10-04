@@ -2,156 +2,115 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>복불복 핀볼 룸 - 세미니의 놀이터</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
-    body {
+    
+    html, body {
+      height: 100%;
+      height: 100dvh; /* 모바일 주소창 높이 변화 완벽 대응 */
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* 모바일 이중 스크롤 방지 */
       font-family: 'Noto Sans KR', sans-serif;
-      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      background: #09090b;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
 
-    /* 화면 잘림 방지용 고해상도 가상 캔버스 래퍼 */
-    #iframe-viewport-wrapper {
-      position: relative;
+    /* 아이프레임 터치 스크롤 최적화 */
+    .mobile-iframe-wrapper {
+      -webkit-overflow-scrolling: touch;
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #pinball-frame {
-      width: 1050px;
-      height: 900px;
-      border: 0;
-      transform-origin: center center;
     }
   </style>
 </head>
-<body class="text-white min-h-screen flex flex-col justify-between p-2 sm:p-4">
+<body class="text-white flex flex-col justify-between">
 
-  <!-- 헤더 -->
-  <header class="w-full max-w-6xl mx-auto flex items-center justify-between bg-slate-900/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
-    <div class="flex items-center gap-3">
-      <button onclick="location.href='../../index.html'" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-600 transition">
-        ◀ 놀이터 로비
+  <!-- 모바일 상단 미니멀 헤더 -->
+  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2.5 flex items-center justify-between shrink-0 shadow-lg z-20">
+    <div class="flex items-center gap-2">
+      <button onclick="location.href='../../index.html'" class="px-2.5 py-1 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-lg border border-slate-700 transition flex items-center gap-1">
+        <span>◀</span> 로비
       </button>
-      <div>
-        <h1 class="text-xl sm:text-2xl font-black text-rose-400 title-font flex items-center gap-2">
-          <span>🎰</span> 복불복 핀볼 룰렛
-        </h1>
-        <p class="text-[11px] sm:text-xs text-slate-400">잘림 방지 최적화 뷰 & 화면 공유 전용 모드</p>
-      </div>
+      <h1 class="text-base sm:text-lg font-black text-rose-400 title-font flex items-center gap-1">
+        <span>🎰</span> 복불복 핀볼
+      </h1>
     </div>
 
-    <!-- 우측 도구 버튼 세트 -->
-    <div class="flex items-center gap-2">
-      <button onclick="toggleFullscreen()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-bold rounded-xl shadow transition flex items-center gap-1">
-        <span>🖥️</span> <span id="fs-btn-text">전체화면</span>
+    <!-- 모바일 핵심 액션 버튼 -->
+    <div class="flex items-center gap-1.5">
+      <button onclick="shareGameLink()" class="px-3 py-1.5 bg-emerald-600 active:bg-emerald-500 text-xs font-black rounded-xl shadow transition flex items-center gap-1">
+        <span>📤</span> 친구 초대
       </button>
-      <button onclick="openOriginalPopout()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-xs font-black rounded-xl shadow transition">
-        새 팝업창 ↗
+      <button onclick="openExternalMobile()" class="px-2.5 py-1.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 transition">
+        새창 ↗
       </button>
     </div>
   </header>
 
-  <!-- 메인 작업 공간 -->
-  <main class="w-full max-w-6xl mx-auto my-3 flex-1 flex flex-col gap-2.5">
-    
-    <!-- 실시간 같이 보기 안내 툴바 -->
-    <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-      <div class="flex items-center gap-2 text-slate-300">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>화면 크기에 맞춰 <strong>상하좌우 전체 판이 100% 자동 정렬</strong>됩니다. [전체화면] 버튼을 누르면 송출 화면이 더 넓어집니다.</span>
-      </div>
-      <button onclick="resetScale()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-[11px] text-slate-300 font-bold transition">
-        🔄 화면 맞춤 새로고침
-      </button>
+  <!-- 메인 원본 핀볼 뷰포트 (모바일 화면 100% 꽉 채움) -->
+  <main class="w-full flex-1 relative bg-slate-950 overflow-hidden">
+    <div class="mobile-iframe-wrapper">
+      <iframe 
+        id="pinball-frame"
+        src="https://lazygyu.github.io/roulette/" 
+        class="w-full h-full border-0 block"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+        loading="eager">
+      </iframe>
     </div>
-
-    <!-- 원본 게임 임베드 영역 (비율 자동 스케일) -->
-    <div id="game-container" class="w-full flex-1 min-h-[680px] sm:min-h-[780px] bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
-      <div id="iframe-viewport-wrapper">
-        <iframe 
-          id="pinball-frame"
-          src="https://lazygyu.github.io/roulette/" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          scrolling="no">
-        </iframe>
-      </div>
-    </div>
-
   </main>
 
-  <footer class="w-full max-w-6xl mx-auto py-2 text-center text-xs text-slate-500">
-    © 2026 세미니의 놀이터. All rights reserved.
+  <!-- 모바일 하단 플로팅 팁 바 -->
+  <footer class="w-full bg-slate-900/90 border-t border-slate-800/80 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+    <span class="flex items-center gap-1.5 truncate">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+      <span class="truncate">디스코드 모바일 화면 공유 또는 카톡 음성방과 함께 쓰세요!</span>
+    </span>
+    <button onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2">
+      새로고침 🔄
+    </button>
   </footer>
 
   <script>
-    const TARGET_URL = 'https://lazygyu.github.io/roulette/';
-    const iframe = document.getElementById('pinball-frame');
-    const wrapper = document.getElementById('iframe-viewport-wrapper');
+    const ORIGINAL_URL = 'https://lazygyu.github.io/roulette/';
 
-    // 핀볼 고유 렌더링 해상도
-    const BASE_WIDTH = 1050;
-    const BASE_HEIGHT = 900;
+    // 1. 스마트폰 네이티브 공유 API (카카오톡, 디스코드, 메시지 바로 전송)
+    function shareGameLink() {
+      const shareData = {
+        title: '세미니의 놀이터 - 복불복 핀볼 룰렛',
+        text: '복불복 핀볼 추첨 판으로 들어와서 같이 보자! 🎰🎈',
+        url: window.location.href
+      };
 
-    // 화면 비율에 맞춰 핀볼 판 전체를 왜곡 없이 축소/확대(Fit)
-    function fitPinballToScreen() {
-      const containerWidth = wrapper.clientWidth;
-      const containerHeight = wrapper.clientHeight;
-
-      if (!containerWidth || !containerHeight) return;
-
-      const scaleX = containerWidth / BASE_WIDTH;
-      const scaleY = containerHeight / BASE_HEIGHT;
-      // 화면 밖으로 잘려 나가지 않도록 더 작은 비율 채택
-      const finalScale = Math.min(scaleX, scaleY, 1.05);
-
-      iframe.style.transform = `scale(${finalScale})`;
-    }
-
-    function resetScale() {
-      fitPinballToScreen();
-    }
-
-    // 팝업창 열기
-    function openOriginalPopout() {
-      window.open(TARGET_URL, 'pinball_popup', 'width=1000,height=880,menubar=no,status=no,toolbar=no');
-    }
-
-    // 전체화면 토글 (화면 공유 시 검은 여백 및 잘림 완전 제거)
-    function toggleFullscreen() {
-      const target = document.getElementById('game-container');
-      const fsBtn = document.getElementById('fs-btn-text');
-
-      if (!document.fullscreenElement) {
-        target.requestFullscreen().then(() => {
-          fsBtn.innerText = '창 모드';
-        }).catch(err => {
-          console.warn('전체화면 실패:', err);
-        });
+      if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
       } else {
-        document.exitFullscreen().then(() => {
-          fsBtn.innerText = '전체화면';
+        // 공유 API 미지원 브라우저는 클립보드 복사
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('링크가 복사되었습니다! 친구들에게 전달하세요.');
+        }).catch(() => {
+          prompt('초대 주소를 복사하세요:', window.location.href);
         });
       }
     }
 
-    // 창 크기 변경 시 자동 리스케일링
-    window.addEventListener('resize', fitPinballToScreen);
-    document.addEventListener('fullscreenchange', () => {
-      setTimeout(fitPinballToScreen, 150);
-    });
+    // 2. 외부 브라우저 단독 새창 열기
+    function openExternalMobile() {
+      window.open(ORIGINAL_URL, '_blank');
+    }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(fitPinballToScreen, 200);
-    });
+    // 3. 핀볼 화면 새로고침
+    function reloadPinball() {
+      const frame = document.getElementById('pinball-frame');
+      frame.src = frame.src;
+    }
   </script>
 </body>
 </html>

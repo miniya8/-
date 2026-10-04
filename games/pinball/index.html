@@ -22,19 +22,20 @@
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
 
-    @keyframes pop-in {
-      0% { transform: scale(0.92); opacity: 0; }
+    /* 모달 팝업 애니메이션 */
+    @keyframes modal-scale {
+      0% { transform: scale(0.9); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
-    .animate-pop {
-      animation: pop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .pop-anim {
+      animation: modal-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
-<body class="text-white flex flex-col justify-between relative">
+<body class="text-white flex flex-col justify-between relative w-full h-full">
 
-  <!-- 상단 헤더 -->
-  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 shadow-lg z-20">
+  <!-- 상단 헤더 (터치 우선권 z-50 지정) -->
+  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 shadow-lg relative z-50">
     <div class="flex items-center gap-2">
       <button onclick="location.href='../../index.html'" class="px-2.5 py-1.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1">
         <span>◀</span> 로비
@@ -44,15 +45,15 @@
       </h1>
     </div>
 
-    <!-- 버튼 세트 (충돌 유발 코드 완전 제거) -->
-    <div class="flex items-center gap-1.5">
+    <!-- 터치 보장 버튼 세트 -->
+    <div class="flex items-center gap-2">
       <!-- 1. 단톡방 초대 버튼 -->
-      <button onclick="openInviteModal()" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow transition flex items-center gap-1">
-        <span>📤</span> 단톡방 초대
+      <button type="button" onclick="openInviteModal(event)" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow transition flex items-center gap-1">
+        <span>📤</span> 초대 링크
       </button>
 
-      <!-- 2. 화면공유 퀵가이드 버튼 (에러 0% 보장) -->
-      <button onclick="openShareGuideModal()" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
+      <!-- 2. 카카오톡 화면공유 버튼 -->
+      <button type="button" onclick="openShareModal(event)" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
         <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
           <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.87 1.88 5.38 4.72 6.74-.21.78-.76 2.81-.87 3.24-.14.54.2.53.42.38.17-.11 2.76-1.87 3.86-2.63.61.08 1.24.13 1.87.13 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
         </svg>
@@ -61,8 +62,8 @@
     </div>
   </header>
 
-  <!-- 원본 핀볼 웹뷰 영역 -->
-  <main class="w-full flex-1 relative bg-slate-950 overflow-hidden">
+  <!-- 메인 핀볼 웹뷰 영역 -->
+  <main class="w-full flex-1 relative bg-slate-950 overflow-hidden z-10">
     <iframe 
       id="pinball-frame"
       src="https://lazygyu.github.io/roulette/" 
@@ -72,103 +73,132 @@
     </iframe>
   </main>
 
-  <!-- 하단 상태 바 -->
-  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0 z-20">
+  <!-- 하단 바 -->
+  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0 relative z-30">
     <div class="flex items-center gap-1.5 truncate">
       <span class="w-2 h-2 rounded-full bg-[#FEE500] shrink-0"></span>
       <span class="truncate">단톡방 페이스톡 화면공유를 켜면 이 화면이 실시간 생중계됩니다!</span>
     </div>
-    <button onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2 hover:underline">
+    <button type="button" onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2 hover:underline">
       새로고침 🔄
     </button>
   </footer>
 
-  <!-- 1. 단톡방 초대 모달 -->
-  <div id="invite-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-center animate-pop space-y-3">
+  <!-- 1. 단톡방 초대 모달 (최상위 계층 z-[999]) -->
+  <div id="invite-modal" class="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+    <div class="w-full max-w-xs bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-center pop-anim space-y-3">
       <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-2xl">
         📋
       </div>
       <div>
-        <h3 class="text-base font-black text-white title-font">초대 주소가 복사되었습니다!</h3>
+        <h3 class="text-base font-black text-white title-font">초대 주소 복사 완료!</h3>
         <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-          카카오톡 단톡방 입력창에 <strong>붙여넣기</strong> 해주세요.
+          카카오톡 단톡방 입력창에 <strong>길게 눌러 붙여넣기</strong> 해주세요.
         </p>
       </div>
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] text-amber-400 break-all select-all font-mono" id="invite-url-box">
         -
       </div>
-      <button onclick="closeModal('invite-modal')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition">
+      <button type="button" onclick="closeModal('invite-modal')" class="w-full py-2.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl transition">
         확인
       </button>
     </div>
   </div>
 
-  <!-- 2. 카톡 화면공유 가이드 모달 (오류 완전 방지) -->
-  <div id="share-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-slate-900 border border-[#FEE500]/50 rounded-3xl p-5 shadow-2xl text-left animate-pop space-y-4">
+  <!-- 2. 카톡 화면공유 가이드 & 실행 모달 (최상위 계층 z-[999]) -->
+  <div id="share-modal" class="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+    <div class="w-full max-w-xs bg-slate-900 border border-[#FEE500]/60 rounded-3xl p-5 shadow-2xl text-left pop-anim space-y-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-[#FEE500] text-[#191919] flex items-center justify-center font-black text-xl shrink-0">
           💬
         </div>
         <div>
-          <h3 class="text-base font-black text-white title-font">카톡 화면공유 켜는 법</h3>
-          <p class="text-[11px] text-slate-400">핸드폰 화면을 친구들에게 생중계합니다</p>
+          <h3 class="text-base font-black text-white title-font">카톡 화면공유 방법</h3>
+          <p class="text-[11px] text-slate-400">핸드폰 화면을 실시간 생중계합니다</p>
         </div>
       </div>
 
       <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs text-slate-300">
         <div class="flex items-start gap-2">
           <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
-          <span>친구들과 있는 <strong>카카오톡 단톡방</strong>을 엽니다.</span>
+          <span>친구들과 있는 <strong>카카오톡 단톡방</strong> 열기</span>
         </div>
         <div class="flex items-start gap-2">
           <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
-          <span>하단 <strong>[+]</strong> 버튼 누르고 <strong>[페이스톡]</strong>을 연결합니다.</span>
+          <span>하단 <strong>[+]</strong> 누르고 <strong>[페이스톡]</strong> 연결</span>
         </div>
         <div class="flex items-start gap-2">
           <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
-          <span>통화 화면 아래 <strong>[화면공유]</strong> 아이콘을 켭니다.</span>
+          <span>통화 화면 아래 <strong>[화면공유]</strong> 아이콘 터치</span>
         </div>
         <div class="flex items-start gap-2">
           <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">4</span>
-          <span>다시 <strong>이 화면으로 돌아와 구슬을 발사</strong>하면 끝!</span>
+          <span><strong>이 핀볼 화면으로 돌아와 구슬 발사!</strong></span>
         </div>
       </div>
 
-      <button onclick="closeModal('share-modal')" class="w-full py-2.5 bg-[#FEE500] text-[#191919] text-xs font-black rounded-xl shadow transition active:scale-95">
-        알겠습니다, 진행하기
-      </button>
+      <div class="flex gap-2">
+        <button type="button" onclick="closeModal('share-modal')" class="flex-1 py-2.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl transition">
+          닫기
+        </button>
+        <!-- 에러 없이 카카오톡 앱을 안전하게 실행하는 버튼 -->
+        <button type="button" onclick="launchKakaoAppSafe()" class="flex-1 py-2.5 bg-[#FEE500] active:bg-[#E5CB00] text-[#191919] text-xs font-black rounded-xl shadow transition flex items-center justify-center gap-1">
+          <span>카톡 열기</span> 💬
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
-    // 1. 초대 링크 복사 (에러 없는 텍스트영역 방식)
-    function openInviteModal() {
+    // 1. 단톡방 초대 링크 복사
+    function openInviteModal(e) {
+      if (e) e.preventDefault();
       const url = window.location.href;
       document.getElementById('invite-url-box').innerText = url;
 
+      // 클립보드 복사
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).catch(() => fallbackCopy(url));
+      } else {
+        fallbackCopy(url);
+      }
+
+      document.getElementById('invite-modal').style.display = 'flex';
+    }
+
+    function fallbackCopy(text) {
       const temp = document.createElement('textarea');
-      temp.value = `🎰 [세미니의 놀이터 - 복불복 핀볼]\n친구들과 함께하는 복불복 추첨판입니다! 아래 링크로 들어오세요!\n👉 ${url}`;
+      temp.value = text;
       temp.style.position = 'fixed';
       temp.style.top = '-9999px';
       document.body.appendChild(temp);
       temp.select();
-      try {
-        document.execCommand('copy');
-      } catch (e) {}
+      try { document.execCommand('copy'); } catch (err) {}
       document.body.removeChild(temp);
-
-      document.getElementById('invite-modal').classList.remove('hidden');
     }
 
-    // 2. 화면공유 버튼 클릭 시 (에러를 유발하던 kakaotalk:// 스키마 제거)
-    function openShareGuideModal() {
-      document.getElementById('share-modal').classList.remove('hidden');
+    // 2. 카카오톡 화면공유 모달 열기
+    function openShareModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('share-modal').style.display = 'flex';
     }
 
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // 3. 에러 없는 안전한 카카오톡 앱 실행 로직
+    function launchKakaoAppSafe() {
+      closeModal('share-modal');
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      if (isAndroid) {
+        // 안드로이드(갤럭시 폴드 등): 오류 없이 카카오톡 앱 메인을 실행하는 공식 안드로이드 인텐트
+        window.location.href = "intent://launch#Intent;scheme=kakaotalk;package=com.kakao.talk;end";
+      } else {
+        // iOS (아이폰): 카카오톡 메인 스킴
+        window.location.href = "kakaotalk://";
+      }
     }
 
     function reloadPinball() {

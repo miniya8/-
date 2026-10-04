@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>세미니의 전설 종합 게임센터</title>
+  <title>✨ 세미니의 놀이터^^* 🎈</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
@@ -18,6 +18,40 @@
       box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
       border-color: rgba(245, 158, 11, 0.8);
     }
+
+    /* 반짝반짝 무지개 샤인 애니메이션 */
+    @keyframes rainbow-sparkle {
+      0% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+      }
+      50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.85));
+      }
+      100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+      }
+    }
+
+    .sparkle-text {
+      background: linear-gradient(90deg, #fbbf24, #f43f5e, #ec4899, #8b5cf6, #38bdf8, #34d399, #fbbf24);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-sparkle 4s ease infinite;
+    }
+
+    /* 앙증맞은 통통 튀는 모션 */
+    @keyframes cute-bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(8deg); }
+    }
+    .bounce-cute {
+      display: inline-block;
+      animation: cute-bounce 2s ease-in-out infinite;
+    }
   </style>
 </head>
 <body class="text-white min-h-screen flex flex-col items-center justify-between p-3 sm:p-6">
@@ -26,11 +60,17 @@
   <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
     <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl shadow-inner">
-        🎮
+        <span class="bounce-cute">🎪</span>
       </div>
       <div>
-        <h1 class="text-xl sm:text-2xl font-black text-amber-400 title-font tracking-wide">세미니의 전설 게임센터</h1>
-        <p class="text-xs text-slate-400">웹 기반 실시간 P2P & 아케이드 보드게임 천국</p>
+        <h1 class="text-2xl sm:text-3xl font-black title-font tracking-wide flex items-center gap-1.5">
+          <span class="text-amber-300">✨</span>
+          <span class="sparkle-text">세미니의 놀이터^^*</span>
+          <span class="bounce-cute text-xl sm:text-2xl">🎈</span>
+        </h1>
+        <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+          <span>💖 신나고 유쾌한 보드게임 & 파티 플레이 공간 🍭</span>
+        </p>
       </div>
     </div>
 
@@ -45,8 +85,10 @@
   <!-- 메인 게임 선택 카드 그리드 -->
   <main class="w-full max-w-5xl my-6 flex-1 flex flex-col justify-center">
     <div class="text-center mb-6">
-      <h2 class="text-2xl sm:text-3xl font-black text-slate-100 title-font">플레이할 게임을 선택하세요</h2>
-      <p class="text-xs sm:text-sm text-slate-400 mt-1">친구와 1:1 온라인 대전 또는 가벼운 복불복 추첨을 즐겨보세요</p>
+      <h2 class="text-2xl sm:text-3xl font-black text-slate-100 title-font flex items-center justify-center gap-2">
+        <span>⭐</span> 플레이할 놀이를 골라보세요! <span>🧸</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">친구와 1:1 대결을 하거나 쫄깃한 복불복 핀볼을 즐겨보세요 🥳</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -87,7 +129,7 @@
         </div>
       </div>
 
-      <!-- 3. 복불복 핀볼 룰렛 카드 (신규 추가) -->
+      <!-- 3. 복불복 핀볼 룰렛 카드 -->
       <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -112,17 +154,17 @@
   <footer class="w-full max-w-5xl bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-slate-400">
     <div class="flex items-center gap-2">
       <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span class="font-bold text-slate-300">게임 센터 상태: 정상 가동 중</span>
+      <span class="font-bold text-slate-300">놀이터 상태: 친구 맞이 준비 완료! 🎉</span>
     </div>
-    <span>© 2026 세미니의 멀티센터. All rights reserved.</span>
+    <span>© 2026 세미니의 놀이터. All rights reserved.</span>
   </footer>
 
   <script>
     function loadSavedNickname() {
       let saved = localStorage.getItem('jg_permanent_nickname');
       if (!saved) {
-        const prefixes = ['질풍의', '전설의', '천하제일', '무적의', '바람의', '신궁', '패왕'];
-        const suffixes = ['차마', '포왕', '알까기왕', '슬링샷', '대장군', '마스터'];
+        const prefixes = ['질풍의', '전설의', '천하제일', '무적의', '바람의', '신궁', '패왕', '귀여운'];
+        const suffixes = ['차마', '포왕', '알까기왕', '슬링샷', '대장군', '마스터', '장인'];
         saved = `${prefixes[Math.floor(Math.random() * prefixes.length)]}${suffixes[Math.floor(Math.random() * suffixes.length)]}_${Math.floor(10 + Math.random() * 90)}`;
         localStorage.setItem('jg_permanent_nickname', saved);
       }

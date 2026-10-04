@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>전설의 알까기 - 세미니 게임센터</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      overscroll-behavior: none;
+    }
+    .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
+  </style>
+</head>
+<body class="text-white h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden">
+
+  <!-- 상단 상태바 -->
+  <header class="w-full max-w-lg flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-xl z-20 flex-shrink-0">
+    <!-- 상대방 상태 -->
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-black text-xs text-red-300">한</div>
+      <div class="flex flex-col">
+        <span id="opp-name" class="font-bold text-xs text-slate-100">상대방</span>
+        <span id="opp-pieces-count" class="text-[10px] text-red-400 font-black">남은 알: 5개</span>
+      </div>
+    </div>
+
+    <!-- 중앙 턴 상태 -->
+    <div class="flex flex-col items-center">
+      <div id="turn-badge" class="px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse">초 차례</div>
+      <span class="text-[9px] text-slate-400 mt-0.5">드래그해서 튕기세요!</span>
+    </div>
+
+    <!-- 내 정보 & 로비 복귀 -->
+    <div class="flex items-center gap-2 flex-row-reverse text-right">
+      <button onclick="location.href='../../index.html'" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 shadow">
+        🏠 로비
+      </button>
+      <div class="flex flex-col">
+        <span id="my-name" class="font-bold text-xs text-slate-100">나</span>
+        <span id="my-pieces-count" class="text-[10px] text-emerald-400 font-black">남은 알: 5개</span>
+      </div>
+      <div class="w-9 h-9 rounded-full bg-emerald-950 border-2 border-emerald-500 flex items-center justify-center font-black text-xs text-emerald-300">초</div>
+    </div>
+  </header>
+
+  <!-- 메인 알까기 보드 캔버스 영역 -->
+  <main class="relative w-full max-w-lg flex-1 flex items-center justify-center p-1 my-1 overflow-hidden">
+    <div id="board-container" class="relative w-full h-full rounded-2xl shadow-2xl bg-gradient-to-b from-amber-950 to-amber-900 border-4 border-amber-800 p-2 overflow-hidden flex items-center justify-center">
+      <canvas id="alkkagiCanvas" class="rounded-xl block touch-none cursor-crosshair"></canvas>
+
+      <!-- 게임 종료 모달 -->
+      <div id="game-over-modal" class="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-400 text-white p-6 rounded-3xl text-center max-w-xs w-full shadow-2xl">
+          <div id="over-title" class="text-2xl font-black title-font text-amber-300">👑 승 리 👑</div>
+          <p id="over-desc" class="text-xs text-slate-300 mt-2">상대방의 모든 알을 판 밖으로 떨어뜨렸습니다!</p>
+          <div class="flex flex-col gap-2 mt-5">
+            <button onclick="restartAlkkagi()" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 font-bold rounded-xl text-xs shadow">🔄 한 판 더 하기</button>
+            <button onclick="location.href='../../index.html'" class="w-full py-2 bg-slate-800 border border-slate-700 font-bold rounded-xl text-xs text-slate-300">🏠 메인 허브로 나가기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 하단 조작 바 -->
+  <footer class="w-full max-w-lg flex items-center justify-between gap-2 z-20 pb-1 flex-shrink-0">
+    <button onclick="restartAlkkagi()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-bold text-slate-200">
+      판 다시 배치
+    </button>
+    <button onclick="toggleAIMode()" id="ai-toggle-btn" class="flex-1 py-2 bg-blue-600 border border-blue-500 rounded-xl text-xs font-bold text-white shadow">
+      모드: COM 대전
+    </button>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('alkkagiCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 오디오 컨텍스트
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playClack(vol = 0.5) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      } catch(e) {}
+    }
+
+    function playFall() {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.28);
+      } catch(e) {}
+    }
+
+    // 알까기 물리 파라미터
+    let pieces = [];
+    let currentTurn = 'cho';
+    let isDragging = false;
+    let selectedPiece = null;
+    let dragStart = { x: 0, y: 0 };
+    let dragCurrent = { x: 0, y: 0 };
+    let isSimulating = false;
+    let isAIMode = true;
+    let isGameOver = false;
+
+    // 경기장 규격 (패딩을 두어 경계 밖으로 나가면 낙사)
+    let boardBounds = { left: 0, top: 0, right: 0, bottom: 0 };
+    let pieceRadius = 20;
+
+    function resizeCanvas() {
+      const container = document.getElementById('board-container');
+      const w = container.clientWidth - 16;
+      const h = container.clientHeight - 16;
+      canvas.width = w * window.devicePixelRatio;
+      canvas.height = h * window.devicePixelRatio;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.resetTransform();
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      boardBounds = {
+        left: w * 0.06,
+        top: h * 0.06,
+        right: w * 0.94,
+        bottom: h * 0.94
+      };
+      pieceRadius = Math.min(w, h) * 0.052;
+
+      if (pieces.length === 0) setupPieces();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function setupPieces() {
+      pieces = [];
+      const w = parseFloat(canvas.style.width);
+      const h = parseFloat(canvas.style.height);
+
+      // 한 진영 (상단 5개)
+      for (let i = 0; i < 5; i++) {
+        pieces.push({
+          id: 'han_' + i,
+          side: 'han',
+          name: ['車', '包', '馬', '象', '卒'][i],
+          x: boardBounds.left + (boardBounds.right - boardBounds.left) * (0.15 + i * 0.175),
+          y: boardBounds.top + (boardBounds.bottom - boardBounds.top) * 0.18,
+          vx: 0, vy: 0,
+          alive: true
+        });
+      }
+
+      // 초 진영 (하단 5개)
+      for (let i = 0; i < 5; i++) {
+        pieces.push({
+          id: 'cho_' + i,
+          side: 'cho',
+          name: ['車', '包', '馬', '象', '兵'][i],
+          x: boardBounds.left + (boardBounds.right - boardBounds.left) * (0.15 + i * 0.175),
+          y: boardBounds.top + (boardBounds.bottom - boardBounds.top) * 0.82,
+          vx: 0, vy: 0,
+          alive: true
+        });
+      }
+      updatePieceCountUI();
+    }
+
+    function updatePieceCountUI() {
+      const choCount = pieces.filter(p => p.side === 'cho' && p.alive).length;
+      const hanCount = pieces.filter(p => p.side === 'han' && p.alive).length;
+      document.getElementById('my-pieces-count').innerText = `남은 알: ${choCount}개`;
+      document.getElementById('opp-pieces-count').innerText = `남은 알: ${hanCount}개`;
+
+      if (!isGameOver) {
+        if (choCount === 0) {
+          endGame('han');
+        } else if (hanCount === 0) {
+          endGame('cho');
+        }
+      }
+    }
+
+    function endGame(winner) {
+      isGameOver = true;
+      const modal = document.getElementById('game-over-modal');
+      const title = document.getElementById('over-title');
+      const desc = document.getElementById('over-desc');
+
+      if (winner === 'cho') {
+        title.innerText = '👑 초(나)의 대승리! 👑';
+        title.className = 'text-2xl font-black title-font text-emerald-400';
+        desc.innerText = '모든 상대 알을 판 밖으로 밀어내어 승리했습니다!';
+      } else {
+        title.innerText = '💀 한(상대)의 승리 💀';
+        title.className = 'text-2xl font-black title-font text-rose-500';
+        desc.innerText = '내 모든 알이 판 밖으로 떨어졌습니다.';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function restartAlkkagi() {
+      document.getElementById('game-over-modal').classList.add('hidden');
+      isGameOver = false;
+      currentTurn = 'cho';
+      document.getElementById('turn-badge').innerText = '초 차례';
+      document.getElementById('turn-badge').className = 'px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
+      setupPieces();
+    }
+
+    function toggleAIMode() {
+      isAIMode = !isAIMode;
+      document.getElementById('ai-toggle-btn').innerText = isAIMode ? '모드: COM 대전' : '모드: 2인 패스앤플레이';
+    }
+
+    // 마우스 & 터치 드래그 인터랙션
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      if (isSimulating || isGameOver) return;
+      if (isAIMode && currentTurn !== 'cho') return;
+
+      const pos = getPointerPos(e);
+      const clicked = pieces.find(p => p.alive && p.side === currentTurn && Math.hypot(p.x - pos.x, p.y - pos.y) <= pieceRadius * 1.3);
+
+      if (clicked) {
+        isDragging = true;
+        selectedPiece = clicked;
+        dragStart = { x: clicked.x, y: clicked.y };
+        dragCurrent = { x: pos.x, y: pos.y };
+      }
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (!isDragging) return;
+      dragCurrent = getPointerPos(e);
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!isDragging || !selectedPiece) return;
+      isDragging = false;
+
+      // 드래그 벡터 계산 (슬링샷: 반대 방향으로 발사)
+      const dx = dragStart.x - dragCurrent.x;
+      const dy = dragStart.y - dragCurrent.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 10) {
+        const power = Math.min(dist * 0.22, 28);
+        const angle = Math.atan2(dy, dx);
+        selectedPiece.vx = Math.cos(angle) * power;
+        selectedPiece.vy = Math.sin(angle) * power;
+
+        playClack(0.8);
+        isSimulating = true;
+      }
+      selectedPiece = null;
+    });
+
+    // 물리 시뮬레이션 루프
+    function updatePhysics() {
+      if (!isSimulating) return;
+
+      let stillMoving = false;
+      const friction = 0.982; // 감속 마찰력
+
+      // 1. 위치 이동 및 마찰
+      pieces.forEach(p => {
+        if (!p.alive) return;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= friction;
+        p.vy *= friction;
+
+        if (Math.hypot(p.vx, p.vy) > 0.12) {
+          stillMoving = true;
+        } else {
+          p.vx = 0; p.vy = 0;
+        }
+
+        // 장외 낙사 판정
+        if (p.x < boardBounds.left || p.x > boardBounds.right || p.y < boardBounds.top || p.y > boardBounds.bottom) {
+          p.alive = false;
+          p.vx = 0; p.vy = 0;
+          playFall();
+          updatePieceCountUI();
+        }
+      });
+
+      // 2. 알끼리 완전 탄성 충돌
+      for (let i = 0; i < pieces.length; i++) {
+        for (let j = i + 1; j < pieces.length; j++) {
+          const p1 = pieces[i];
+          const p2 = pieces[j];
+          if (!p1.alive || !p2.alive) continue;
+
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < pieceRadius * 2) {
+            playClack(Math.min(1.0, Math.hypot(p1.vx - p2.vx, p1.vy - p2.vy) * 0.1));
+
+            // 충돌 각도 분해
+            const angle = Math.atan2(dy, dx);
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+
+            // 겹침 방지 보정
+            const overlap = (pieceRadius * 2 - dist) / 2;
+            p1.x -= cos * overlap; p1.y -= sin * overlap;
+            p2.x += cos * overlap; p2.y += sin * overlap;
+
+            // 속도 벡터 회전 및 교환
+            const vx1 = p1.vx * cos + p1.vy * sin;
+            const vy1 = p1.vy * cos - p1.vx * sin;
+            const vx2 = p2.vx * cos + p2.vy * sin;
+            const vy2 = p2.vy * cos - p2.vx * sin;
+
+            p1.vx = vx2 * cos - vy1 * sin;
+            p1.vy = vy1 * cos + vx2 * sin;
+            p2.vx = vx1 * cos - vy2 * sin;
+            p2.vy = vy2 * cos + vx1 * sin;
+          }
+        }
+      }
+
+      // 모든 알 정지 시 턴 전환
+      if (!stillMoving) {
+        isSimulating = false;
+        currentTurn = (currentTurn === 'cho') ? 'han' : 'cho';
+        const badge = document.getElementById('turn-badge');
+        badge.innerText = (currentTurn === 'cho') ? '초 차례' : '한 차례';
+        badge.className = (currentTurn === 'cho') ? 'px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow animate-pulse' : 'px-3 py-0.5 rounded-full text-xs font-black bg-red-600 text-white shadow animate-pulse';
+
+        if (isAIMode && currentTurn === 'han' && !isGameOver) {
+          setTimeout(triggerAIMove, 700);
+        }
+      }
+    }
+
+    // 간단한 COM 알까기 AI
+    function triggerAIMove() {
+      const myAlives = pieces.filter(p => p.side === 'han' && p.alive);
+      const enemyAlives = pieces.filter(p => p.side === 'cho' && p.alive);
+      if (myAlives.length === 0 || enemyAlives.length === 0) return;
+
+      // 가장 가까운 적을 향해 발사
+      const shooter = myAlives[Math.floor(Math.random() * myAlives.length)];
+      let closestEnemy = enemyAlives[0];
+      let minDist = 9999;
+      enemyAlives.forEach(e => {
+        const d = Math.hypot(e.x - shooter.x, e.y - shooter.y);
+        if (d < minDist) { minDist = d; closestEnemy = e; }
+      });
+
+      const angle = Math.atan2(closestEnemy.y - shooter.y, closestEnemy.x - shooter.x) + (Math.random() - 0.5) * 0.15;
+      const power = 16 + Math.random() * 8;
+      shooter.vx = Math.cos(angle) * power;
+      shooter.vy = Math.sin(angle) * power;
+
+      playClack(0.8);
+      isSimulating = true;
+    }
+
+    // 렌더링 루프
+    function render() {
+      const w = parseFloat(canvas.style.width);
+      const h = parseFloat(canvas.style.height);
+      ctx.clearRect(0, 0, w, h);
+
+      // 1. 경기장 바닥 (바둑판 격자 스타일)
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(boardBounds.left, boardBounds.top, boardBounds.right - boardBounds.left, boardBounds.bottom - boardBounds.top);
+
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.5;
+      const stepX = (boardBounds.right - boardBounds.left) / 8;
+      const stepY = (boardBounds.bottom - boardBounds.top) / 8;
+      for (let i = 0; i <= 8; i++) {
+        ctx.beginPath();
+        ctx.moveTo(boardBounds.left + i * stepX, boardBounds.top);
+        ctx.lineTo(boardBounds.left + i * stepX, boardBounds.bottom);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(boardBounds.left, boardBounds.top + i * stepY);
+        ctx.lineTo(boardBounds.right, boardBounds.top + i * stepY);
+        ctx.stroke();
+      }
+
+      // 장외 위험 경계선
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boardBounds.left, boardBounds.top, boardBounds.right - boardBounds.left, boardBounds.bottom - boardBounds.top);
+
+      // 2. 알 그리기
+      pieces.forEach(p => {
+        if (!p.alive) return;
+        const isCho = (p.side === 'cho');
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+
+        // 그림자
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 4;
+
+        // 알 바디
+        ctx.fillStyle = isCho ? '#064e3b' : '#7f1d1d';
+        ctx.beginPath();
+        ctx.arc(0, 0, pieceRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = isCho ? '#6ee7b7' : '#fca5a5';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // 한자 표기
+        ctx.fillStyle = isCho ? '#ecfdf5' : '#fef2f2';
+        ctx.font = `bold ${pieceRadius * 1.1}px 'Jua'`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.name, 0, 1);
+
+        ctx.restore();
+      });
+
+      // 3. 슬링샷 조준선 궤적
+      if (isDragging && selectedPiece) {
+        const dx = dragStart.x - dragCurrent.x;
+        const dy = dragStart.y - dragCurrent.y;
+        const dist = Math.hypot(dx, dy);
+        const power = Math.min(dist * 0.22, 28);
+        const aimDist = power * 7;
+        const angle = Math.atan2(dy, dx);
+
+        ctx.save();
+        // 당기는 고무줄
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(dragStart.x, dragStart.y);
+        ctx.lineTo(dragCurrent.x, dragCurrent.y);
+        ctx.stroke();
+
+        // 발사 궤적 화살표
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(dragStart.x, dragStart.y);
+        ctx.lineTo(dragStart.x + Math.cos(angle) * aimDist, dragStart.y + Math.sin(angle) * aimDist);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      updatePhysics();
+      requestAnimationFrame(render);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedNick = localStorage.getItem('jg_permanent_nickname');
+      if (savedNick) document.getElementById('my-name').innerText = savedNick;
+      resizeCanvas();
+      requestAnimationFrame(render);
+    });
+  </script>
+</body>
+</html>

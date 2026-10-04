@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>복불복 핀볼 라이브 룸 - 세미니의 놀이터</title>
+  <title>복불복 핀볼 룸 - 세미니의 놀이터</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
@@ -18,38 +18,42 @@
       background: #09090b;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
   </style>
 </head>
 <body class="text-white flex flex-col justify-between">
 
-  <!-- 상단 간편 제어 헤더 -->
+  <!-- 카카오톡 스타일 상단 헤더 -->
   <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 shadow-lg z-20">
     <div class="flex items-center gap-2">
-      <button onclick="location.href='../../index.html'" class="px-2.5 py-1 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-lg border border-slate-700 transition">
-        ◀ 로비
+      <button onclick="location.href='../../index.html'" class="px-2.5 py-1.5 bg-slate-800 active:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1">
+        <span>◀</span> 로비
       </button>
       <h1 class="text-base sm:text-lg font-black text-rose-400 title-font flex items-center gap-1">
         <span>🎰</span> 복불복 핀볼
       </h1>
     </div>
 
-    <!-- 원클릭 방송 & 링크 공유 버튼 세트 -->
+    <!-- 카카오톡 전용 원터치 액션 버튼 세트 -->
     <div class="flex items-center gap-1.5">
-      <!-- 1. 방장용: 클릭 한 번으로 무설치 방송실 오픈 -->
-      <button onclick="startBroadcast()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-xs font-black rounded-xl shadow-md transition flex items-center gap-1 animate-pulse">
-        <span>🔴</span> 방송 시작
+      <!-- 1. 단톡방에 게임 링크 및 참여 안내 원클릭 공유 -->
+      <button onclick="shareToKakao()" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1">
+        <span>📤</span> 단톡방 초대
       </button>
-      
-      <!-- 2. 친구 초대용: 무설치 웹 시청 링크 자동 복사/공유 -->
-      <button onclick="shareViewerLink()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-xs font-black rounded-xl shadow-md transition flex items-center gap-1">
-        <span>📤</span> 친구 초대
+
+      <!-- 2. 카카오톡 앱 즉시 실행 및 페이스톡 화면공유 연결 -->
+      <button onclick="launchKakaoShare()" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
+        <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+          <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.87 1.88 5.38 4.72 6.74-.21.78-.76 2.81-.87 3.24-.14.54.2.53.42.38.17-.11 2.76-1.87 3.86-2.63.61.08 1.24.13 1.87.13 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+        </svg>
+        <span>카톡 화면공유</span>
       </button>
     </div>
   </header>
 
-  <!-- 메인 핀볼 게임 화면 -->
+  <!-- 원본 핀볼 웹뷰 영역 (모바일 화면 100% 핏) -->
   <main class="w-full flex-1 relative bg-slate-950 overflow-hidden">
     <iframe 
       id="pinball-frame"
@@ -60,52 +64,52 @@
     </iframe>
   </main>
 
-  <!-- 하단 상태 바 -->
-  <footer class="w-full bg-slate-900/90 border-t border-slate-800/80 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
-    <span class="flex items-center gap-1.5 truncate">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-      <span id="room-status-text" class="truncate">친구들은 앱 설치 없이 링크만 누르면 바로 시청합니다!</span>
-    </span>
-    <button onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2">
+  <!-- 하단 원포인트 가이드 바 -->
+  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0">
+    <div class="flex items-center gap-1.5 truncate">
+      <span class="w-2 h-2 rounded-full bg-[#FEE500] shrink-0"></span>
+      <span class="truncate">카톡 단톡방에서 <strong>[페이스톡 ▶ 화면공유]</strong>를 켜면 친구들과 함께 봅니다!</span>
+    </div>
+    <button onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2 hover:underline">
       새로고침 🔄
     </button>
   </footer>
 
   <script>
-    // 날짜/시간 기반으로 고유 룸 번호 생성 (매번 충돌 없는 새 방 유지)
-    const savedRoomId = localStorage.getItem('semin_live_room_id') || ('semin-live-' + Math.random().toString(36).substring(2, 7));
-    localStorage.setItem('semin_live_room_id', savedRoomId);
-
-    // 무설치 웹 화상/화면공유 주소 (Jitsi 공용 서버)
-    const LIVE_STREAM_URL = `https://meet.jit.si/${savedRoomId}#config.startWithAudioMuted=true&config.prejoinPageEnabled=false`;
-
-    // [1] 방장: 버튼 1번으로 화면공유 방 열기
-    function startBroadcast() {
-      // 팝업창 형태로 방송룸 호출
-      window.open(LIVE_STREAM_URL, 'semin_broadcast', 'width=500,height=700,menubar=no,status=no');
-      
-      setTimeout(() => {
-        alert("📌 [방송 시작 안내]\n\n열린 새 창에서 하단 [모니터(화면 공유) 아이콘]만 누르면 끝!\n그 다음 '친구 초대' 버튼을 눌러 링크를 단톡방에 보내세요.");
-      }, 300);
-    }
-
-    // [2] 친구들: 앱/로그인 전혀 없이 웹에서 바로 보는 링크 전송
-    function shareViewerLink() {
+    // 1. 카카오톡 단톡방으로 초대 메시지 발송
+    function shareToKakao() {
       const shareData = {
-        title: '세미니의 놀이터 - 핀볼 실시간 생방송',
-        text: '🎰 복불복 핀볼 실시간 화면 공유방입니다! (어플 설치 없이 바로 볼 수 있어요)',
-        url: LIVE_STREAM_URL
+        title: '세미니의 놀이터 - 복불복 핀볼 룰렛',
+        text: '🎰 복불복 핀볼 추첨 시작합니다! 카톡 화면공유로 들어와서 같이 보세요! 🎈',
+        url: window.location.href
       };
 
       if (navigator.share) {
         navigator.share(shareData).catch(() => {});
       } else {
-        navigator.clipboard.writeText(LIVE_STREAM_URL).then(() => {
-          alert('🎉 무설치 시청 링크가 복사되었습니다!\n\n카카오톡 단톡방에 붙여넣어 친구들에게 공유하세요:\n' + LIVE_STREAM_URL);
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('🎉 링크가 복사되었습니다!\n카카오톡 단톡방에 붙여넣어 친구들을 초대하세요.');
         }).catch(() => {
-          prompt('아래 링크를 친구들에게 보내주세요:', LIVE_STREAM_URL);
+          prompt('초대 주소를 복사해 단톡방에 전달하세요:', window.location.href);
         });
       }
+    }
+
+    // 2. 카카오톡 앱 즉시 호출
+    function launchKakaoShare() {
+      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+      
+      // 모바일 기기일 때 카카오톡 공식 딥링크 호출
+      if (isMobile) {
+        window.location.href = "kakaolink://";
+      } else {
+        window.location.href = "kakaoopen://";
+      }
+
+      // 화면공유 간단 안내 팝업
+      setTimeout(() => {
+        alert("📌 [카카오톡 화면공유 3초 가이드]\n\n1. 열린 카카오톡 단톡방 메뉴(+)에서 '페이스톡' 연결\n2. 통화 창 하단의 [화면 공유] 아이콘 터치\n3. 다시 이 핀볼 화면으로 돌아와 구슬을 떨어뜨리세요!");
+      }, 400);
     }
 
     function reloadPinball() {

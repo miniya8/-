@@ -35,7 +35,7 @@
 </head>
 <body id="app-root" class="text-white flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
 
-  <!-- 상단 상태바 & 듀얼 타이머 -->
+  <!-- 상단 상태바 & 타이머 -->
   <header class="w-full max-w-md flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-2.5 py-1 sm:py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
     <div class="flex items-center justify-between">
       <!-- 상대방 상태 -->
@@ -53,7 +53,7 @@
           <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
           <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
         </div>
-        <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">기습 진형을 짜세요!</span>
+        <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">98~100% 크리티컬 파워를 노리세요!</span>
       </div>
 
       <!-- 내 정보 & 메인 복귀 -->
@@ -84,7 +84,6 @@
       </div>
 
       <div class="space-y-2.5">
-        <!-- 내 방 번호 -->
         <div class="bg-slate-950/80 p-2 rounded-2xl border border-slate-800 text-center">
           <span class="text-[10px] font-bold text-emerald-400">내 4자리 방 번호 (초군 방장)</span>
           <div class="flex items-center justify-center gap-1.5 mt-1">
@@ -94,7 +93,6 @@
           <p id="host-wait-msg" class="text-[9px] text-slate-400 mt-1">친구에게 4자리 번호를 알려주세요...</p>
         </div>
 
-        <!-- 상대 방 참가 -->
         <div class="bg-slate-950/80 p-2 rounded-2xl border border-slate-800">
           <span class="text-[10px] font-bold text-cyan-400">친구 방 번호로 입장 (한군 도전자)</span>
           <div class="flex items-center justify-between gap-1.5 mt-1">
@@ -105,7 +103,6 @@
           </div>
         </div>
 
-        <!-- AI 플레이 -->
         <button onclick="startSoloAIMode()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-xs font-bold text-amber-300">
           🤖 AI와 싱글 전략전 시작
         </button>
@@ -122,7 +119,7 @@
       <div id="game-over-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3">
         <div class="bg-slate-900 border-2 border-amber-400 text-white p-5 rounded-3xl text-center max-w-xs w-full shadow-2xl">
           <div id="over-title" class="text-xl sm:text-2xl font-black title-font text-amber-300">👑 대승리 👑</div>
-          <p id="over-desc" class="text-xs text-slate-300 mt-1.5">적의 모든 말을 장외로 격추했습니다!</p>
+          <p id="over-desc" class="text-xs text-slate-300 mt-1.5">치열한 전술 끝에 승리했습니다!</p>
           <div class="flex flex-col gap-2 mt-4">
             <button onclick="requestInstantRematch()" id="rematch-btn" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-black rounded-xl text-xs shadow tracking-wide">
               🔄 즉시 재경기 (방 유지)
@@ -136,7 +133,7 @@
     </div>
   </main>
 
-  <!-- 하단 컨트롤 바 (배치 패널 & 파워 게이지 컨트롤러) -->
+  <!-- 하단 컨트롤 바 -->
   <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-xl">
     
     <!-- 1. 배치 단계 패널 -->
@@ -155,57 +152,86 @@
         </div>
       </div>
 
-      <!-- 6종 장기 기물 구매 (가치 및 등급 시각화) -->
-      <div class="grid grid-cols-6 gap-1 text-center">
-        <button onclick="buyPiece('楚')" class="bg-slate-800/90 hover:bg-slate-700 border-2 border-emerald-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-xs font-black text-emerald-300">장(楚)</span>
-          <span class="text-[9px] text-yellow-300 font-black">6P 특대</span>
+      <!-- 상단: 5대 영웅급 (세미니, 홍구, 창궈니, 하도리, 현조) -->
+      <div class="text-[9px] font-black text-amber-400 px-1">👑 5대 영웅 (8P 신급 / 성벽·장애물 원샷 파괴)</div>
+      <div class="grid grid-cols-5 gap-1 text-center">
+        <button onclick="buyPiece('HERO_세미니')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow">
+          <span class="text-[10px] font-black text-yellow-300 truncate w-full">세미니</span>
+          <span class="text-[8px] text-amber-300 font-bold">8P</span>
         </button>
-        <button onclick="buyPiece('車')" class="bg-slate-800/90 hover:bg-slate-700 border border-cyan-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-[11px] font-black text-cyan-300">차(車)</span>
-          <span class="text-[9px] text-amber-400 font-bold">5P 대</span>
+        <button onclick="buyPiece('HERO_홍구')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow">
+          <span class="text-[10px] font-black text-yellow-300 truncate w-full">홍구</span>
+          <span class="text-[8px] text-amber-300 font-bold">8P</span>
         </button>
-        <button onclick="buyPiece('包')" class="bg-slate-800/90 hover:bg-slate-700 border border-purple-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-[11px] font-black text-purple-300">포(包)</span>
-          <span class="text-[9px] text-amber-400 font-bold">4P 중</span>
+        <button onclick="buyPiece('HERO_창궈니')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow">
+          <span class="text-[10px] font-black text-yellow-300 truncate w-full">창궈니</span>
+          <span class="text-[8px] text-amber-300 font-bold">8P</span>
         </button>
-        <button onclick="buyPiece('馬')" class="bg-slate-800/90 hover:bg-slate-700 border border-orange-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-[11px] font-black text-orange-300">마(馬)</span>
-          <span class="text-[9px] text-amber-400 font-bold">3P 소</span>
+        <button onclick="buyPiece('HERO_하도리')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow">
+          <span class="text-[10px] font-black text-yellow-300 truncate w-full">하도리</span>
+          <span class="text-[8px] text-amber-300 font-bold">8P</span>
         </button>
-        <button onclick="buyPiece('象')" class="bg-slate-800/90 hover:bg-slate-700 border border-amber-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-[11px] font-black text-amber-300">상(象)</span>
-          <span class="text-[9px] text-amber-400 font-bold">2P 중</span>
+        <button onclick="buyPiece('HERO_현조')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow">
+          <span class="text-[10px] font-black text-yellow-300 truncate w-full">현조</span>
+          <span class="text-[8px] text-amber-300 font-bold">8P</span>
         </button>
-        <button onclick="buyPiece('卒')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-400/80 p-1 rounded-xl flex flex-col items-center">
-          <span class="text-[11px] font-black text-slate-200">졸/병</span>
-          <span class="text-[9px] text-amber-400 font-bold">1P 극소</span>
+      </div>
+
+      <!-- 하단: 장기 정규 기물 -->
+      <div class="grid grid-cols-6 gap-1 text-center mt-0.5">
+        <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-emerald-300">장(楚)</span>
+          <span class="text-[8px] text-yellow-300 font-bold">6P</span>
+        </button>
+        <button onclick="buyPiece('車')" class="bg-slate-800 hover:bg-slate-700 border border-cyan-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-cyan-300">차(車)</span>
+          <span class="text-[8px] text-amber-400 font-bold">5P</span>
+        </button>
+        <button onclick="buyPiece('包')" class="bg-slate-800 hover:bg-slate-700 border border-purple-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-purple-300">포(包)</span>
+          <span class="text-[8px] text-amber-400 font-bold">4P</span>
+        </button>
+        <button onclick="buyPiece('馬')" class="bg-slate-800 hover:bg-slate-700 border border-orange-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-orange-300">마(馬)</span>
+          <span class="text-[8px] text-amber-400 font-bold">3P</span>
+        </button>
+        <button onclick="buyPiece('象')" class="bg-slate-800 hover:bg-slate-700 border border-amber-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-amber-300">상(象)</span>
+          <span class="text-[8px] text-amber-400 font-bold">2P</span>
+        </button>
+        <button onclick="buyPiece('卒')" class="bg-slate-800 hover:bg-slate-700 border border-slate-400/80 p-0.5 rounded-xl flex flex-col items-center">
+          <span class="text-[10px] font-black text-slate-200">졸/병</span>
+          <span class="text-[8px] text-amber-400 font-bold">1P</span>
         </button>
       </div>
     </div>
 
-    <!-- 2. 배틀 단계: 중앙 하단 파워 게이지 컨트롤러 -->
+    <!-- 2. 배틀 단계: 타이밍 바운스 파워 패널 + 조준 취소 버튼 -->
     <div id="battle-panel" class="hidden flex flex-col gap-1.5">
       <div class="flex justify-between items-center px-1">
-        <div id="battle-status-msg" class="text-[11px] text-slate-300">
-          <span class="text-amber-400 font-bold">1단계:</span> 내 기물을 터치해 조준하세요.
+        <div id="battle-status-msg" class="text-[11px] text-slate-300 truncate">
+          <span class="text-amber-400 font-bold">1단계:</span> 말을 누르고 조준한 뒤 손을 떼세요!
         </div>
         <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
       </div>
 
-      <!-- 파워 게이지 바 및 발사 버튼 컨트롤 -->
-      <div id="power-control-group" class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-700">
+      <!-- 타이밍 파워 게이지 바 & 조준 취소 & 발사 버튼 -->
+      <div id="power-control-group" class="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-700">
+        <button id="cancel-aim-btn" onclick="cancelAiming()" disabled class="px-2.5 py-1.5 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700">
+          ↩ 취소
+        </button>
+
         <span class="text-[10px] font-black text-amber-300 whitespace-nowrap">파워</span>
         
-        <!-- 터치/드래그 가능한 슬라이딩 파워 바 -->
-        <div id="power-track" class="flex-1 h-5 bg-slate-800 rounded-lg overflow-hidden relative cursor-pointer border border-slate-600">
-          <div id="power-fill" class="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-600 transition-all duration-75" style="width: 50%;"></div>
-          <span id="power-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow">50%</span>
+        <div id="power-track" class="flex-1 h-5 bg-slate-800 rounded-lg overflow-hidden relative border border-slate-600">
+          <div id="power-fill" class="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-rose-600" style="width: 0%;"></div>
+          <!-- 98~100% 크리티컬 존 표시선 -->
+          <div class="absolute right-0 top-0 bottom-0 w-[4%] bg-rose-400/40 border-l border-yellow-300 animate-pulse"></div>
+          <span id="power-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow">0%</span>
         </div>
 
-        <!-- 최종 발사 버튼 -->
-        <button id="shoot-btn" onclick="executeShot()" disabled class="px-3.5 py-1.5 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow transition-all whitespace-nowrap">
-          선택 대기
+        <button id="shoot-btn" onclick="executeTimingShot()" disabled class="px-3.5 py-1.5 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow transition-all whitespace-nowrap">
+          조준 대기
         </button>
       </div>
     </div>
@@ -217,6 +243,21 @@
 
     window.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // 5대 영웅 사진 프리로드
+    const heroImageFiles = {
+      '세미니': '세미니.jpeg',
+      '홍구': '홍구.jpeg',
+      '창궈니': '창궈니.jpeg',
+      '하도리': '하도리.jpeg',
+      '현조': '현조.jpeg'
+    };
+    const loadedImages = {};
+    for (const [key, filename] of Object.entries(heroImageFiles)) {
+      const img = new Image();
+      img.src = filename;
+      loadedImages[key] = img;
+    }
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let lastClackTime = 0;
@@ -274,8 +315,26 @@
       } catch(e) {}
     }
 
+    function playCriticalShotSfx() {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(280, t);
+        osc.frequency.exponentialRampToValueAtTime(1400, t + 0.22);
+        gain.gain.setValueAtTime(0.9, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.25);
+      } catch(e) {}
+    }
+
     function playSlideFriction(speed) {
-      if (speed < 1.8) return;
+      if (speed < 1.4) return;
       const now = performance.now();
       if (now - lastSlideTime < 90) return;
       lastSlideTime = now;
@@ -298,7 +357,7 @@
         slideFilter.frequency.setValueAtTime(650, t);
 
         const slideGain = audioCtx.createGain();
-        const vol = Math.min(0.25, (speed / 20) * 0.2);
+        const vol = Math.min(0.25, (speed / 16) * 0.2);
         slideGain.gain.setValueAtTime(vol, t);
         slideGain.gain.linearRampToValueAtTime(0.001, t + dur);
 
@@ -306,24 +365,6 @@
         slideFilter.connect(slideGain);
         slideGain.connect(audioCtx.destination);
         slideNoise.start(t);
-      } catch(e) {}
-    }
-
-    function playSlashDamageSfx() {
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const t = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(900, t);
-        osc.frequency.exponentialRampToValueAtTime(120, t + 0.15);
-        gain.gain.setValueAtTime(0.5, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + 0.16);
       } catch(e) {}
     }
 
@@ -399,8 +440,9 @@
       } catch(e) {}
     }
 
-    // [개선] 가치에 따른 확실한 크기(radiusRatio)와 질량(mass) 차등 배분
+    // 기물 스펙
     const PIECE_CONFIG = {
+      'HERO': { cost: 8, radiusRatio: 0.048, mass: 12.0, border: '#fbbf24', ringWidth: 5.5, ability: 'hero_shock', shield: 3 },
       '楚': { name: '장군', cost: 6, radiusRatio: 0.040, mass: 7.5, border: '#34d399', ringWidth: 4.5, ability: 'shockwave', shield: 2 },
       '漢': { name: '장군', cost: 6, radiusRatio: 0.040, mass: 7.5, border: '#f87171', ringWidth: 4.5, ability: 'shockwave', shield: 2 },
       '車': { name: '차',   cost: 5, radiusRatio: 0.033, mass: 5.0, border: '#38bdf8', ringWidth: 3.5, ability: 'charge', shield: 1 },
@@ -431,16 +473,20 @@
 
     let shakeIntensity = 0;
     function triggerShake(val) {
-      shakeIntensity = Math.min(18, shakeIntensity + val);
+      shakeIntensity = Math.min(22, shakeIntensity + val);
     }
 
     let currentTurn = 'cho';
 
-    // [신규 조준 & 파워 시스템 상태]
+    // 타이밍 파워 게이지 컨트롤 상태
     let selectedPiece = null;
-    let aimAngle = -Math.PI / 2; // 기본 위쪽 조준
-    let isAiming = false;
-    let selectedPower = 50;     // 1 ~ 100%
+    let isAimDragging = false;
+    let aimAngle = -Math.PI / 2;
+    let isPowerBouncing = false;
+    let bouncePower = 0;
+    let bounceDirection = 1;
+    let bounceSpeed = 150;
+    let lastBounceTime = performance.now();
     let isSimulating = false;
     let isGameOver = false;
 
@@ -477,7 +523,7 @@
       const maxW = mainArea.clientWidth - 10;
       const maxH = mainArea.clientHeight - 10;
 
-      const targetRatio = 9 / 13;
+      const targetRatio = 9 / 16;
       let w = maxW;
       let h = w / targetRatio;
 
@@ -502,19 +548,19 @@
 
       boardBounds = {
         left: drawW * 0.03,
-        top: drawH * 0.03,
+        top: drawH * 0.025,
         right: drawW * 0.97,
-        bottom: drawH * 0.97,
+        bottom: drawH * 0.975,
         width: drawW * 0.94,
-        height: drawH * 0.94
+        height: drawH * 0.95
       };
 
       if (mySide === 'cho') {
-        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
-        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
+        mySpawnZone = { top: boardBounds.top + boardBounds.height * 0.74, bottom: boardBounds.bottom };
+        oppSpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.26 };
       } else {
-        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.28 };
-        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.72, bottom: boardBounds.bottom };
+        mySpawnZone = { top: boardBounds.top, bottom: boardBounds.top + boardBounds.height * 0.26 };
+        oppSpawnZone = { top: boardBounds.top + boardBounds.height * 0.74, bottom: boardBounds.bottom };
       }
     }
 
@@ -529,7 +575,7 @@
       }, 200);
     });
 
-    // [개선] 장애물이 절대 겹치지 않도록 안전 반경 검사 배치 알고리즘
+    // 중앙 벽 및 장애물 생성 (모두 HP 부여 및 파괴 가능)
     function generateRandomMap() {
       const w = boardBounds.width;
       const h = boardBounds.height;
@@ -541,14 +587,17 @@
 
       const midY = by + h * 0.5;
       const segW = w / 5;
-      currentMap.walls.push({ x1: bx, y1: midY, x2: bx + segW * 1.35, y2: midY, color: '#38bdf8' });
-      currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8' });
-      currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8' });
+      const wallBaseHp = 95; // 중앙 성벽 기본 HP
 
-      currentMap.walls.push({ x1: bx, y1: by + h * 0.25, x2: bx, y2: by + h * 0.35, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.25, x2: bx + w, y2: by + h * 0.35, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx, y1: by + h * 0.65, x2: bx, y2: by + h * 0.75, color: '#94a3b8' });
-      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.65, x2: bx + w, y2: by + h * 0.75, color: '#94a3b8' });
+      // [핵심] 중앙 성벽에 HP 및 maxHp 속성 부여
+      currentMap.walls.push({ x1: bx, y1: midY, x2: bx + segW * 1.35, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
+      currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
+      currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
+
+      currentMap.walls.push({ x1: bx, y1: by + h * 0.25, x2: bx, y2: by + h * 0.35, color: '#94a3b8', hp: wallBaseHp, maxHp: wallBaseHp });
+      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.25, x2: bx + w, y2: by + h * 0.35, color: '#94a3b8', hp: wallBaseHp, maxHp: wallBaseHp });
+      currentMap.walls.push({ x1: bx, y1: by + h * 0.65, x2: bx, y2: by + h * 0.75, color: '#94a3b8', hp: wallBaseHp, maxHp: wallBaseHp });
+      currentMap.walls.push({ x1: bx + w, y1: by + h * 0.65, x2: bx + w, y2: by + h * 0.75, color: '#94a3b8', hp: wallBaseHp, maxHp: wallBaseHp });
 
       const obstacleTypes = ['mountain', 'water_puddle', 'sawblade', 'twin_blade', 'mud'];
       const targetCount = 6;
@@ -564,11 +613,9 @@
         if (obsType === 'water_puddle') candidateR = w * 0.055;
         if (obsType === 'twin_blade') candidateR = w * 0.06;
 
-        // 중앙 전장 지역에 스폰 (상하 스폰존 침범 방지)
         const ox = bx + candidateR + 10 + Math.random() * (w - candidateR * 2 - 20);
-        const oy = by + h * 0.33 + Math.random() * (h * 0.34);
+        const oy = by + h * 0.32 + Math.random() * (h * 0.36);
 
-        // 중앙 성벽 선분과 충돌 여부 확인
         let wallOverlap = false;
         currentMap.walls.forEach(wl => {
           const { dist } = pointToSegmentDistance(ox, oy, wl.x1, wl.y1, wl.x2, wl.y2);
@@ -576,11 +623,10 @@
         });
         if (wallOverlap) continue;
 
-        // 기존 배치된 장애물들과의 거리 검사 (겹침 완전 차단)
         let obsOverlap = false;
         for (const existing of currentMap.obstacles) {
           const d = Math.hypot(existing.x - ox, existing.y - oy);
-          const reqDist = (existing.boundR || existing.r || 25) + candidateR + 18; // 최소 18px 여유 간격
+          const reqDist = (existing.boundR || existing.r || 25) + candidateR + 18;
           if (d < reqDist) {
             obsOverlap = true;
             break;
@@ -588,9 +634,10 @@
         }
         if (obsOverlap) continue;
 
-        // 적합한 위치에 생성
+        const baseHp = 85;
+
         if (obsType === 'mountain') {
-          const r = w * (0.026 + Math.random() * 0.01);
+          const r = w * (0.028 + Math.random() * 0.01);
           const points = [];
           const numPts = 7;
           for (let p = 0; p < numPts; p++) {
@@ -598,20 +645,20 @@
             const dist = r * (0.75 + Math.random() * 0.45);
             points.push({ x: Math.cos(ang) * dist, y: Math.sin(ang) * dist });
           }
-          currentMap.obstacles.push({ type: 'mountain', x: ox, y: oy, r, boundR: r, points });
+          currentMap.obstacles.push({ type: 'mountain', x: ox, y: oy, r, boundR: r, points, hp: baseHp, maxHp: baseHp });
         } else if (obsType === 'water_puddle') {
           const rx = w * (0.045 + Math.random() * 0.015);
           const ry = h * (0.035 + Math.random() * 0.012);
-          currentMap.obstacles.push({ type: 'water_puddle', x: ox, y: oy, rx, ry, r: (rx + ry) / 2, boundR: rx });
+          currentMap.obstacles.push({ type: 'water_puddle', x: ox, y: oy, rx, ry, r: (rx + ry) / 2, boundR: rx, hp: baseHp, maxHp: baseHp });
         } else if (obsType === 'sawblade') {
           const r = w * 0.028;
-          currentMap.obstacles.push({ type: 'sawblade', x: ox, y: oy, r, boundR: r, angle: 0, speed: (Math.random() > 0.5 ? 1 : -1) * 0.06 });
+          currentMap.obstacles.push({ type: 'sawblade', x: ox, y: oy, r, boundR: r, angle: 0, speed: (Math.random() > 0.5 ? 1 : -1) * 0.06, hp: baseHp, maxHp: baseHp });
         } else if (obsType === 'twin_blade') {
           const len = w * (0.045 + Math.random() * 0.015);
-          currentMap.obstacles.push({ type: 'twin_blade', x: ox, y: oy, len, boundR: len, angle: Math.random() * Math.PI, speed: (Math.random() > 0.5 ? 1 : -1) * 0.03 });
+          currentMap.obstacles.push({ type: 'twin_blade', x: ox, y: oy, len, boundR: len, angle: Math.random() * Math.PI, speed: (Math.random() > 0.5 ? 1 : -1) * 0.03, hp: baseHp, maxHp: baseHp });
         } else if (obsType === 'mud') {
           const r = w * (0.04 + Math.random() * 0.015);
-          currentMap.obstacles.push({ type: 'mud', x: ox, y: oy, r, boundR: r });
+          currentMap.obstacles.push({ type: 'mud', x: ox, y: oy, r, boundR: r, hp: baseHp, maxHp: baseHp });
         }
 
         placed++;
@@ -727,7 +774,9 @@
       isMyReady = false;
       isPeerReady = false;
       selectedPiece = null;
-      isAiming = false;
+      isAimDragging = false;
+      isPowerBouncing = false;
+      bouncePower = 0;
       gamePhase = 'placement';
       budget = 20;
       pieces = [];
@@ -745,7 +794,6 @@
       badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow';
       document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
 
-      buyPiece('楚', true);
       if (isAIMode) setupAIHanArmy();
 
       updateUI();
@@ -770,6 +818,14 @@
       timerInterval = setInterval(() => {
         if (isGameOver) {
           clearInterval(timerInterval);
+          return;
+        }
+
+        if (isPowerBouncing && gamePhase === 'battle') {
+          if (timerRemaining > 1) {
+            timerRemaining--;
+            updateTimerDisplay();
+          }
           return;
         }
 
@@ -832,22 +888,29 @@
       const zH = zBottom - zTop;
 
       const formation = [
-        { type: '楚', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 },
-        { type: '車', x: bLeft + bW * 0.18, y: zTop + zH * 0.45 },
-        { type: '包', x: bLeft + bW * 0.82, y: zTop + zH * 0.75 },
-        { type: '馬', x: bLeft + bW * 0.75, y: zTop + zH * 0.45 },
-        { type: '象', x: bLeft + bW * 0.50, y: zTop + zH * 0.28 }
+        { type: 'HERO_세미니', x: bLeft + bW * 0.50, y: zTop + zH * 0.80 },
+        { type: '車', x: bLeft + bW * 0.20, y: zTop + zH * 0.45 },
+        { type: '包', x: bLeft + bW * 0.80, y: zTop + zH * 0.55 },
+        { type: '馬', x: bLeft + bW * 0.50, y: zTop + zH * 0.32 }
       ];
 
       formation.forEach(item => {
-        const conf = PIECE_CONFIG[item.type];
-        const r = bW * conf.radiusRatio;
-        const charName = (mySide === 'cho') ? (item.type === '楚' ? '楚' : item.type) : (item.type === '楚' ? '漢' : item.type);
+        let conf, charName, heroKey = null;
+        if (item.type.startsWith('HERO_')) {
+          conf = PIECE_CONFIG['HERO'];
+          heroKey = item.type.replace('HERO_', '');
+          charName = heroKey;
+        } else {
+          conf = PIECE_CONFIG[item.type];
+          charName = (mySide === 'cho') ? item.type : (item.type === '楚' ? '漢' : item.type);
+        }
 
+        const r = bW * conf.radiusRatio;
         pieces.push({
           id: mySide + '_' + Math.random().toString(36).substring(2, 9),
           side: mySide,
           char: charName,
+          heroKey: heroKey,
           x: item.x,
           y: (mySide === 'cho') ? item.y : (boardBounds.top + (zBottom - item.y)),
           vx: 0, vy: 0,
@@ -867,19 +930,28 @@
       });
 
       budget = 0;
-      playWoodClack(0.9, 4.0);
+      playWoodClack(0.9, 5.0);
       updateUI();
     }
 
-    function buyPiece(char, isFree = false) {
+    function buyPiece(typeCode) {
       if (gamePhase !== 'placement') return;
-      const conf = PIECE_CONFIG[char];
 
-      if (!isFree && budget < conf.cost) {
+      let conf, charName, heroKey = null;
+      if (typeCode.startsWith('HERO_')) {
+        conf = PIECE_CONFIG['HERO'];
+        heroKey = typeCode.replace('HERO_', '');
+        charName = heroKey;
+      } else {
+        conf = PIECE_CONFIG[typeCode];
+        charName = (mySide === 'cho') ? (typeCode === '楚' ? '楚' : typeCode) : (typeCode === '楚' ? '漢' : typeCode);
+      }
+
+      if (budget < conf.cost) {
         alert('배치 포인트가 부족합니다!');
         return;
       }
-      if (!isFree) budget -= conf.cost;
+      budget -= conf.cost;
 
       const r = boardBounds.width * conf.radiusRatio;
       let spawnX = 0, spawnY = 0, attempts = 0;
@@ -891,19 +963,17 @@
         attempts++;
       }
 
-      const pieceSide = mySide;
-      const displayChar = (char === '楚' || char === '漢') ? (pieceSide === 'cho' ? '楚' : '漢') : char;
-
       pieces.push({
-        id: pieceSide + '_' + Math.random().toString(36).substring(2, 9),
-        side: pieceSide,
-        char: displayChar,
+        id: mySide + '_' + Math.random().toString(36).substring(2, 9),
+        side: mySide,
+        char: charName,
+        heroKey: heroKey,
         x: spawnX, y: spawnY,
         vx: 0, vy: 0,
         mass: conf.mass,
         radius: r,
         ringWidth: conf.ringWidth,
-        color: pieceSide === 'cho' ? '#064e3b' : '#7f1d1d',
+        color: mySide === 'cho' ? '#064e3b' : '#7f1d1d',
         border: conf.border,
         ability: conf.ability,
         shield: conf.shield,
@@ -914,14 +984,29 @@
         alive: true
       });
 
-      playWoodClack(0.6, conf.mass);
+      playWoodClack(0.7, conf.mass);
       updateUI();
     }
 
     function setupAIHanArmy() {
-      const aiRoster = ['漢', '車', '包', '馬', '象'];
-      aiRoster.forEach(type => {
-        const conf = PIECE_CONFIG[type];
+      const aiRoster = [
+        { type: 'HERO_홍구' },
+        { type: '車' },
+        { type: '包' },
+        { type: '馬' }
+      ];
+
+      aiRoster.forEach(item => {
+        let conf, charName, heroKey = null;
+        if (item.type.startsWith('HERO_')) {
+          conf = PIECE_CONFIG['HERO'];
+          heroKey = item.type.replace('HERO_', '');
+          charName = heroKey;
+        } else {
+          conf = PIECE_CONFIG[item.type];
+          charName = (item.type === '楚') ? '漢' : item.type;
+        }
+
         const r = boardBounds.width * conf.radiusRatio;
         const x = boardBounds.left + r + Math.random() * (boardBounds.width - r * 2);
         const y = boardBounds.top + r + Math.random() * (boardBounds.height * 0.25 - r * 2);
@@ -929,7 +1014,8 @@
         pieces.push({
           id: 'han_' + Math.random().toString(36).substring(2, 9),
           side: 'han',
-          char: type,
+          char: charName,
+          heroKey: heroKey,
           x: x, y: y,
           vx: 0, vy: 0,
           mass: conf.mass,
@@ -966,6 +1052,7 @@
             id: p.id,
             side: p.side,
             char: p.char,
+            heroKey: p.heroKey,
             x: p.x,
             y: p.y,
             mass: p.mass,
@@ -1028,7 +1115,7 @@
       if (winner === mySide) {
         title.innerText = '👑 판쓸이 대승리! 👑';
         title.className = 'text-xl sm:text-2xl font-black title-font text-emerald-400';
-        desc.innerText = '치열한 전술 끝에 적 진영을 격파했습니다!';
+        desc.innerText = '전략적인 타격으로 적 진영을 완벽히 소탕했습니다!';
       } else {
         title.innerText = '💀 패배 💀';
         title.className = 'text-xl sm:text-2xl font-black title-font text-rose-500';
@@ -1037,7 +1124,6 @@
       modal.classList.remove('hidden');
     }
 
-    // 좌표 추출 도우미
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1048,10 +1134,9 @@
       };
     }
 
-    // [선택 및 방향 조준 터치 핸들러]
     let isMovingPlacement = false;
 
-    function handleCanvasTouchStart(e) {
+    function handlePointerStart(e) {
       if (e.cancelable) e.preventDefault();
       const pos = getCanvasPos(e);
 
@@ -1064,29 +1149,26 @@
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
 
-        // 1. 내 기물 터치 여부 확인 (기물 선택)
+        if (isPowerBouncing && selectedPiece) {
+          executeTimingShot();
+          return;
+        }
+
         const clickedPiece = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
 
         if (clickedPiece) {
           selectedPiece = clickedPiece;
-          isAiming = true;
-          // 초기 기본 방향: 적 진영 방향
+          isAimDragging = true;
+          isPowerBouncing = false;
           aimAngle = (mySide === 'cho') ? -Math.PI / 2 : Math.PI / 2;
+          bouncePower = 0;
           updateBattleControlUI();
           playWoodClack(0.4, selectedPiece.mass);
-        } else if (selectedPiece) {
-          // 2. 이미 선택된 상태에서 판 다른 곳을 터치하면 그 방향으로 조준각 설정
-          const dx = pos.x - selectedPiece.x;
-          const dy = pos.y - selectedPiece.y;
-          if (Math.hypot(dx, dy) > 8) {
-            aimAngle = Math.atan2(dy, dx);
-            isAiming = true;
-          }
         }
       }
     }
 
-    function handleCanvasTouchMove(e) {
+    function handlePointerMove(e) {
       if (e.cancelable) e.preventDefault();
       const pos = getCanvasPos(e);
 
@@ -1094,8 +1176,7 @@
         const r = selectedPiece.radius;
         selectedPiece.x = Math.max(boardBounds.left + r, Math.min(boardBounds.right - r, pos.x));
         selectedPiece.y = Math.max(mySpawnZone.top + r, Math.min(mySpawnZone.bottom - r, pos.y));
-      } else if (gamePhase === 'battle' && selectedPiece && isAiming) {
-        // 드래그하면서 실시간 레이저 조준 각도 갱신
+      } else if (gamePhase === 'battle' && selectedPiece && isAimDragging) {
         const dx = pos.x - selectedPiece.x;
         const dy = pos.y - selectedPiece.y;
         if (Math.hypot(dx, dy) > 8) {
@@ -1104,106 +1185,117 @@
       }
     }
 
-    function handleCanvasTouchEnd(e) {
+    function handlePointerEnd(e) {
       if (gamePhase === 'placement') {
         isMovingPlacement = false;
+      } else if (gamePhase === 'battle') {
+        if (isAimDragging && selectedPiece) {
+          isAimDragging = false;
+          isPowerBouncing = true;
+          bounceDirection = 1;
+          lastBounceTime = performance.now();
+          updateBattleControlUI();
+        }
       }
     }
 
-    canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleCanvasTouchEnd, { passive: false });
+    canvas.addEventListener('touchstart', handlePointerStart, { passive: false });
+    window.addEventListener('touchmove', handlePointerMove, { passive: false });
+    window.addEventListener('touchend', handlePointerEnd, { passive: false });
 
-    canvas.addEventListener('mousedown', handleCanvasTouchStart);
-    canvas.addEventListener('mousemove', handleCanvasTouchMove);
-    canvas.addEventListener('mouseup', handleCanvasTouchEnd);
+    canvas.addEventListener('mousedown', handlePointerStart);
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerEnd);
 
-    // [신규 파워 게이지 바 조작]
-    const powerTrack = document.getElementById('power-track');
-    let isAdjustingPower = false;
-
-    function setPowerByEvent(e) {
-      const rect = powerTrack.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const offsetX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-      const pct = Math.max(5, Math.min(100, Math.round((offsetX / rect.width) * 100)));
-      selectedPower = pct;
-      updatePowerDisplay();
+    function cancelAiming() {
+      if (!selectedPiece || isSimulating) return;
+      deselectPiece();
     }
-
-    function updatePowerDisplay() {
-      document.getElementById('power-fill').style.width = `${selectedPower}%`;
-      document.getElementById('power-text').innerText = `${selectedPower}%`;
-    }
-
-    powerTrack.addEventListener('touchstart', e => {
-      isAdjustingPower = true;
-      setPowerByEvent(e);
-      if (e.cancelable) e.preventDefault();
-    }, { passive: false });
-
-    powerTrack.addEventListener('touchmove', e => {
-      if (isAdjustingPower) setPowerByEvent(e);
-      if (e.cancelable) e.preventDefault();
-    }, { passive: false });
-
-    window.addEventListener('touchend', () => isAdjustingPower = false);
-
-    powerTrack.addEventListener('mousedown', e => {
-      isAdjustingPower = true;
-      setPowerByEvent(e);
-    });
-    window.addEventListener('mousemove', e => {
-      if (isAdjustingPower) setPowerByEvent(e);
-    });
-    window.addEventListener('mouseup', () => isAdjustingPower = false);
 
     function updateBattleControlUI() {
       const shootBtn = document.getElementById('shoot-btn');
+      const cancelBtn = document.getElementById('cancel-aim-btn');
       const msg = document.getElementById('battle-status-msg');
 
-      if (selectedPiece) {
+      if (isPowerBouncing && selectedPiece) {
         shootBtn.disabled = false;
-        shootBtn.innerText = `🚀 ${selectedPiece.char} 발사!`;
-        shootBtn.className = 'px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-black shadow-lg transition-all animate-pulse';
-        msg.innerHTML = `<span class="text-emerald-300 font-bold">[${selectedPiece.char}]</span> 방향 터치 후 파워 설정 & 발사!`;
+        cancelBtn.disabled = false;
+        cancelBtn.className = 'px-2.5 py-1.5 bg-rose-900/60 hover:bg-rose-800 text-rose-200 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-rose-500/80 cursor-pointer';
+        shootBtn.innerText = `⚡ HIT! 발사!`;
+        shootBtn.className = 'px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white rounded-xl text-xs font-black shadow-lg transition-all animate-pulse';
+        msg.innerHTML = `<span class="text-yellow-300 font-bold">화면 탭으로 발사! (98~100% 크리티컬)</span>`;
+      } else if (isAimDragging && selectedPiece) {
+        shootBtn.disabled = true;
+        cancelBtn.disabled = false;
+        cancelBtn.className = 'px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-600 cursor-pointer';
+        shootBtn.innerText = `조준 중...`;
+        shootBtn.className = 'px-3.5 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow';
+        msg.innerHTML = `<span class="text-emerald-300 font-bold">[${selectedPiece.char}]</span> 방향 조준 후 손을 떼세요!`;
       } else {
         shootBtn.disabled = true;
-        shootBtn.innerText = '선택 대기';
+        cancelBtn.disabled = true;
+        cancelBtn.className = 'px-2.5 py-1.5 bg-slate-800 text-slate-600 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700/50 cursor-not-allowed';
+        shootBtn.innerText = '조준 대기';
         shootBtn.className = 'px-3.5 py-1.5 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow cursor-not-allowed';
-        msg.innerHTML = `<span class="text-amber-400 font-bold">1단계:</span> 내 기물을 터치해 조준하세요.`;
+        msg.innerHTML = `<span class="text-amber-400 font-bold">1단계:</span> 내 기물을 터치하고 조준하세요.`;
       }
     }
 
     function deselectPiece() {
       selectedPiece = null;
-      isAiming = false;
+      isAimDragging = false;
+      isPowerBouncing = false;
+      bouncePower = 0;
       updateBattleControlUI();
+      document.getElementById('power-fill').style.width = '0%';
+      document.getElementById('power-text').innerText = '0%';
     }
 
-    // [발사 버튼 클릭 실행]
-    function executeShot() {
-      if (!selectedPiece || isSimulating || isGameOver || currentTurn !== mySide) return;
+    // [핵심] 98~100% 충전 시 파워 가중치 & 특수 크리티컬 이펙트
+    function executeTimingShot() {
+      if (!selectedPiece || !isPowerBouncing || isSimulating || isGameOver || currentTurn !== mySide) return;
 
       if (timerInterval) clearInterval(timerInterval);
 
-      let powerRatio = selectedPower / 100;
-      let maxSpeed = 22;
-      if (selectedPiece.ability === 'charge') maxSpeed = 27;
+      const finalPowerPct = Math.max(5, Math.round(bouncePower));
+      isPowerBouncing = false;
 
-      const launchSpeed = Math.max(3, powerRatio * maxSpeed);
+      // 98% ~ 100% 크리티컬 보너스 판정
+      const isCritical = (finalPowerPct >= 98);
+      const criticalMult = isCritical ? 1.4 : 1.0; // 1.4배 폭발적 파워 부스트
+
+      let powerRatio = finalPowerPct / 100;
+      let maxSpeed = 15.0;
+      if (selectedPiece.ability === 'charge') maxSpeed = 18.0;
+      if (selectedPiece.ability === 'hero_shock') maxSpeed = 20.0;
+
+      const launchSpeed = Math.max(2.5, powerRatio * maxSpeed) * criticalMult;
       const vx = Math.cos(aimAngle) * launchSpeed;
       const vy = Math.sin(aimAngle) * launchSpeed;
 
       selectedPiece.vx = vx;
       selectedPiece.vy = vy;
 
-      if (selectedPiece.ability === 'cannon') {
-        selectedPiece.isJumping = true;
-        selectedPiece.jumpTime = 22;
-        playJumpSfx();
+      if (isCritical) {
+        // [특수 이펙트] 98~100% 발동 시 크리티컬 광원 및 번개 이펙트
+        spawnShockwave(selectedPiece.x, selectedPiece.y, '#f59e0b', 180);
+        spawnShockwave(selectedPiece.x, selectedPiece.y, '#ef4444', 120);
+        visualEffects.push({ type: 'lightning', x: selectedPiece.x, y: selectedPiece.y, color: '#fef08a', life: 20 });
+        spawnHitParticles(selectedPiece.x, selectedPiece.y, '#fbbf24', 30, 2.2);
+        playCriticalShotSfx();
+        playExplosionSfx(0.95);
+        triggerShake(14);
       } else {
-        playWoodClack(Math.min(1.0, 0.4 + launchSpeed * 0.03), selectedPiece.mass);
+        if (selectedPiece.ability === 'cannon') {
+          selectedPiece.isJumping = true;
+          selectedPiece.jumpTime = 22;
+          playJumpSfx();
+        } else if (selectedPiece.ability === 'hero_shock') {
+          playExplosionSfx(0.9);
+          triggerShake(6);
+        } else {
+          playWoodClack(Math.min(1.0, 0.4 + launchSpeed * 0.04), selectedPiece.mass);
+        }
       }
 
       if (selectedPiece.ability === 'curve') {
@@ -1243,9 +1335,16 @@
     }
 
     function triggerPieceSpecialEffect(p, hitX, hitY) {
-      if (p.ability === 'shockwave') {
-        spawnShockwave(hitX, hitY, '#10b981', 115);
-        triggerShake(7);
+      if (p.ability === 'hero_shock') {
+        spawnShockwave(hitX, hitY, '#facc15', 150);
+        spawnShockwave(hitX, hitY, '#38bdf8', 100);
+        visualEffects.push({ type: 'lightning', x: hitX, y: hitY, color: '#fef08a', life: 16 });
+        spawnHitParticles(hitX, hitY, '#fbbf24', 24, 1.6);
+        triggerShake(10);
+        playExplosionSfx(0.9);
+      } else if (p.ability === 'shockwave') {
+        spawnShockwave(hitX, hitY, '#10b981', 110);
+        triggerShake(6);
         playExplosionSfx(0.65);
       } else if (p.ability === 'charge') {
         visualEffects.push({ type: 'lightning', x: hitX, y: hitY, color: '#38bdf8', life: 12 });
@@ -1279,10 +1378,29 @@
       return { dist, projX, projY };
     }
 
+    // 장애물 및 성벽 데미지 처리
+    function damageObstacle(target, piece, speed, isWall = false) {
+      const dmg = Math.round((piece.mass * 0.42 + 0.8) * speed);
+      target.hp -= dmg;
+      
+      const midX = isWall ? (target.x1 + target.x2) / 2 : target.x;
+      const midY = isWall ? (target.y1 + target.y2) / 2 : target.y;
+
+      spawnHitParticles(midX, midY, isWall ? target.color : '#f59e0b', 8, 1.2);
+      triggerShake(Math.min(8, dmg * 0.08));
+
+      if (target.hp <= 0) {
+        spawnShockwave(midX, midY, isWall ? '#38bdf8' : '#ef4444', 90);
+        spawnHitParticles(midX, midY, isWall ? '#bae6fd' : '#94a3b8', 25, 2.0);
+        playExplosionSfx(0.7);
+        triggerShake(9);
+      }
+    }
+
     function updatePhysics() {
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'sawblade' || obs.type === 'twin_blade') {
-          obs.angle = (obs.angle + obs.speed) % (Math.PI * 2);
+          obs.angle = (obs.angle + (obs.speed || 0.04)) % (Math.PI * 2);
         }
       });
 
@@ -1314,14 +1432,16 @@
         p.y += p.vy;
 
         const currentSpeed = Math.hypot(p.vx, p.vy);
-        if (currentSpeed > 2.0 && !p.isJumping) {
+        if (currentSpeed > 1.8 && !p.isJumping) {
           playSlideFriction(currentSpeed);
         }
 
-        let currentFriction = 0.983;
+        let currentFriction = 0.981;
 
         if (!p.isJumping) {
-          currentMap.walls.forEach(w => {
+          // [핵심] 성벽 충돌 & 파괴 로직
+          for (let wi = currentMap.walls.length - 1; wi >= 0; wi--) {
+            const w = currentMap.walls[wi];
             const { dist, projX, projY } = pointToSegmentDistance(p.x, p.y, w.x1, w.y1, w.x2, w.y2);
             if (dist < p.radius + 3) {
               const nx = (p.x - projX) / (dist || 1);
@@ -1330,18 +1450,25 @@
               p.y = projY + ny * (p.radius + 3);
 
               const dot = p.vx * nx + p.vy * ny;
-              p.vx = (p.vx - 2 * dot * nx) * 0.82;
-              p.vy = (p.vy - 2 * dot * ny) * 0.82;
+              p.vx = (p.vx - 2 * dot * nx) * 0.8;
+              p.vy = (p.vy - 2 * dot * ny) * 0.8;
 
-              if (Math.hypot(p.vx, p.vy) > 0.8) {
-                playWoodClack(0.7, p.mass);
-                spawnHitParticles(projX, projY, w.color, 6);
-                triggerShake(2);
+              playWoodClack(0.7, p.mass);
+              const spd = Math.hypot(p.vx, p.vy);
+              damageObstacle(w, p, spd, true);
+
+              if (w.hp <= 0) {
+                currentMap.walls.splice(wi, 1);
+                continue;
               }
             }
-          });
+          }
 
-          currentMap.obstacles.forEach(obs => {
+          // 장애물 충돌 & 파괴
+          for (let oi = currentMap.obstacles.length - 1; oi >= 0; oi--) {
+            const obs = currentMap.obstacles[oi];
+            const spd = Math.hypot(p.vx, p.vy);
+
             if (obs.type === 'mountain') {
               const dist = Math.hypot(p.x - obs.x, p.y - obs.y);
               if (dist < obs.r + p.radius) {
@@ -1350,33 +1477,47 @@
                 p.x = obs.x + nx * (obs.r + p.radius);
                 p.y = obs.y + ny * (obs.r + p.radius);
                 const dot = p.vx * nx + p.vy * ny;
-                p.vx = (p.vx - 2 * dot * nx) * 0.78;
-                p.vy = (p.vy - 2 * dot * ny) * 0.78;
-                if (Math.hypot(p.vx, p.vy) > 0.8) {
-                  playWoodClack(0.65, p.mass);
-                  spawnHitParticles(p.x, p.y, '#94a3b8', 6);
+                p.vx = (p.vx - 2 * dot * nx) * 0.72;
+                p.vy = (p.vy - 2 * dot * ny) * 0.72;
+
+                damageObstacle(obs, p, spd);
+                if (obs.hp <= 0) {
+                  currentMap.obstacles.splice(oi, 1);
+                  continue;
                 }
               }
             } else if (obs.type === 'water_puddle') {
               if (Math.hypot(p.x - obs.x, p.y - obs.y) < obs.r + p.radius) {
-                currentFriction = 0.997;
-                p.vx += (Math.random() - 0.5) * 0.18;
+                currentFriction = 0.995;
+                p.vx += (Math.random() - 0.5) * 0.15;
+                damageObstacle(obs, p, spd * 0.5);
+                if (obs.hp <= 0) {
+                  currentMap.obstacles.splice(oi, 1);
+                  continue;
+                }
               }
             } else if (obs.type === 'mud') {
               if (Math.hypot(p.x - obs.x, p.y - obs.y) < obs.r + p.radius) {
-                currentFriction = 0.91;
+                currentFriction = 0.90;
+                damageObstacle(obs, p, spd * 0.7);
+                if (obs.hp <= 0) {
+                  currentMap.obstacles.splice(oi, 1);
+                  continue;
+                }
               }
             } else if (obs.type === 'sawblade') {
               const dist = Math.hypot(p.x - obs.x, p.y - obs.y);
               if (dist < obs.r + p.radius) {
                 const nx = (p.x - obs.x) / dist;
                 const ny = (p.y - obs.y) / dist;
-                p.vx = nx * 8.0;
-                p.vy = ny * 8.0;
+                p.vx = nx * 6.5;
+                p.vy = ny * 6.5;
                 if (p.shield > 0) p.shield--;
-                playSlashDamageSfx();
-                spawnHitParticles(p.x, p.y, '#ef4444', 16, 1.5);
-                triggerShake(6);
+                damageObstacle(obs, p, spd);
+                if (obs.hp <= 0) {
+                  currentMap.obstacles.splice(oi, 1);
+                  continue;
+                }
               }
             } else if (obs.type === 'twin_blade') {
               const x2 = obs.x + Math.cos(obs.angle) * obs.len;
@@ -1387,14 +1528,16 @@
               const { dist, projX, projY } = pointToSegmentDistance(p.x, p.y, x1, y1, x2, y2);
               if (dist < p.radius + 4) {
                 const pushAngle = obs.angle + Math.PI / 2;
-                p.vx += Math.cos(pushAngle) * 7.5;
-                p.vy += Math.sin(pushAngle) * 7.5;
-                playSlashDamageSfx();
-                spawnShockwave(projX, projY, '#f59e0b', 35);
-                triggerShake(4);
+                p.vx += Math.cos(pushAngle) * 6.0;
+                p.vy += Math.sin(pushAngle) * 6.0;
+                damageObstacle(obs, p, spd);
+                if (obs.hp <= 0) {
+                  currentMap.obstacles.splice(oi, 1);
+                  continue;
+                }
               }
             }
-          });
+          }
         }
 
         p.vx *= currentFriction;
@@ -1415,7 +1558,7 @@
             p.vx = -p.vx * 0.65;
             p.vy = -p.vy * 0.65;
             playBarrierSaveSfx();
-            spawnShockwave(p.x, p.y, '#38bdf8', 75);
+            spawnShockwave(p.x, p.y, '#38bdf8', 85);
             triggerShake(6);
           } else {
             p.alive = false;
@@ -1428,7 +1571,7 @@
         }
       });
 
-      // 기물 상호 충돌
+      // 기물끼리 충돌
       for (let i = 0; i < pieces.length; i++) {
         for (let j = i + 1; j < pieces.length; j++) {
           const p1 = pieces[i];
@@ -1453,14 +1596,25 @@
               p2.hitCooldown = 6;
             }
 
-            if ((p1.ability === 'shockwave' || p2.ability === 'shockwave') && relSpd > 5) {
+            if ((p1.ability === 'hero_shock' || p2.ability === 'hero_shock') && relSpd > 3.5) {
               pieces.forEach(target => {
                 if (target !== p1 && target !== p2 && target.alive && !target.isJumping) {
                   const td = Math.hypot(target.x - hitX, target.y - hitY);
-                  if (td < 110) {
+                  if (td < 140) {
                     const ang = Math.atan2(target.y - hitY, target.x - hitX);
-                    target.vx += Math.cos(ang) * 3.5;
-                    target.vy += Math.sin(ang) * 3.5;
+                    target.vx += Math.cos(ang) * 4.2;
+                    target.vy += Math.sin(ang) * 4.2;
+                  }
+                }
+              });
+            } else if ((p1.ability === 'shockwave' || p2.ability === 'shockwave') && relSpd > 4.5) {
+              pieces.forEach(target => {
+                if (target !== p1 && target !== p2 && target.alive && !target.isJumping) {
+                  const td = Math.hypot(target.x - hitX, target.y - hitY);
+                  if (td < 100) {
+                    const ang = Math.atan2(target.y - hitY, target.x - hitX);
+                    target.vx += Math.cos(ang) * 3.0;
+                    target.vy += Math.sin(ang) * 3.0;
                   }
                 }
               });
@@ -1535,8 +1689,8 @@
         if (d < minD) { minD = d; target = c; }
       });
 
-      const angle = Math.atan2(target.y - shooter.y, target.x - shooter.x) + (Math.random() - 0.5) * 0.15;
-      const power = 13 + Math.random() * 6;
+      const angle = Math.atan2(target.y - shooter.y, target.x - shooter.x) + (Math.random() - 0.5) * 0.12;
+      const power = (shooter.ability === 'hero_shock') ? (14 + Math.random() * 5) : (10 + Math.random() * 4);
       shooter.vx = Math.cos(angle) * power;
       shooter.vy = Math.sin(angle) * power;
 
@@ -1544,6 +1698,9 @@
         shooter.isJumping = true;
         shooter.jumpTime = 22;
         playJumpSfx();
+      } else if (shooter.ability === 'hero_shock') {
+        playExplosionSfx(0.9);
+        triggerShake(5);
       } else {
         playWoodClack(0.85, shooter.mass);
       }
@@ -1551,7 +1708,27 @@
       isSimulating = true;
     }
 
-    function render() {
+    function render(timestamp) {
+      if (isPowerBouncing && selectedPiece && gamePhase === 'battle') {
+        const delta = (timestamp - lastBounceTime) / 1000;
+        bouncePower += bounceDirection * bounceSpeed * delta;
+        if (bouncePower >= 100) {
+          bouncePower = 100;
+          bounceDirection = -1;
+        } else if (bouncePower <= 0) {
+          bouncePower = 0;
+          bounceDirection = 1;
+        }
+        document.getElementById('power-fill').style.width = `${Math.round(bouncePower)}%`;
+        
+        // 98~100% 도달 시 게이지 텍스트 강조
+        const isCrit = (bouncePower >= 98);
+        document.getElementById('power-text').innerHTML = isCrit 
+          ? `<span class="text-yellow-300 font-black animate-ping">CRITICAL! 100%</span>` 
+          : `${Math.round(bouncePower)}%`;
+      }
+      lastBounceTime = timestamp;
+
       const w = parseFloat(canvas.style.width);
       const h = parseFloat(canvas.style.height);
       if (!w || !h) return;
@@ -1569,7 +1746,6 @@
       ctx.fillStyle = currentMap.bg;
       ctx.fillRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
-      // 모눈선
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
       ctx.lineWidth = 1;
       for (let i = 0; i <= 14; i++) {
@@ -1581,7 +1757,7 @@
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
-      // 성벽
+      // [핵심] 중앙 성벽 렌더링 & 성벽 HP 바 표시
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
@@ -1591,12 +1767,33 @@
         ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); ctx.stroke();
         ctx.restore();
+
+        // 성벽 상단 HP 바
+        if (w.hp !== undefined && w.maxHp) {
+          const midX = (w.x1 + w.x2) / 2;
+          const midY = (w.y1 + w.y2) / 2;
+          const barW = Math.max(18, Math.hypot(w.x2 - w.x1, w.y2 - w.y1) * 0.4);
+          const barH = 3;
+          const barX = midX - barW / 2;
+          const barY = midY - 7;
+          const hpRatio = Math.max(0, w.hp / w.maxHp);
+
+          ctx.save();
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(barX, barY, barW, barH);
+          ctx.fillStyle = hpRatio > 0.5 ? '#38bdf8' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+          ctx.fillRect(barX, barY, barW * hpRatio, barH);
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(barX, barY, barW, barH);
+          ctx.restore();
+        }
       });
 
-      // 겹치지 않는 장애물 렌더링
+      // 장애물 렌더링 & 상단 HP 바 표시
       currentMap.obstacles.forEach(obs => {
+        ctx.save();
         if (obs.type === 'mountain') {
-          ctx.save();
           ctx.translate(obs.x, obs.y);
           ctx.fillStyle = '#334155';
           ctx.strokeStyle = '#64748b';
@@ -1609,15 +1806,7 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-
-          ctx.strokeStyle = '#475569';
-          ctx.beginPath();
-          ctx.moveTo(0, 0); ctx.lineTo(obs.points[0].x * 0.7, obs.points[0].y * 0.7);
-          ctx.moveTo(0, 0); ctx.lineTo(obs.points[3].x * 0.7, obs.points[3].y * 0.7);
-          ctx.stroke();
-          ctx.restore();
         } else if (obs.type === 'water_puddle') {
-          ctx.save();
           ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
           ctx.strokeStyle = '#38bdf8';
           ctx.lineWidth = 1.5;
@@ -1625,14 +1814,7 @@
           ctx.ellipse(obs.x, obs.y, obs.rx, obs.ry, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-
-          ctx.strokeStyle = 'rgba(125, 211, 252, 0.4)';
-          ctx.beginPath();
-          ctx.ellipse(obs.x, obs.y, obs.rx * 0.55, obs.ry * 0.55, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
         } else if (obs.type === 'mud') {
-          ctx.save();
           ctx.fillStyle = 'rgba(120, 53, 15, 0.45)';
           ctx.strokeStyle = '#92400e';
           ctx.lineWidth = 1.8;
@@ -1641,9 +1823,7 @@
           ctx.font = 'bold 9px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText('진흙', obs.x, obs.y + 3);
-          ctx.restore();
         } else if (obs.type === 'sawblade') {
-          ctx.save();
           ctx.translate(obs.x, obs.y);
           ctx.rotate(obs.angle);
           ctx.fillStyle = '#475569';
@@ -1660,15 +1840,31 @@
             ctx.lineTo(obs.r, 3);
             ctx.fill();
           }
-          ctx.restore();
         } else if (obs.type === 'twin_blade') {
-          ctx.save();
           ctx.translate(obs.x, obs.y);
           ctx.rotate(obs.angle);
           ctx.fillStyle = '#f59e0b';
           ctx.fillRect(-obs.len, -2.5, obs.len * 2, 5);
           ctx.fillStyle = '#ef4444';
           ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+
+        if (obs.hp !== undefined && obs.maxHp) {
+          const barW = Math.max(22, (obs.boundR || obs.r || 20) * 1.5);
+          const barH = 3.5;
+          const barX = obs.x - barW / 2;
+          const barY = obs.y - (obs.boundR || obs.r || 20) - 8;
+          const hpRatio = Math.max(0, obs.hp / obs.maxHp);
+
+          ctx.save();
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(barX, barY, barW, barH);
+          ctx.fillStyle = hpRatio > 0.5 ? '#10b981' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+          ctx.fillRect(barX, barY, barW * hpRatio, barH);
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(barX, barY, barW, barH);
           ctx.restore();
         }
       });
@@ -1705,52 +1901,21 @@
       ctx.lineWidth = 2.5;
       ctx.strokeRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
-      // 충격파 및 이펙트
+      // 충격파
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         const sw = shockwaves[i];
         ctx.save();
         ctx.strokeStyle = sw.color;
         ctx.globalAlpha = sw.alpha;
-        ctx.lineWidth = 3 * sw.alpha;
+        ctx.lineWidth = 3.5 * sw.alpha;
         ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
-        sw.r += 4.2;
+        sw.r += 4.5;
         sw.alpha -= 0.045;
         if (sw.alpha <= 0 || sw.r >= sw.maxR) shockwaves.splice(i, 1);
       }
 
-      for (let i = visualEffects.length - 1; i >= 0; i--) {
-        const vf = visualEffects[i];
-        ctx.save();
-        if (vf.type === 'lightning') {
-          ctx.strokeStyle = vf.color;
-          ctx.lineWidth = 2.5;
-          ctx.beginPath(); ctx.moveTo(vf.x, vf.y);
-          for (let step = 0; step < 4; step++) {
-            ctx.lineTo(vf.x + (Math.random() - 0.5) * 35, vf.y + (Math.random() - 0.5) * 35);
-          }
-          ctx.stroke();
-        } else if (vf.type === 'explosion') {
-          ctx.fillStyle = 'rgba(168, 85, 247, 0.35)';
-          ctx.strokeStyle = '#d8b4fe';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          vf.r += 2.8;
-        } else if (vf.type === 'vortex') {
-          ctx.strokeStyle = 'rgba(251, 146, 60, 0.6)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(vf.x, vf.y, 18, vf.angle, vf.angle + Math.PI); ctx.stroke();
-          vf.angle += 0.4;
-        } else if (vf.type === 'shield_barrier') {
-          ctx.strokeStyle = '#facc15';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.stroke();
-        }
-        ctx.restore();
-        vf.life--;
-        if (vf.life <= 0) visualEffects.splice(i, 1);
-      }
-
+      // 파티클
       for (let i = particles.length - 1; i >= 0; i--) {
         const pt = particles[i];
         ctx.save();
@@ -1764,7 +1929,7 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
-      // 기물 렌더링 (가치별 크기/링 두께 확실한 차별화)
+      // 기물 렌더링
       pieces.forEach(p => {
         if (!p.alive) return;
         if (gamePhase === 'placement' && p.side !== mySide) return;
@@ -1777,13 +1942,12 @@
         const scale = p.isJumping ? 1.35 : 1.0;
         ctx.scale(scale, scale);
 
-        // 선택된 알에 대한 황금 펄스 오라 링
         if (selectedPiece === p && gamePhase === 'battle') {
           ctx.save();
           ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 3.5;
+          ctx.lineWidth = 4;
           ctx.shadowColor = '#fbbf24';
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 14;
           ctx.beginPath(); ctx.arc(0, 0, p.radius + 6, 0, Math.PI * 2); ctx.stroke();
           ctx.restore();
         }
@@ -1796,52 +1960,74 @@
           ctx.setLineDash([]);
         }
 
-        const grad = ctx.createRadialGradient(-p.radius * 0.3, -p.radius * 0.3, p.radius * 0.1, 0, 0, p.radius);
-        if (isCho) {
-          grad.addColorStop(0, '#059669');
-          grad.addColorStop(1, '#064e3b');
+        if (p.heroKey && loadedImages[p.heroKey] && loadedImages[p.heroKey].complete) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+          ctx.clip();
+
+          const img = loadedImages[p.heroKey];
+          ctx.drawImage(img, -p.radius, -p.radius, p.radius * 2, p.radius * 2);
+          ctx.restore();
+
+          ctx.save();
+          ctx.lineWidth = p.ringWidth || 5;
+          ctx.strokeStyle = '#facc15';
+          ctx.shadowColor = '#eab308';
+          ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+
+          ctx.fillStyle = '#fef08a';
+          ctx.font = `900 ${p.radius * 0.42}px 'Jua'`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.shadowColor = '#000000';
+          ctx.shadowBlur = 4;
+          ctx.fillText(p.char, 0, p.radius - 1);
         } else {
-          grad.addColorStop(0, '#dc2626');
-          grad.addColorStop(1, '#7f1d1d');
-        }
+          const grad = ctx.createRadialGradient(-p.radius * 0.3, -p.radius * 0.3, p.radius * 0.1, 0, 0, p.radius);
+          if (isCho) {
+            grad.addColorStop(0, '#059669');
+            grad.addColorStop(1, '#064e3b');
+          } else {
+            grad.addColorStop(0, '#dc2626');
+            grad.addColorStop(1, '#7f1d1d');
+          }
 
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill();
 
-        // 기물별 고유 외곽 테두리 링 두께
-        ctx.lineWidth = p.ringWidth || 2.5;
-        ctx.strokeStyle = p.border;
-        ctx.stroke();
+          ctx.lineWidth = p.ringWidth || 2.5;
+          ctx.strokeStyle = p.border;
+          ctx.stroke();
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `900 ${p.radius * 1.15}px 'Jua'`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.char, 0, 1.2);
-
-        if (p.isJumping) {
-          ctx.fillStyle = '#c084fc';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillText('도약', 0, -p.radius * 1.3);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `900 ${p.radius * 1.15}px 'Jua'`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(p.char, 0, 1.2);
         }
 
         ctx.restore();
       });
 
-      // [신규 조준 시스템: 선택된 알에서 뻗어나가는 조준선 & 파워 시뮬레이션]
+      // 조준선 및 발사 방향 가이드 (98% 이상일 때 크리티컬 이펙트 궤적 렌더링)
       if (selectedPiece && gamePhase === 'battle' && !isSimulating) {
         ctx.save();
 
-        const pRatio = selectedPower / 100;
-        let maxSpd = 22;
-        if (selectedPiece.ability === 'charge') maxSpd = 27;
-        const launchSpeed = Math.max(3, pRatio * maxSpd);
+        const curPower = isPowerBouncing ? Math.max(10, bouncePower) : 60;
+        const isCritAim = isPowerBouncing && (curPower >= 98);
+        const pRatio = curPower / 100;
+        let maxSpd = 15.0;
+        if (selectedPiece.ability === 'charge') maxSpd = 18.0;
+        if (selectedPiece.ability === 'hero_shock') maxSpd = 20.0;
+        const launchSpeed = Math.max(2.5, pRatio * maxSpd) * (isCritAim ? 1.4 : 1.0);
 
-        // 1. 조준 빔 궤적
-        ctx.strokeStyle = selectedPiece.border;
-        ctx.fillStyle = selectedPiece.border;
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = isCritAim ? '#fbbf24' : (isPowerBouncing ? '#ef4444' : selectedPiece.border);
+        ctx.fillStyle = isCritAim ? '#fbbf24' : (isPowerBouncing ? '#ef4444' : selectedPiece.border);
+        ctx.lineWidth = isCritAim ? 4.5 : (isPowerBouncing ? 3.5 : 2.5);
+        ctx.setLineDash(isCritAim ? [3, 2] : [5, 4]);
 
         let simX = selectedPiece.x;
         let simY = selectedPiece.y;
@@ -1851,7 +2037,7 @@
         ctx.beginPath();
         ctx.moveTo(simX, simY);
 
-        const steps = 10;
+        const steps = 11;
         for (let step = 1; step <= steps; step++) {
           if (selectedPiece.ability === 'curve') {
             simVx += -simVy * 0.045;
@@ -1863,10 +2049,9 @@
         }
         ctx.stroke();
 
-        // 2. 조준점 타겟 링
         ctx.setLineDash([]);
         ctx.beginPath();
-        ctx.arc(simX, simY, 5, 0, Math.PI * 2);
+        ctx.arc(simX, simY, isCritAim ? 7 : (isPowerBouncing ? 6 : 4.5), 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -1883,8 +2068,7 @@
       resizeCanvas();
       generateRandomMap();
       initP2P();
-      buyPiece('楚', true);
-      updatePowerDisplay();
+      updateUI();
       requestAnimationFrame(render);
     });
   </script>

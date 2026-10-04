@@ -189,7 +189,7 @@
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
       <div class="text-[10px] text-slate-300">
-        <span class="font-bold text-amber-400">조준 가이드:</span> 말을 누른 뒤 <span class="text-amber-300 font-bold">뒤로 길게 당겼다 손을 떼면</span> 총알처럼 발사됩니다!
+        <span class="font-bold text-amber-400">조준:</span> 기물을 누르고 뒤로 당기면 점선 줄과 궤적이 생깁니다. <span class="text-amber-300 font-bold">손을 놓으면 발사!</span>
       </div>
       <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
@@ -420,7 +420,7 @@
     let currentTurn = 'cho';
     let isDragging = false;
     let selectedPiece = null;
-    let activePointerId = null;
+    let dragStart = { x: 0, y: 0 };
     let dragCurrent = { x: 0, y: 0 };
     let isSimulating = false;
     let isGameOver = false;
@@ -510,7 +510,7 @@
       }, 200);
     });
 
-    // 울퉁불퉁한 현실적인 바위산, 투명 물결 웅덩이, 회전 톱날, 이중 칼날 원본 복구
+    // 울퉁불퉁 현실적인 바위산, 투명 물결 웅덩이, 회전 톱날, 이중 칼날 원본 복구
     function generateRandomMap() {
       const w = boardBounds.width;
       const h = boardBounds.height;
@@ -674,7 +674,11 @@
       handleInstantRematch(currentMap);
     }
 
+    // [수정] 재시작 시 AI 멈춤 및 0초 프리징 현상 원천 차단
     function handleInstantRematch(newMap) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+
       document.getElementById('game-over-modal').classList.add('hidden');
       if (newMap) currentMap = newMap;
       
@@ -682,6 +686,8 @@
       isSimulating = false;
       isMyReady = false;
       isPeerReady = false;
+      isDragging = false;
+      selectedPiece = null;
       gamePhase = 'placement';
       budget = 20;
       pieces = [];
@@ -716,20 +722,32 @@
     }
 
     function startTimer(duration) {
-      clearInterval(timerInterval);
+      if (timerInterval) clearInterval(timerInterval);
       timerTotal = duration;
       timerRemaining = duration;
       updateTimerDisplay();
 
       timerInterval = setInterval(() => {
-        // [수정] 조준 중에는 타이머에 의한 강제 발사/턴 넘김이 간섭하지 않음
-        if (isDragging && gamePhase === 'battle') return;
+        if (isGameOver) {
+          clearInterval(timerInterval);
+          return;
+        }
+
+        // 조준 중일 때는 생각 시간으로 간주하여 발사를 끊지 않고 1초까지만 대기
+        if (isDragging && gamePhase === 'battle') {
+          if (timerRemaining > 1) {
+            timerRemaining--;
+            updateTimerDisplay();
+          }
+          return;
+        }
 
         timerRemaining--;
         updateTimerDisplay();
 
         if (timerRemaining <= 0) {
           clearInterval(timerInterval);
+          timerInterval = null;
           handleTimeOut();
         }
       }, 1000);
@@ -738,7 +756,7 @@
     function updateTimerDisplay() {
       const tb = document.getElementById('timer-badge');
       const tp = document.getElementById('timer-progress');
-      tb.innerText = `${timerRemaining}초`;
+      tb.innerText = `${Math.max(0, timerRemaining)}초`;
       const ratio = Math.max(0, timerRemaining / timerTotal);
       tp.style.width = `${ratio * 100}%`;
 
@@ -750,10 +768,15 @@
     }
 
     function handleTimeOut() {
+      if (isGameOver) return;
       if (gamePhase === 'placement') {
         if (!isMyReady) toggleReady();
       } else if (gamePhase === 'battle') {
         if (currentTurn === mySide) {
+          if (isDragging) {
+            isDragging = false;
+            selectedPiece = null;
+          }
           if (peerConn && peerConn.open) {
             peerConn.send({ type: 'TIMEOUT_PASS' });
           }
@@ -763,7 +786,7 @@
     }
 
     function forceTurnPass() {
-      if (isSimulating) return;
+      if (isSimulating || isGameOver) return;
       currentTurn = (currentTurn === 'cho') ? 'han' : 'cho';
       onTurnSwitched();
     }
@@ -964,6 +987,8 @@
     function endGame(winner) {
       isGameOver = true;
       clearInterval(timerInterval);
+      timerInterval = null;
+
       const modal = document.getElementById('game-over-modal');
       const title = document.getElementById('over-title');
       const desc = document.getElementById('over-desc');
@@ -982,15 +1007,16 @@
 
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
       return { 
-        x: e.clientX - rect.left, 
-        y: e.clientY - rect.top 
+        x: cx - rect.left, 
+        y: cy - rect.top 
       };
     }
 
-    // [핵심] 조준 시작: 손가락을 대고 있는 동안에는 절대 발사되지 않음
+    // [당기기(슬링샷) 시스템: 원본 인터랙션 100% 복구]
     canvas.addEventListener('pointerdown', e => {
-      e.preventDefault();
       const pos = getPointerPos(e);
 
       if (gamePhase === 'placement') {
@@ -998,27 +1024,23 @@
         if (target) {
           isDragging = true;
           selectedPiece = target;
-          activePointerId = e.pointerId;
-          canvas.setPointerCapture(e.pointerId);
         }
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
         
-        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
+        // 내 기물을 정확히 터치했을 때만 슬링샷 당기기 모드 진입
+        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.0);
         if (target) {
           isDragging = true;
           selectedPiece = target;
-          activePointerId = e.pointerId;
+          dragStart = { x: target.x, y: target.y };
           dragCurrent = { x: pos.x, y: pos.y };
-          canvas.setPointerCapture(e.pointerId);
         }
       }
-    }, { passive: false });
+    });
 
-    // 손가락을 당기는 동안 파워와 각도만 실시간 계산 (발사는 되지 않음)
-    canvas.addEventListener('pointermove', e => {
-      if (!isDragging || !selectedPiece || e.pointerId !== activePointerId) return;
-      e.preventDefault();
+    window.addEventListener('pointermove', e => {
+      if (!isDragging || !selectedPiece) return;
       const pos = getPointerPos(e);
 
       if (gamePhase === 'placement') {
@@ -1037,38 +1059,31 @@
           }
         });
       } else {
+        // [핵심] 당기는 도중에는 절대로 자동 발사되지 않고 손가락 좌표만 계속 갱신
         dragCurrent = pos;
       }
-    }, { passive: false });
+    });
 
-    // [핵심] 오직 손가락을 뗐을 때만(pointerup) 격발
-    canvas.addEventListener('pointerup', e => {
-      if (!isDragging || !selectedPiece || e.pointerId !== activePointerId) return;
-      e.preventDefault();
-
-      if (canvas.hasPointerCapture(e.pointerId)) {
-        try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
-      }
+    // [핵심] 손가락을 화면에서 완전히 뗐을 때만(pointerup) 당긴 거리만큼 시원하게 발사
+    window.addEventListener('pointerup', () => {
+      if (!isDragging || !selectedPiece) return;
 
       if (gamePhase === 'battle') {
-        const pullDx = dragCurrent.x - selectedPiece.x;
-        const pullDy = dragCurrent.y - selectedPiece.y;
-        const pullDist = Math.hypot(pullDx, pullDy);
+        const dx = dragStart.x - dragCurrent.x;
+        const dy = dragStart.y - dragCurrent.y;
+        const dist = Math.hypot(dx, dy);
 
-        // 손가락을 12px 이상 당긴 상태에서 손을 뗐을 때만 강력 발사
-        if (pullDist > 12) {
+        // 의도적으로 10px 이상 당겼을 때만 탄성 발사 (실수 클릭 방지)
+        if (dist > 10) {
           clearInterval(timerInterval);
 
-          const shootAngle = Math.atan2(-pullDy, -pullDx);
+          let powerMult = 0.16;
+          if (selectedPiece.ability === 'charge') powerMult = 0.23;
 
-          let powerMult = 0.17;
-          if (selectedPiece.ability === 'charge') powerMult = 0.24;
-
-          const basePower = (pullDist - 10) * powerMult;
-          const power = Math.min(Math.max(basePower, 3.5), 26.0);
-
-          const vx = Math.cos(shootAngle) * power;
-          const vy = Math.sin(shootAngle) * power;
+          const power = Math.min(dist * powerMult, 20);
+          const angle = Math.atan2(dy, dx);
+          const vx = Math.cos(angle) * power;
+          const vy = Math.sin(angle) * power;
 
           selectedPiece.vx = vx;
           selectedPiece.vy = vy;
@@ -1078,7 +1093,7 @@
             selectedPiece.jumpTime = 22;
             playJumpSfx();
           } else {
-            playWoodClack(Math.min(1.0, 0.4 + power * 0.03), selectedPiece.mass);
+            playWoodClack(Math.min(1.0, 0.45 + power * 0.03), selectedPiece.mass);
           }
 
           if (selectedPiece.ability === 'curve') {
@@ -1100,18 +1115,7 @@
 
       isDragging = false;
       selectedPiece = null;
-      activePointerId = null;
-    }, { passive: false });
-
-    // 취소 이벤트 시에는 발사되지 않고 안전하게 조준만 해제
-    canvas.addEventListener('pointercancel', e => {
-      if (canvas.hasPointerCapture(e.pointerId)) {
-        try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
-      }
-      isDragging = false;
-      selectedPiece = null;
-      activePointerId = null;
-    }, { passive: false });
+    });
 
     function spawnShockwave(x, y, color = '#fbbf24', maxR = 90) {
       shockwaves.push({ x, y, r: 4, maxR, color, alpha: 1.0 });
@@ -1391,6 +1395,7 @@
     }
 
     function onTurnSwitched() {
+      if (isGameOver) return;
       const badge = document.getElementById('game-phase-badge');
 
       if (currentTurn === mySide) {
@@ -1478,7 +1483,7 @@
         ctx.restore();
       });
 
-      // 현실적인 울퉁불퉁 바위산, 일렁이는 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
+      // 현실적인 바위산, 일렁이는 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'mountain') {
           ctx.save();
@@ -1619,11 +1624,6 @@
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(vf.x, vf.y, vf.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           vf.r += 2.8;
-        } else if (vf.type === 'vortex') {
-          ctx.strokeStyle = 'rgba(251, 146, 60, 0.6)';
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(vf.x, vf.y, 18, vf.angle, vf.angle + Math.PI); ctx.stroke();
-          vf.angle += 0.4;
         } else if (vf.type === 'shield_barrier') {
           ctx.strokeStyle = '#facc15';
           ctx.lineWidth = 2.5;
@@ -1698,75 +1698,62 @@
         ctx.restore();
       });
 
-      // 슬링샷 당기기 궤적 및 다이내믹 파워 렌더링
+      // [원래의 당기기 점선 줄 & 발사 궤적 시뮬레이션 100% 복구]
       if (isDragging && selectedPiece && gamePhase === 'battle') {
-        const pullDx = dragCurrent.x - selectedPiece.x;
-        const pullDy = dragCurrent.y - selectedPiece.y;
-        const pullDist = Math.hypot(pullDx, pullDy);
+        const dx = dragStart.x - dragCurrent.x;
+        const dy = dragStart.y - dragCurrent.y;
+        const dist = Math.hypot(dx, dy);
 
-        if (pullDist > 8) {
-          const shootAngle = Math.atan2(-pullDy, -pullDx);
-          const powerRatio = Math.min(1.0, (pullDist - 8) / 120);
+        if (dist > 8) {
+          let powerMult = 0.16;
+          if (selectedPiece.ability === 'charge') powerMult = 0.23;
+          const power = Math.min(dist * powerMult, 20);
+          const angle = Math.atan2(dy, dx);
 
-          let dynamicColor = '#34d399';
-          if (powerRatio > 0.65) dynamicColor = '#ef4444';
-          else if (powerRatio > 0.35) dynamicColor = '#fbbf24';
-
-          // 뒤로 당기는 고무줄 탄성 라인
+          // 1. 뒤로 팽팽하게 당기는 고무줄 탄성 라인 (원본 스타일)
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.lineWidth = 2.2;
+          ctx.lineWidth = 1.8;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
-          ctx.moveTo(selectedPiece.x, selectedPiece.y);
+          ctx.moveTo(dragStart.x, dragStart.y);
           ctx.lineTo(dragCurrent.x, dragCurrent.y);
-          ctx.stroke();
-
-          // 손가락 터치 핑거 링
-          ctx.setLineDash([]);
-          ctx.strokeStyle = dynamicColor;
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.arc(dragCurrent.x, dragCurrent.y, 8 + powerRatio * 6, 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
 
-          // 발사 진행 궤적선 & 화살촉
+          // 2. 발사 방향 점선 예측 궤적선 (원본 스텝별 시뮬레이션 방식 복구)
           ctx.save();
-          ctx.strokeStyle = dynamicColor;
-          ctx.fillStyle = dynamicColor;
-          ctx.shadowColor = dynamicColor;
-          ctx.shadowBlur = 10;
-          ctx.lineWidth = 2.8;
+          ctx.strokeStyle = selectedPiece.border;
+          ctx.fillStyle = selectedPiece.border;
+          ctx.lineWidth = 2.4;
 
-          const shootVectorLen = Math.min(pullDist * 1.5, 160);
-          const endShootX = selectedPiece.x + Math.cos(shootAngle) * shootVectorLen;
-          const endShootY = selectedPiece.y + Math.sin(shootAngle) * shootVectorLen;
+          let simX = dragStart.x;
+          let simY = dragStart.y;
+          let simVx = Math.cos(angle) * power;
+          let simVy = Math.sin(angle) * power;
 
           ctx.beginPath();
-          ctx.moveTo(selectedPiece.x, selectedPiece.y);
-          ctx.lineTo(endShootX, endShootY);
+          ctx.moveTo(simX, simY);
+
+          const steps = 8;
+          for (let step = 1; step <= steps; step++) {
+            if (selectedPiece.ability === 'curve') {
+              simVx += -simVy * 0.045;
+              simVy += simVx * 0.045;
+            }
+            simX += simVx;
+            simY += simVy;
+            if (selectedPiece.ability === 'cannon') {
+              ctx.setLineDash([3, 3]);
+            }
+            ctx.lineTo(simX, simY);
+          }
           ctx.stroke();
 
-          const arrowSize = 7 + powerRatio * 5;
+          // 궤적 끝점 에임 타겟 동그라미
           ctx.beginPath();
-          ctx.moveTo(endShootX, endShootY);
-          ctx.lineTo(
-            endShootX - Math.cos(shootAngle - Math.PI / 6) * arrowSize,
-            endShootY - Math.sin(shootAngle - Math.PI / 6) * arrowSize
-          );
-          ctx.lineTo(
-            endShootX - Math.cos(shootAngle + Math.PI / 6) * arrowSize,
-            endShootY - Math.sin(shootAngle + Math.PI / 6) * arrowSize
-          );
-          ctx.closePath();
+          ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 11px "Jua"';
-          ctx.textAlign = 'center';
-          ctx.fillText(`파워 ${Math.round(powerRatio * 100)}%`, selectedPiece.x, selectedPiece.y - selectedPiece.radius - 12);
-
           ctx.restore();
         }
       }

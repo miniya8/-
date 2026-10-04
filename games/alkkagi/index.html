@@ -53,9 +53,12 @@
       </div>
 
       <!-- 중앙 상태 & 타이머 -->
-      <div class="flex items-center gap-1">
-        <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
-        <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
+      <div class="flex flex-col items-center">
+        <div class="flex items-center gap-1">
+          <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
+          <div id="timer-badge" class="px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow font-mono animate-pulse">40초</div>
+        </div>
+        <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">기습 진형을 짜세요!</span>
       </div>
 
       <!-- 내 정보 & 메인 복귀 -->
@@ -186,7 +189,7 @@
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
       <div class="text-[10px] text-slate-300">
-        <span class="font-bold text-amber-400">조언:</span> 기물을 손가락으로 누른 채 뒤로 당겼다 놓으세요!
+        <span class="font-bold text-amber-400">조준 가이드:</span> 말을 누른 뒤 <span class="text-amber-300 font-bold">반대 방향으로 길게 당길수록</span> 강력하게 발사됩니다!
       </div>
       <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
@@ -196,7 +199,6 @@
     const canvas = document.getElementById('alkkagiCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 컨텍스트 메뉴(길게 누르면 뜨는 복사/선택 등) 원천 차단
     window.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -419,7 +421,6 @@
     let isDragging = false;
     let selectedPiece = null;
     let activePointerId = null;
-    let dragStart = { x: 0, y: 0 };
     let dragCurrent = { x: 0, y: 0 };
     let isSimulating = false;
     let isGameOver = false;
@@ -970,7 +971,6 @@
       modal.classList.remove('hidden');
     }
 
-    // 모바일 터치 좌표 정밀 추출
     function getPointerPos(e) {
       const rect = canvas.getBoundingClientRect();
       return { 
@@ -979,7 +979,7 @@
       };
     }
 
-    // [핵심] Pointer Capture 및 멀티터치 제스처 간섭 차단
+    // [핵심 슬링샷 조준 & 당기기 시스템]
     canvas.addEventListener('pointerdown', e => {
       e.preventDefault();
       const pos = getPointerPos(e);
@@ -994,13 +994,13 @@
         }
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
-        // 터치 판정 범위를 2.0배로 넓혀 작은 스마트폰 화면에서도 손가락 아래 기물이 정확히 잡히도록 보정
+        
+        // 내 턴일 때 기물 터치 선택 (판정 반경 넉넉히 지정)
         const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
           activePointerId = e.pointerId;
-          dragStart = { x: target.x, y: target.y };
           dragCurrent = { x: pos.x, y: pos.y };
           canvas.setPointerCapture(e.pointerId);
         }
@@ -1028,6 +1028,7 @@
           }
         });
       } else {
+        // 배틀 단계: 기물 위치는 고정되고, 손가락을 당기는 실시간 좌표만 추적
         dragCurrent = pos;
       }
     }, { passive: false });
@@ -1041,21 +1042,28 @@
       }
 
       if (gamePhase === 'battle') {
-        const dx = dragStart.x - dragCurrent.x;
-        const dy = dragStart.y - dragCurrent.y;
-        const dist = Math.hypot(dx, dy);
+        // [슬링샷 역방향 탄성 물리 계산]
+        // 손가락을 기물 중심에서 뒤로 당긴 거리 벡터
+        const pullDx = dragCurrent.x - selectedPiece.x;
+        const pullDy = dragCurrent.y - selectedPiece.y;
+        const pullDist = Math.hypot(pullDx, pullDy);
 
-        // 최소 6px 이상 슬링샷 드래그했을 때 즉시 격발
-        if (dist > 6) {
+        // 최소 12px 이상 의도적으로 뒤로 당겼을 때만 발사 (실수 탭/터치 오발 방지)
+        if (pullDist > 12) {
           clearInterval(timerInterval);
 
-          let powerMult = 0.16;
-          if (selectedPiece.ability === 'charge') powerMult = 0.23;
+          // 당긴 반대 방향(발사 진행 방향)의 각도
+          const shootAngle = Math.atan2(-pullDy, -pullDx);
 
-          const power = Math.min(dist * powerMult, 19);
-          const angle = Math.atan2(dy, dx);
-          const vx = Math.cos(angle) * power;
-          const vy = Math.sin(angle) * power;
+          // [핵심] 당긴 거리에 비례하여 파워 축적 (최대 26까지 시원하게 증폭)
+          let powerMult = 0.17;
+          if (selectedPiece.ability === 'charge') powerMult = 0.24;
+
+          const basePower = (pullDist - 10) * powerMult;
+          const power = Math.min(Math.max(basePower, 3.5), 26.0);
+
+          const vx = Math.cos(shootAngle) * power;
+          const vy = Math.sin(shootAngle) * power;
 
           selectedPiece.vx = vx;
           selectedPiece.vy = vy;
@@ -1065,7 +1073,8 @@
             selectedPiece.jumpTime = 22;
             playJumpSfx();
           } else {
-            playWoodClack(0.75, selectedPiece.mass);
+            // 강하게 당길수록 묵직하고 경쾌한 원목 타건음
+            playWoodClack(Math.min(1.0, 0.4 + power * 0.03), selectedPiece.mass);
           }
 
           if (selectedPiece.ability === 'curve') {
@@ -1644,58 +1653,79 @@
         ctx.restore();
       });
 
-      // 슬링샷 조준선 렌더링
+      // [슬링샷 당기기 궤적 및 다이내믹 파워 렌더링]
       if (isDragging && selectedPiece && gamePhase === 'battle') {
-        const dx = dragStart.x - dragCurrent.x;
-        const dy = dragStart.y - dragCurrent.y;
-        const dist = Math.hypot(dx, dy);
+        const pullDx = dragCurrent.x - selectedPiece.x;
+        const pullDy = dragCurrent.y - selectedPiece.y;
+        const pullDist = Math.hypot(pullDx, pullDy);
 
-        if (dist > 5) {
-          let powerMult = 0.16;
-          if (selectedPiece.ability === 'charge') powerMult = 0.23;
-          const power = Math.min(dist * powerMult, 19);
-          const angle = Math.atan2(dy, dx);
+        if (pullDist > 8) {
+          // 당긴 반대 방향(탄성 발사 방향)
+          const shootAngle = Math.atan2(-pullDy, -pullDx);
+          const powerRatio = Math.min(1.0, (pullDist - 8) / 120);
 
-          // 드래그 고무줄 가이드 라인
+          // 파워 단계별 다이내믹 컬러 (약: 초록 -> 중: 황색 -> 강: 붉은색)
+          let dynamicColor = '#34d399';
+          if (powerRatio > 0.65) dynamicColor = '#ef4444';
+          else if (powerRatio > 0.35) dynamicColor = '#fbbf24';
+
+          // 1. 뒤로 당기는 고무줄 탄성 라인 (손가락 위치까지 팽팽하게 표시)
           ctx.save();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 2.2;
           ctx.setLineDash([4, 4]);
-          ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(dragCurrent.x, dragCurrent.y); ctx.stroke();
-          ctx.restore();
-
-          // 실제 발사 궤적 예측선
-          ctx.save();
-          ctx.strokeStyle = selectedPiece.border;
-          ctx.fillStyle = selectedPiece.border;
-          ctx.lineWidth = 2.5;
-
-          let simX = dragStart.x;
-          let simY = dragStart.y;
-          let simVx = Math.cos(angle) * power;
-          let simVy = Math.sin(angle) * power;
-
           ctx.beginPath();
-          ctx.moveTo(simX, simY);
-
-          const steps = 8;
-          for (let step = 1; step <= steps; step++) {
-            if (selectedPiece.ability === 'curve') {
-              simVx += -simVy * 0.045;
-              simVy += simVx * 0.045;
-            }
-            simX += simVx;
-            simY += simVy;
-            if (selectedPiece.ability === 'cannon') {
-              ctx.setLineDash([3, 3]);
-            }
-            ctx.lineTo(simX, simY);
-          }
+          ctx.moveTo(selectedPiece.x, selectedPiece.y);
+          ctx.lineTo(dragCurrent.x, dragCurrent.y);
           ctx.stroke();
 
+          // 손가락 터치 지점 탄성 핑거 링
+          ctx.setLineDash([]);
+          ctx.strokeStyle = dynamicColor;
+          ctx.lineWidth = 2.5;
           ctx.beginPath();
-          ctx.arc(simX, simY, 3.5, 0, Math.PI * 2);
+          ctx.arc(dragCurrent.x, dragCurrent.y, 8 + powerRatio * 6, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+
+          // 2. 발사 방향으로 뻗어나가는 정밀 궤적선 (당긴 거리가 길수록 길고 선명해짐)
+          ctx.save();
+          ctx.strokeStyle = dynamicColor;
+          ctx.fillStyle = dynamicColor;
+          ctx.shadowColor = dynamicColor;
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 2.8;
+
+          const shootVectorLen = Math.min(pullDist * 1.5, 160);
+          const endShootX = selectedPiece.x + Math.cos(shootAngle) * shootVectorLen;
+          const endShootY = selectedPiece.y + Math.sin(shootAngle) * shootVectorLen;
+
+          ctx.beginPath();
+          ctx.moveTo(selectedPiece.x, selectedPiece.y);
+          ctx.lineTo(endShootX, endShootY);
+          ctx.stroke();
+
+          // 발사 궤적 끝점 조준 화살촉
+          const arrowSize = 7 + powerRatio * 5;
+          ctx.beginPath();
+          ctx.moveTo(endShootX, endShootY);
+          ctx.lineTo(
+            endShootX - Math.cos(shootAngle - Math.PI / 6) * arrowSize,
+            endShootY - Math.sin(shootAngle - Math.PI / 6) * arrowSize
+          );
+          ctx.lineTo(
+            endShootX - Math.cos(shootAngle + Math.PI / 6) * arrowSize,
+            endShootY - Math.sin(shootAngle + Math.PI / 6) * arrowSize
+          );
+          ctx.closePath();
           ctx.fill();
+
+          // 파워 게이지 텍스트 표시
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px "Jua"';
+          ctx.textAlign = 'center';
+          ctx.fillText(`파워 ${Math.round(powerRatio * 100)}%`, selectedPiece.x, selectedPiece.y - selectedPiece.radius - 12);
+
           ctx.restore();
         }
       }

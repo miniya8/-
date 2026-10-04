@@ -189,7 +189,7 @@
 
     <div id="battle-panel" class="hidden flex justify-between items-center px-1.5 py-0.5">
       <div class="text-[10px] text-slate-300">
-        <span class="font-bold text-amber-400">조준:</span> 기물을 누르고 뒤로 당기면 점선 줄과 궤적이 생깁니다. <span class="text-amber-300 font-bold">손을 놓으면 발사!</span>
+        <span class="font-bold text-amber-400">조준:</span> 말을 누르고 뒤로 당기면 점선 줄과 궤적이 생깁니다. <span class="text-amber-300 font-bold">손을 놓으면 발사!</span>
       </div>
       <div class="text-[10px] font-bold text-emerald-400" id="current-map-title">요새 격전지</div>
     </div>
@@ -674,7 +674,7 @@
     }
 
     function handleInstantRematch(newMap) {
-      clearInterval(timerInterval);
+      if (timerInterval) clearInterval(timerInterval);
       timerInterval = null;
 
       document.getElementById('game-over-modal').classList.add('hidden');
@@ -731,6 +731,7 @@
           return;
         }
 
+        // 조준을 당기고 있는 동안에는 타이머로 인한 샷 취소 방지
         if (isDragging && gamePhase === 'battle') {
           if (timerRemaining > 1) {
             timerRemaining--;
@@ -983,7 +984,7 @@
 
     function endGame(winner) {
       isGameOver = true;
-      clearInterval(timerInterval);
+      if (timerInterval) clearInterval(timerInterval);
       timerInterval = null;
 
       const modal = document.getElementById('game-over-modal');
@@ -1002,45 +1003,59 @@
       modal.classList.remove('hidden');
     }
 
-    // [최초 원본 포인터 좌표 계산 복구: 모바일 터치 및 마우스 완벽 호환]
-    function getPointerPos(e) {
+    // 모바일 터치 및 마우스 완벽 통합 좌표 추출
+    function getEventPos(e) {
       const rect = canvas.getBoundingClientRect();
-      const cx = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : (e.clientX !== undefined ? e.clientX : dragCurrent.x);
-      const cy = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : (e.clientY !== undefined ? e.clientY : dragCurrent.y);
-      return { 
-        x: cx - rect.left, 
-        y: cy - rect.top 
+      let clientX, clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
       };
     }
 
-    // [최초 원본 방식: pointerdown은 캔버스에서 시작]
-    canvas.addEventListener('pointerdown', e => {
-      const pos = getPointerPos(e);
+    // [핵심] 당기기 시작: 기물 선택
+    function handleDragStart(e) {
+      const pos = getEventPos(e);
 
       if (gamePhase === 'placement') {
-        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.0);
+        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
+          if (e.cancelable) e.preventDefault();
         }
       } else if (gamePhase === 'battle') {
         if (isSimulating || isGameOver || currentTurn !== mySide) return;
         
-        // 내 기물을 터치하면 슬링샷 조준 시작 (최초 원본 반경 1.5배)
-        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 1.8);
+        // 내 기물을 터치하면 슬링샷 조준 시작
+        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isDragging = true;
           selectedPiece = target;
           dragStart = { x: target.x, y: target.y };
           dragCurrent = { x: pos.x, y: pos.y };
+          if (e.cancelable) e.preventDefault();
         }
       }
-    });
+    }
 
-    // [최초 원본 방식: pointermove는 window 전체에서 감지하여 말 범위를 아무리 벗어나도 절대 취소 안 됨]
-    window.addEventListener('pointermove', e => {
+    // [핵심] 당기는 도중: 기물 범위를 아무리 벗어나도 끝까지 당겨짐 (절대 취소 안 됨)
+    function handleDragMove(e) {
       if (!isDragging || !selectedPiece) return;
-      const pos = getPointerPos(e);
+      if (e.cancelable) e.preventDefault();
+      const pos = getEventPos(e);
 
       if (gamePhase === 'placement') {
         const r = selectedPiece.radius;
@@ -1058,23 +1073,24 @@
           }
         });
       } else {
-        // 배틀 단계: 당기는 동안 말 범위를 벗어나 화면 끝까지 가도 dragCurrent가 계속 갱신됨
+        // 배틀 단계: 손가락을 당기는 실시간 좌표 반영
         dragCurrent = pos;
       }
-    });
+    }
 
-    // [최초 원본 방식: pointerup은 window 전체에서 감지하여 손을 뗄 때만 발사]
-    window.addEventListener('pointerup', () => {
+    // [핵심] 당겼다 손을 떼었을 때만 발사
+    function handleDragEnd(e) {
       if (!isDragging || !selectedPiece) return;
+      if (e.cancelable) e.preventDefault();
 
       if (gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
         const dist = Math.hypot(dx, dy);
 
-        // 10px 이상 당겼을 때 발사
+        // 10px 이상 당겼을 때 당긴 거리에 비례하여 강력 발사
         if (dist > 10) {
-          clearInterval(timerInterval);
+          if (timerInterval) clearInterval(timerInterval);
 
           let powerMult = 0.16;
           if (selectedPiece.ability === 'charge') powerMult = 0.23;
@@ -1114,7 +1130,16 @@
 
       isDragging = false;
       selectedPiece = null;
-    });
+    }
+
+    // 모바일 터치 이벤트(Touch)와 마우스 이벤트(Mouse)를 듀얼로 완벽 등록
+    canvas.addEventListener('touchstart', handleDragStart, { passive: false });
+    window.addEventListener('touchmove', handleDragMove, { passive: false });
+    window.addEventListener('touchend', handleDragEnd, { passive: false });
+
+    canvas.addEventListener('mousedown', handleDragStart);
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
 
     function spawnShockwave(x, y, color = '#fbbf24', maxR = 90) {
       shockwaves.push({ x, y, r: 4, maxR, color, alpha: 1.0 });
@@ -1437,7 +1462,7 @@
       } else {
         playWoodClack(0.85, shooter.mass);
       }
-      clearInterval(timerInterval);
+      if (timerInterval) clearInterval(timerInterval);
       isSimulating = true;
     }
 
@@ -1470,7 +1495,6 @@
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
-      // 성벽 렌더링
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
@@ -1482,7 +1506,7 @@
         ctx.restore();
       });
 
-      // 현실적인 바위산, 일렁이는 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
+      // 현실적인 각진 바위산, 투명 물 웅덩이, 회전 톱날, 이중 칼날 렌더링
       currentMap.obstacles.forEach(obs => {
         if (obs.type === 'mountain') {
           ctx.save();
@@ -1702,7 +1726,7 @@
         ctx.restore();
       });
 
-      // [최초 원본 당기기 궤적 및 점선 줄 렌더링 100% 복구]
+      // [슬링샷 당기기 줄 및 점선 궤적 시뮬레이션: 손가락이 말 밖으로 나가도 끝까지 유지]
       if (isDragging && selectedPiece && gamePhase === 'battle') {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
@@ -1714,7 +1738,7 @@
           const power = Math.min(dist * powerMult, 20);
           const angle = Math.atan2(dy, dx);
 
-          // 1. 뒤로 팽팽하게 당기는 고무줄 점선 줄 (손가락이 말 밖으로 나가도 끝까지 연결됨)
+          // 1. 뒤로 팽팽하게 당기는 고무줄 점선 줄
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
           ctx.lineWidth = 2.0;
@@ -1725,7 +1749,7 @@
           ctx.stroke();
           ctx.restore();
 
-          // 2. 발사 방향 점선 예측 궤적선 (원래의 8단계 스텝 물리 시뮬레이션)
+          // 2. 발사 방향 점선 예측 궤적선 (스텝별 물리 예측)
           ctx.save();
           ctx.strokeStyle = selectedPiece.border;
           ctx.fillStyle = selectedPiece.border;

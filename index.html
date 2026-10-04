@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>세미니의 멀티센터 장기1</title>
+  <title>세미니의 멀티센터 전설장기1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
@@ -18,6 +18,51 @@
       overscroll-behavior: none;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
+    .piece-hanja { font-family: 'Noto Serif KR', serif; }
+
+    /* 투명 말풍선 텍스트 윤곽선 */
+    .text-stroke-comic {
+      text-shadow: 
+        -1.5px -1.5px 0 #000,  
+         1.5px -1.5px 0 #000,
+        -1.5px  1.5px 0 #000,
+         1.5px  1.5px 0 #000,
+         0px 3px 8px rgba(0,0,0,0.9);
+    }
+    .text-stroke-shout {
+      text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+         0px 4px 12px rgba(220,38,38,0.85);
+    }
+
+    /* 관전자 중앙 멘트 윤곽선 */
+    .text-stroke-spec-cho {
+      text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+         0 0 16px rgba(16, 185, 129, 0.95);
+    }
+    .text-stroke-spec-han {
+      text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+         0 0 16px rgba(239, 68, 68, 0.95);
+    }
+    .text-stroke-spec-neutral {
+      text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+         0 0 16px rgba(245, 158, 11, 0.95);
+    }
 
     @keyframes radarSweep {
       0% { transform: rotate(0deg); }
@@ -35,6 +80,28 @@
     }
     .animate-smooth-in {
       animation: smoothScaleIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes spectatorFloat {
+      0% { transform: translate(-50%, -46%) scale(0.85); opacity: 0; }
+      15% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+      25% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -54%) scale(0.92); opacity: 0; }
+    }
+    .animate-spec-float {
+      animation: spectatorFloat 4.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes diceRoll3D {
+      0% { transform: rotateX(0deg) rotateY(0deg) scale(0.7); }
+      25% { transform: rotateX(180deg) rotateY(360deg) scale(1.15); }
+      50% { transform: rotateX(360deg) rotateY(720deg) scale(1.25); }
+      75% { transform: rotateX(540deg) rotateY(1080deg) scale(1.1); }
+      100% { transform: rotateX(720deg) rotateY(1440deg) scale(1); }
+    }
+    .animate-dice-3d {
+      animation: diceRoll3D 1.1s cubic-bezier(0.2, 0.8, 0.3, 1);
     }
 
     @keyframes nuclearShake {
@@ -69,6 +136,17 @@
       50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.85), inset 0 0 25px rgba(234, 179, 8, 0.45); }
     }
     .neon-pulse { animation: neonGlow 1.8s infinite; }
+
+    @keyframes illegalWarningFlash {
+      0% { box-shadow: inset 0 0 0px rgba(239, 68, 68, 0), 0 0 0px rgba(239, 68, 68, 0); border-color: #b45309; }
+      25% { box-shadow: inset 0 0 45px rgba(239, 68, 68, 0.9), 0 0 35px rgba(239, 68, 68, 0.9); border-color: #ef4444; }
+      50% { box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.5), 0 0 20px rgba(239, 68, 68, 0.5); border-color: #f87171; }
+      75% { box-shadow: inset 0 0 45px rgba(239, 68, 68, 0.9), 0 0 35px rgba(239, 68, 68, 0.9); border-color: #ef4444; }
+      100% { box-shadow: inset 0 0 0px rgba(239, 68, 68, 0), 0 0 0px rgba(239, 68, 68, 0); border-color: #b45309; }
+    }
+    .illegal-move-warning {
+      animation: illegalWarningFlash 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
   </style>
 </head>
 <body class="text-white h-screen flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden">
@@ -95,6 +173,7 @@
       <div class="flex flex-col items-center">
         <div id="turn-badge" class="px-3 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow-md animate-pulse">초 차례</div>
         <div class="flex items-center gap-1 mt-0.5">
+          <span id="spectator-view-tag" class="hidden text-[10px] bg-purple-600/80 text-white px-1.5 py-0.2 rounded font-black tracking-tight">👁️ 관전모드</span>
           <span class="text-[10px] text-slate-400 font-bold">남은시간</span>
           <span id="timer-text" class="text-sm font-black text-amber-300 title-font">45s</span>
         </div>
@@ -103,7 +182,7 @@
         </div>
       </div>
 
-      <!-- 내 정보 & 로비 나가기 -->
+      <!-- 내 정보 & 사운드/퇴장 -->
       <div class="flex items-center gap-1.5 flex-row-reverse text-right">
         <button id="sound-btn" onclick="toggleMute()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-xs sm:text-sm shadow transition" title="소리 켜기/끄기">
           🔊
@@ -135,33 +214,47 @@
     <div id="board-container" class="relative w-full h-full rounded-2xl shadow-2xl bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950 p-1 border-2 border-amber-700/80 overflow-hidden flex items-center justify-center">
       <canvas id="boardCanvas" class="rounded-xl cursor-pointer block touch-none"></canvas>
 
-      <!-- 공격 시 시네마틱 샤우팅 배너 -->
-      <div id="attack-shout-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-[90] w-3/4 max-w-xs">
-        <div class="bg-gradient-to-r from-red-600/90 via-rose-600/90 to-amber-600/90 backdrop-blur-md border border-yellow-300 text-white px-3.5 py-2.5 rounded-2xl shadow-xl animate-smooth-in text-center">
-          <div class="text-[10px] font-bold text-yellow-200 tracking-wider" id="attack-shout-title">⚔️ 필살 공격! ⚔️</div>
-          <p id="attack-shout-text" class="text-xs sm:text-sm font-medium text-yellow-50 mt-1 leading-snug break-keep">
+      <!-- 공격 시 시네마틱 샤우팅 (완전 투명 배경) -->
+      <div id="attack-shout-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-[90] w-full max-w-sm px-4">
+        <div class="bg-transparent border-0 text-white px-2 py-1 text-center select-none">
+          <div class="text-xs sm:text-sm font-black text-amber-300 tracking-wider text-stroke-comic" id="attack-shout-title">⚔ 필살 공격! ⚔️</div>
+          <p id="attack-shout-text" class="text-base sm:text-lg font-black text-yellow-300 mt-0.5 leading-snug break-keep text-stroke-shout">
             "내 130kg 육중한 뱃살 맛 좀 봐라!"
           </p>
         </div>
       </div>
 
-      <!-- 투명 배경 도발 텍스트 -->
-      <div id="comic-taunt-box" class="absolute pointer-events-none hidden z-[100] w-[80%] max-w-[280px] -translate-x-1/2 -translate-y-1/2 transition-all duration-300">
-        <div class="bg-transparent text-center p-1">
-          <div class="flex items-center justify-center gap-1 text-[11px] font-bold text-amber-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] mb-0.5">
-            <span>🔥</span><span id="taunt-sender-name">장군</span><span>의 한마디!</span><span>🔥</span>
+      <!-- 플레이어 도발/약올리기 말풍선 (완전 투명) -->
+      <div id="comic-taunt-box" class="absolute pointer-events-none hidden z-[100] w-[85%] max-w-[280px] -translate-x-1/2 -translate-y-1/2 transition-all duration-300">
+        <div class="relative bg-transparent border-0 px-2 py-1 text-center select-none">
+          <div class="flex items-center justify-center gap-1 text-xs font-black text-amber-300 text-stroke-comic tracking-tight mb-0.5">
+            <span>🔥</span><span id="taunt-sender-name">장군</span><span>의 도발!</span><span>🔥</span>
           </div>
-          <p id="taunt-content-text" class="text-sm font-black text-white tracking-tight leading-relaxed break-keep drop-shadow-[0_2px_6px_rgba(0,0,0,1)]">
+          <p id="taunt-content-text" class="text-sm sm:text-base font-black text-white text-stroke-comic tracking-tight leading-snug break-keep drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
             "방구석에서 장기 둘 돈으로 컵라면이나 사 먹어라! 🍜"
           </p>
         </div>
       </div>
 
-      <!-- 외통수 경고 팝업 배너 -->
-      <div id="deadlock-alert-banner" class="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none hidden z-[110] transition-all">
-        <div class="bg-red-950/95 border-2 border-red-500 text-rose-200 px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 animate-bounce">
-          <span class="text-xl">☠️</span>
-          <div class="text-xs font-black tracking-wide">외통수(자살수) 자리입니다! 진입할 수 없습니다![cite: 1]</div>
+      <!-- 관전자 전용 장기판 정중앙 완전 투명 배너 -->
+      <div id="spectator-center-box" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-[105] w-full max-w-sm px-3 select-none">
+        <div class="relative bg-transparent border-0 px-2 py-1 text-center">
+          <div id="spec-header-tag" class="flex items-center justify-center gap-1 text-xs sm:text-sm font-black tracking-wide mb-1">
+            <span id="spec-icon">👁️</span>
+            <span id="spec-sender-display" class="text-stroke-comic">[관전] 나그네</span>
+            <span id="spec-target-tag" class="px-2 py-0.5 rounded-full text-[11px] font-black border border-white/40 shadow">초나라 응원 🟢</span>
+          </div>
+          <p id="spec-content-text" class="text-base sm:text-xl font-black tracking-tight leading-relaxed break-keep">
+            "포 넘겨서 장군 각 봐라! 팝콘 꿀맛 🍿"
+          </p>
+        </div>
+      </div>
+
+      <!-- 간편 토스트 알림 -->
+      <div id="undo-toast" class="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none hidden z-[130] transition-all duration-300 max-w-[90%]">
+        <div id="undo-toast-inner" class="bg-slate-900/90 border-2 border-amber-400 text-white px-4 py-2 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold flex items-center gap-2">
+          <span id="undo-toast-icon">ℹ️</span>
+          <span id="undo-toast-text">상태 메시지</span>
         </div>
       </div>
 
@@ -172,22 +265,30 @@
         </div>
       </div>
 
-      <!-- 물리기 요청 수락 모달 (30초 타이머 탑재) -->
-      <div id="undo-confirm-modal" class="absolute inset-0 z-[120] bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
-        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[280px] animate-smooth-in">
-          <div class="text-xl font-black title-font text-amber-300">↩ 물리기 요청</div>
-          <p id="undo-request-msg" class="text-xs sm:text-sm font-medium text-slate-200 mt-2 break-keep leading-relaxed">
-            상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?[cite: 1]
-          </p>
-          <div class="flex items-center justify-center gap-1 my-2">
-            <span class="text-[11px] text-amber-400 font-bold">응답 제한시간:</span>
-            <span id="undo-modal-timer" class="text-sm font-black text-rose-400 title-font">30s</span>
+      <!-- 자살수/장군자리 경고 배너 -->
+      <div id="suicide-warning-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-[110] w-[88%] max-w-sm">
+        <div class="bg-red-950/95 border-2 border-red-500 text-white px-4 py-3 rounded-2xl shadow-[0_0_35px_rgba(239,68,68,0.9)] text-center animate-smooth-in">
+          <div class="flex items-center justify-center gap-1.5 text-amber-300 font-black text-sm tracking-wide mb-1">
+            <span>🚫</span><span>이동 불가 (외통수/장군 노출)</span><span>🚫</span>
           </div>
-          <div class="grid grid-cols-2 gap-2 mt-3">
+          <p id="suicide-warning-text" class="text-xs sm:text-[13px] font-bold text-red-200 leading-snug break-keep">
+            내 왕(장군)이 상대에게 노출되는 자살수 자리입니다!<br>다른 안전한 자리를 선택하세요.
+          </p>
+        </div>
+      </div>
+
+      <!-- 물리기 요청 수락/거절 모달 -->
+      <div id="undo-confirm-modal" class="absolute inset-0 z-[120] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 pointer-events-auto">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 text-white px-5 py-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.9)] text-center w-full max-w-[280px] animate-smooth-in">
+          <div class="text-xl font-black title-font text-amber-300">↩️ 물리기 요청</div>
+          <p id="undo-request-msg" class="text-xs sm:text-sm font-medium text-slate-200 mt-2 break-keep leading-relaxed">
+            상대방이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?
+          </p>
+          <div class="grid grid-cols-2 gap-2 mt-4">
             <button onclick="respondUndo(true)" class="py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
-              수락
+              수락 (허락)
             </button>
-            <button onclick="respondUndo(false)" class="py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl font-bold text-xs sm:text-sm transition">
+            <button onclick="respondUndo(false)" class="py-2.5 bg-rose-900/90 hover:bg-rose-800 active:scale-95 text-rose-100 border border-rose-600 rounded-xl font-bold text-xs sm:text-sm transition">
               거절
             </button>
           </div>
@@ -203,11 +304,11 @@
           </div>
           
           <div class="flex flex-col gap-2 mt-4">
-            <button onclick="requestRematch()" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
+            <button id="rematch-btn" onclick="requestRematch()" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
               🔄 다시 하기 (재대결)
             </button>
             <button onclick="returnToLobby()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl font-bold text-xs sm:text-sm transition">
-              🏠 로비로 나가기
+              🏠 대기실 / 로비로 나가기
             </button>
           </div>
         </div>
@@ -215,36 +316,83 @@
     </div>
   </main>
 
-  <!-- 하단 컨트롤 바 -->
+  <!-- 하단 컨트롤 바: 플레이어 모드 vs 관전자 모드 -->
   <footer class="w-full max-w-lg flex flex-col gap-1.5 z-20 pb-0.5 flex-shrink-0">
-    <div class="grid grid-cols-4 gap-1.5">
-      <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
-        <span class="btn-label">😏 약올리기</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
-      </button>
-      <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
-        <span class="btn-label">💣 팩폭도발</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
-      </button>
-      <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
-        <span class="btn-label">⏰ 재촉/극딜</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
-      </button>
-      <button id="undo-btn" onclick="requestUndoMove()" class="bg-indigo-950/80 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/70 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow">
-        ↩ 물리기 (<span id="undo-count-badge">2</span>/2)
-      </button>
+    <div id="player-controls-panel" class="flex flex-col gap-1.5">
+      <div class="grid grid-cols-4 gap-1.5">
+        <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
+          <span class="btn-label">😏 약올리기</span>
+          <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        </button>
+        <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
+          <span class="btn-label">💣 팩폭도발</span>
+          <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        </button>
+        <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow overflow-hidden">
+          <span class="btn-label">⏰ 재촉/극딜</span>
+          <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        </button>
+        <button id="undo-btn" onclick="requestUndoMove()" class="bg-indigo-950/80 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/70 rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1 shadow">
+          ↩ 물리기 (<span id="undo-count-badge">2</span>/2)
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button onclick="requestPass()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-2 text-xs font-bold">
+          한 수 쉼
+        </button>
+        <button onclick="requestResign()" class="bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-xl py-2 text-xs font-bold">
+          기권하기
+        </button>
+      </div>
     </div>
-    <div class="grid grid-cols-2 gap-1.5">
-      <button onclick="requestPass()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-2 text-xs font-bold">
-        한 수 쉼
-      </button>
-      <button onclick="requestResign()" class="bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-xl py-2 text-xs font-bold">
-        기권하기
-      </button>
+
+    <!-- 관전자 전용 컨트롤 바 -->
+    <div id="spectator-controls-panel" class="hidden flex-col gap-1.5 bg-slate-900/90 backdrop-blur-md p-2 rounded-2xl border border-purple-500/50 shadow-2xl">
+      <div class="flex items-center justify-between gap-1 text-[11px] font-black">
+        <span class="text-purple-300 flex items-center gap-1">
+          <span>👁️ 응원 진영:</span>
+        </span>
+        <div class="flex items-center gap-1">
+          <button id="spec-side-cho" onclick="setSpectatorTargetSide('cho')" class="px-2.5 py-1 rounded-xl bg-emerald-600 text-white border border-emerald-400 font-black shadow transition active:scale-95">
+            초(楚) 응원 🟢
+          </button>
+          <button id="spec-side-han" onclick="setSpectatorTargetSide('han')" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:text-white transition active:scale-95">
+            한(漢) 응원 🔴
+          </button>
+          <button id="spec-side-neutral" onclick="setSpectatorTargetSide('neutral')" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:text-white transition active:scale-95">
+            중립 🍿
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+        <button onclick="sendSpectatorQuickChant('🔥 기세 타서 밀어붙여라!')" class="flex-shrink-0 px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-amber-200 active:scale-95">
+          🔥 밀어붙여라!
+        </button>
+        <button onclick="sendSpectatorQuickChant('⚡ 포 넘겨서 장군 각 봐라!')" class="flex-shrink-0 px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-amber-200 active:scale-95">
+          ⚡ 포 넘겨라!
+        </button>
+        <button onclick="sendSpectatorQuickChant('🍿 팝콘 뜯는 중! 신선놀음 개꿀잼')" class="flex-shrink-0 px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-amber-200 active:scale-95">
+          🍿 팝콘 꿀잼
+        </button>
+        <button onclick="sendSpectatorQuickChant('💥 외통수 각 떴다 컷!')" class="flex-shrink-0 px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-amber-200 active:scale-95">
+          💥 외통수 떴다!
+        </button>
+        <button onclick="sendSpectatorQuickChant('🛡️ 상길 마길 조심해라!')" class="flex-shrink-0 px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-amber-200 active:scale-95">
+          🛡️ 마길 조심!
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <input id="spectator-msg-input" type="text" maxlength="32" placeholder="중앙 훈수/채팅 입력 (장기판 중앙 출력)" onkeydown="if(event.key==='Enter') sendSpectatorCustomChat()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-amber-300 focus:outline-none focus:border-purple-400">
+        <button onclick="sendSpectatorCustomChat()" class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 active:scale-95 text-white font-bold text-xs rounded-xl shadow">
+          전송 💬
+        </button>
+      </div>
     </div>
   </footer>
 
-  <!-- 주사위 결투 모달 -->
+  <!-- 주사위 선후공 모달 -->
   <div id="dice-modal" class="fixed inset-0 z-[125] bg-black/90 backdrop-blur-lg hidden flex items-center justify-center p-4">
     <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 rounded-3xl p-5 max-w-sm w-full text-center shadow-[0_0_50px_rgba(245,158,11,0.3)] flex flex-col items-center gap-3 animate-smooth-in">
       <div>
@@ -254,7 +402,7 @@
 
       <div class="grid grid-cols-2 gap-3 w-full py-2">
         <div class="flex flex-col items-center bg-slate-800/80 p-3 rounded-2xl border border-emerald-500/40 shadow-inner">
-          <span class="text-xs font-bold text-emerald-400 mb-1">나 (<span id="dice-my-name">나</span>)</span>
+          <span class="text-xs font-bold text-emerald-400 mb-1">초 (<span id="dice-my-name">나</span>)</span>
           <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
             <canvas id="dice-canvas-my" width="160" height="160" class="w-full h-full drop-shadow-[0_10px_15px_rgba(0,0,0,0.7)]"></canvas>
           </div>
@@ -262,7 +410,7 @@
         </div>
 
         <div class="flex flex-col items-center bg-slate-800/80 p-3 rounded-2xl border border-red-500/40 shadow-inner">
-          <span class="text-xs font-bold text-rose-400 mb-1">상대 (<span id="dice-opp-name">상대</span>)</span>
+          <span class="text-xs font-bold text-rose-400 mb-1">한 (<span id="dice-opp-name">상대</span>)</span>
           <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
             <canvas id="dice-canvas-opp" width="160" height="160" class="w-full h-full drop-shadow-[0_10px_15px_rgba(0,0,0,0.7)]"></canvas>
           </div>
@@ -271,7 +419,7 @@
       </div>
 
       <div id="dice-winner-control" class="hidden flex-col gap-2 w-full mt-1">
-        <p class="text-xs font-bold text-emerald-300">🎉 승리! 원하는 진영을 선택하세요:</p>
+        <p class="text-xs font-bold text-emerald-300">🎉 승리! 원하는 진영(선공/후공)을 터치하세요:</p>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="confirmDiceChoice('cho')" class="py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 rounded-xl text-xs sm:text-sm font-bold text-white shadow-lg border border-emerald-400">
             초 (선공 🟢)
@@ -284,53 +432,38 @@
     </div>
   </div>
 
-  <!-- 대전 신청 수락/거절 모달 -->
-  <div id="battle-challenge-modal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-400 text-white px-6 py-5 rounded-3xl shadow-2xl text-center w-full max-w-sm animate-smooth-in">
-      <div class="text-2xl font-black title-font text-amber-300">⚔️ 대전 도전장 도착!</div>
-      <p id="challenge-sender-desc" class="text-sm font-medium text-slate-200 mt-3 break-keep leading-relaxed">
-        [상대]님이 1:1 결투를 신청했습니다!
-      </p>
-      <div class="grid grid-cols-2 gap-2 mt-5">
-        <button onclick="acceptIncomingChallenge()" class="py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition">
-          대결 수락 ⚔️
-        </button>
-        <button onclick="rejectIncomingChallenge()" class="py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl font-bold text-xs sm:text-sm transition">
-          거절하기
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- 메인 모달 -->
   <div id="mode-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-50 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md shadow-2xl flex flex-col gap-3 my-auto">
       <div class="text-center">
-        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 장기1 ⚔</h1>
-        <p class="text-xs text-slate-400 mt-1 font-medium">원클릭 대전 초대 & 기물별 특수전투 애니메이션 탑재</p>
+        <h1 class="text-2xl font-black title-font text-amber-400 tracking-wide">⚔ 세미니의 멀티센터 전설장기1 ⚔</h1>
+        <p class="text-xs text-slate-400 mt-1 font-medium">부드러운 참격 절단 & 8대 킬 연출 완결판</p>
       </div>
 
-      <!-- 실시간 온라인 접속자 패널 -->
       <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow-inner">
         <div class="flex justify-between items-center px-1">
           <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            실시간 로비 접속자 (<span id="online-count">1</span>명)
+            실시간 로비 접속자 (<span id="online-count">1</span>명 접속 중)
           </span>
-          <span class="text-[9px] text-amber-400 font-medium">👉 접속자를 터치해 바로 대결하세요!</span>
+          <span class="text-[9px] text-slate-400 font-medium">자동 동기화 중</span>
         </div>
-        <div id="online-users-list" class="flex flex-col gap-1 max-h-28 overflow-y-auto pr-1"></div>
+        <div id="online-users-list" class="flex flex-col gap-1 max-h-24 overflow-y-auto pr-1">
+          <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-700/60 text-xs">
+            <span class="font-medium text-slate-200 flex items-center gap-1.5">
+              <span class="text-emerald-400">●</span> <span id="lobby-my-name">나</span> (본인)
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-1.5 py-0.2 rounded font-bold">로비 대기중</span>
+          </div>
+        </div>
       </div>
 
       <div class="bg-slate-800/80 p-2 rounded-2xl border border-slate-700">
-        <label class="text-[11px] font-bold text-slate-300 mb-1 flex justify-between items-center">
-          <span>초대/식별용 닉네임</span>
-          <span class="text-[9px] text-emerald-400 font-normal">※ 미입력 시 랜덤 생성</span>
-        </label>
-        <div class="flex gap-1.5">
-          <input id="user-nickname-input" type="text" maxlength="8" placeholder="식별용 닉네임 입력" oninput="handleNicknameChange(this.value)" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
-          <button onclick="assignRandomNickname()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[10px] text-amber-300 font-bold rounded-xl active:scale-95">🎲 랜덤</button>
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-[11px] font-bold text-slate-300">내 닉네임 (신규 유저 자동랜덤 / 수정시 영구기억)</label>
+          <button onclick="regenerateRandomNickname()" class="text-[10px] text-amber-400 font-bold hover:underline">🎲 다른 랜덤이름</button>
         </div>
+        <input id="user-nickname-input" type="text" maxlength="8" placeholder="식별용 닉네임 입력" oninput="handleNicknameChange(this.value)" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
       </div>
 
       <div class="grid grid-cols-2 gap-2 p-1 bg-slate-800/80 rounded-2xl border border-slate-700">
@@ -343,18 +476,23 @@
           <span>📡 방 만들기</span><span class="text-xs font-normal text-blue-200">(카카오톡 초대/코드 발급)</span>
         </button>
 
-        <div class="flex items-center justify-between gap-2 bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700/80">
-          <input id="join-code-input" type="text" maxlength="4" placeholder="코드 4자리" class="w-28 sm:w-32 bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-center text-xs sm:text-sm font-bold tracking-widest text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
-          <button onclick="joinRoomByCode(document.getElementById('join-code-input').value.trim())" class="flex-1 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md transition">
-            대국 참가 ⚔️
+        <div class="flex flex-col gap-1.5 bg-slate-800/50 p-2 rounded-2xl border border-slate-700/80">
+          <div class="flex items-center gap-2">
+            <input id="join-code-input" type="text" maxlength="4" placeholder="코드 4자리" class="w-28 sm:w-32 bg-slate-900 border border-slate-600 rounded-xl px-3 py-1.5 text-center text-xs sm:text-sm font-bold tracking-widest text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
+            <button onclick="joinRoomAsPlayer()" class="flex-1 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md transition">
+              대국자 참가 ⚔️
+            </button>
+          </div>
+          <button onclick="joinRoomAsSpectator()" class="w-full py-1.5 bg-gradient-to-r from-purple-700 to-indigo-800 hover:brightness-110 active:scale-95 text-purple-200 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 border border-purple-500/40">
+            <span>👁️</span> <span>관전자로 입장 (초/한 응원 및 훈수)</span>
           </button>
         </div>
       </div>
 
       <div id="ai-subpanel" class="hidden flex flex-col gap-2">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-bold text-slate-300">COM 난이도 (프로기보 엔진)</span>
-          <span id="ai-diff-desc" class="text-[10px] text-amber-400 font-bold">김경중 정석 기보 + 기물 가치 판단</span>
+          <span class="text-xs font-bold text-slate-300">COM 난이도 설정</span>
+          <span id="ai-diff-desc" class="text-[10px] text-amber-400 font-bold">프로 정석 + 기형적 수 차단</span>
         </div>
         <div class="grid grid-cols-5 gap-1">
           <button onclick="setAiDiff('novice1')" id="diff-novice1" class="diff-btn py-1.5 text-xs rounded-xl font-bold bg-slate-800 border border-slate-700 text-slate-300">초보1</button>
@@ -368,8 +506,8 @@
       <div class="border-t border-slate-800 pt-2 flex flex-col gap-2">
         <div>
           <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-bold text-slate-300">내 대장군 선택</span>
-            <span class="text-[10px] text-emerald-400 font-medium">※ 미선택 시 매판 랜덤 자동배정</span>
+            <span class="text-xs font-bold text-slate-300">내 대장군 선택 (5인 고정)</span>
+            <span class="text-[10px] text-amber-400 font-medium">사진 클릭 선택</span>
           </div>
           <div class="grid grid-cols-5 gap-1.5" id="char-selection-container"></div>
         </div>
@@ -385,8 +523,10 @@
           </div>
 
           <div>
-            <span class="text-[11px] font-bold text-slate-300 mb-1 block">포진 차림</span>
-            <select id="layout-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-1.5 text-xs font-bold text-white focus:outline-none">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-bold text-slate-300">포진 차림 (자동기억)</span>
+            </div>
+            <select id="layout-select" onchange="handleLayoutChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-1.5 text-xs font-bold text-white focus:outline-none">
               <option value="ms_ms">1. 마상마상 (왼상)</option>
               <option value="sm_sm">2. 상마상마 (오른상)</option>
               <option value="ms_sm" selected>3. 마상상마 (안상)</option>
@@ -396,8 +536,7 @@
         </div>
       </div>
 
-      <!-- COM 대결 시작 버튼 -->
-      <button id="start-direct-btn" onclick="startDirectGame()" class="hidden w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-2xl font-bold text-sm shadow-xl">
+      <button id="start-direct-btn" onclick="startDirectGame()" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-2xl font-bold text-sm shadow-xl">
         대국 시작하기 (주사위 결정) 🎲
       </button>
     </div>
@@ -415,7 +554,7 @@
 
       <div class="z-10">
         <h2 id="waiting-status-title" class="text-xl font-black text-emerald-300 title-font">상대방 접속 대기 중...</h2>
-        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">카톡 초대를 보내면 상대가 링크 클릭 시 바로 자동 접속됩니다</p>
+        <p id="waiting-status-desc" class="text-xs text-slate-400 mt-1 font-medium">카카오톡으로 대국 초대장을 바로 전송하세요</p>
       </div>
 
       <div class="z-10 w-full bg-slate-800/90 border border-slate-700 rounded-2xl py-3 px-4 shadow-inner flex flex-col gap-2">
@@ -427,7 +566,7 @@
             <span>💬</span> 카카오톡 초대
           </button>
           <button onclick="copyHostInviteLink()" class="py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
-            <span>📋</span> 초대문구 복사
+            <span>📋</span> 링크 복사
           </button>
         </div>
       </div>
@@ -457,9 +596,7 @@
   </div>
 
   <script>
-    /* ==========================================================================
-       1. 5인 실사 대장군 얼굴 생성기
-       ========================================================================== */
+    /* 1. 5인 실사 얼굴 이미지 캔버스 생성기 */
     const photoCanvases = {};
 
     function generateRealisticFaceCanvas(id) {
@@ -544,149 +681,130 @@
     let myChar = CHARACTERS[0];
     let oppChar = CHARACTERS[2];
     let customNickname = '';
-    let isCharManuallyPicked = false;
 
-    function assignRandomNickname() {
-      const prefixes = ['신출귀몰', '바람의', '초신성', '포진달인', '불패', '천하제일', '돌격대장', '외통수', '쾌도난마'];
-      const suffixes = ['장군', '고수', '책사', '패왕', '사령관', '기객'];
-      const randNum = Math.floor(100 + Math.random() * 900);
-      const randName = `${prefixes[Math.floor(Math.random()*prefixes.length)]}${suffixes[Math.floor(Math.random()*suffixes.length)]}_${randNum}`;
-      customNickname = randName;
-      document.getElementById('user-nickname-input').value = randName;
-      saveCurrentNickname();
-      broadcastPresence();
-    }
+    const NICK_PREFIXES = ['천하무적', '질풍가도', '전설의', '고수', '장기명인', '패왕', '달마', '신출귀몰', '백전백승', '황금', '흑호', '초나라수호신'];
+    const NICK_CORES = ['차마', '포왕', '상대장', '외통수', '궁수', '장군', '빅보스', '호랑이', '사자', '마에스트로'];
 
-    function pickRandomCharacter() {
-      const randIdx = Math.floor(Math.random() * CHARACTERS.length);
-      myChar = CHARACTERS[randIdx];
-      oppChar = CHARACTERS.find(c => c.id !== myChar.id) || CHARACTERS[(randIdx + 1) % CHARACTERS.length];
-      renderCharSelector();
+    function generateRandomNickname() {
+      const p = NICK_PREFIXES[Math.floor(Math.random() * NICK_PREFIXES.length)];
+      const c = NICK_CORES[Math.floor(Math.random() * NICK_CORES.length)];
+      const num = Math.floor(10 + Math.random() * 90);
+      return `${p}${c}_${num}`;
     }
 
     function handleNicknameChange(val) {
       customNickname = val.trim();
-      saveCurrentNickname();
+      document.getElementById('lobby-my-name').innerText = customNickname || myChar.name;
+      localStorage.setItem('jg_nick_customized', 'true');
+      localStorage.setItem('jg_saved_nickname', customNickname);
       broadcastPresence();
     }
 
-    function loadSavedNickname() {
+    function regenerateRandomNickname() {
+      const newNick = generateRandomNickname();
+      customNickname = newNick;
+      document.getElementById('user-nickname-input').value = newNick;
+      document.getElementById('lobby-my-name').innerText = newNick;
+      localStorage.setItem('jg_saved_nickname', newNick);
+      localStorage.setItem('jg_nick_customized', 'true');
+      broadcastPresence();
+      showToast('🎲', `새 닉네임: ${newNick}`);
+    }
+
+    function loadSavedNicknameAndPreferences() {
       const savedName = localStorage.getItem('jg_saved_nickname');
-      const savedCharPicked = localStorage.getItem('jg_char_picked_manual');
+      const isCustomized = localStorage.getItem('jg_nick_customized');
 
-      if (savedName) {
+      if (savedName && isCustomized === 'true') {
         customNickname = savedName;
-        document.getElementById('user-nickname-input').value = savedName;
       } else {
-        assignRandomNickname();
+        customNickname = generateRandomNickname();
+        localStorage.setItem('jg_saved_nickname', customNickname);
       }
+      document.getElementById('user-nickname-input').value = customNickname;
+      document.getElementById('lobby-my-name').innerText = customNickname;
 
-      if (savedCharPicked === 'true') {
-        isCharManuallyPicked = true;
-        const savedCharId = localStorage.getItem('jg_saved_char');
+      const savedCharId = localStorage.getItem('jg_saved_char');
+      if (savedCharId) {
         const found = CHARACTERS.find(c => c.id === savedCharId);
         if (found) {
           myChar = found;
           oppChar = CHARACTERS.find(c => c.id !== found.id) || CHARACTERS[1];
         }
-      } else {
-        pickRandomCharacter();
+      }
+
+      const savedLayout = localStorage.getItem('jg_saved_layout');
+      if (savedLayout) {
+        const layoutSelect = document.getElementById('layout-select');
+        if (layoutSelect) {
+          layoutSelect.value = savedLayout;
+        }
       }
     }
 
-    function saveCurrentNickname() {
-      const input = document.getElementById('user-nickname-input').value.trim();
-      if (input) {
-        customNickname = input;
-        localStorage.setItem('jg_saved_nickname', input);
-      }
-      localStorage.setItem('jg_saved_char', myChar.id);
-      localStorage.setItem('jg_char_picked_manual', isCharManuallyPicked ? 'true' : 'false');
+    function handleLayoutChange(val) {
+      localStorage.setItem('jg_saved_layout', val);
+      showToast('💾', `포진 [${getLayoutLabel(val)}] 설정이 저장되었습니다.`);
     }
 
-    /* ==========================================================================
-       실시간 글로벌 로비 브로드캐스트 엔진
-       ========================================================================== */
-    const myClientId = 'user_' + Math.floor(100000 + Math.random() * 900000);
-    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_lobby_v7') : null;
+    function getLayoutLabel(val) {
+      const map = {
+        'ms_ms': '마상마상',
+        'sm_sm': '상마상마',
+        'ms_sm': '마상상마',
+        'sm_ms': '상마마상'
+      };
+      return map[val] || val;
+    }
+
+    let toastTimeout = null;
+    function showToast(icon, message, duration = 3000) {
+      const toast = document.getElementById('undo-toast');
+      const iconEl = document.getElementById('undo-toast-icon');
+      const textEl = document.getElementById('undo-toast-text');
+
+      iconEl.innerText = icon;
+      textEl.innerText = message;
+
+      toast.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, duration);
+    }
+
+    /* P2P 실시간 감지 */
+    const myClientId = 'user_' + Math.floor(Math.random() * 100000);
+    const presenceChannel = (window.BroadcastChannel) ? new BroadcastChannel('sd_janggi_presence') : null;
     const onlinePeers = new Map();
-    let pendingChallengeData = null;
-    let lobbyPeer = null;
 
-    function initGlobalLobbyNetwork() {
-      const myHubId = 'sd-jg-usr-' + myClientId;
-      try {
-        lobbyPeer = new Peer(myHubId);
-        lobbyPeer.on('connection', (c) => {
-          c.on('data', (data) => {
-            if (data) handleIncomingPresenceMsg(data);
-          });
-        });
-
-        setInterval(() => {
-          ['sd-jg-hub-a', 'sd-jg-hub-b'].forEach(hubId => {
-            if (hubId === myHubId) return;
-            try {
-              const c = lobbyPeer.connect(hubId, { reliable: false });
-              c.on('open', () => {
-                c.send({
-                  type: 'PING',
-                  data: {
-                    id: myClientId,
-                    code: isHost ? hostRoomCode : '',
-                    name: customNickname || myChar.name,
-                    char: myChar.name,
-                    status: isHost ? `방 생성중 (${hostRoomCode})` : (conn && conn.open ? '대국중' : '로비 대기중'),
-                    time: Date.now()
-                  }
-                });
-                setTimeout(() => c.close(), 1000);
-              });
-            } catch(e) {}
-          });
-        }, 4000);
-      } catch(e) {}
-    }
-
-    function handleIncomingPresenceMsg(msg) {
-      if (!msg) return;
-      if (msg.type === 'PING') {
-        if (msg.data && msg.data.id !== myClientId) {
-          onlinePeers.set(msg.data.id, msg.data);
-          updateOnlineUsersUI();
-        }
-      } else if (msg.type === 'CHALLENGE_INVITE') {
-        if (msg.targetId === myClientId) {
-          pendingChallengeData = msg;
-          document.getElementById('challenge-sender-desc').innerText = `[${msg.senderName}]님이 1:1 결투를 신청했습니다! 즉시 대기실로 입장하시겠습니까?`;
-          document.getElementById('battle-challenge-modal').classList.remove('hidden');
-        }
-      } else if (msg.type === 'CHALLENGE_ACCEPT') {
-        if (msg.targetId === myClientId && isHost) {
-          document.getElementById('battle-challenge-modal').classList.add('hidden');
-        }
-      }
-    }
+    let isSpectator = false;
+    let spectatorTargetSide = 'cho';
+    const spectatorConnections = [];
 
     function broadcastPresence() {
       const info = {
         id: myClientId,
-        code: isHost ? hostRoomCode : '',
         name: customNickname || myChar.name,
         char: myChar.name,
-        status: isHost ? `방 생성중 (${hostRoomCode})` : (conn && conn.open ? '대국중' : '로비 대기중'),
+        status: isSpectator ? '관전중' : (isHost ? '방 생성중 (코드: ' + hostRoomCode + ')' : (conn && conn.open ? '대국중' : '로비 대기중')),
         time: Date.now()
       };
-
-      const packet = { type: 'PING', data: info };
-      if (presenceChannel) presenceChannel.postMessage(packet);
-      localStorage.setItem('jg_hb_v7_' + myClientId, JSON.stringify(info));
+      if (presenceChannel) {
+        presenceChannel.postMessage({ type: 'PING', data: info });
+      }
+      localStorage.setItem('jg_hb_' + myClientId, JSON.stringify(info));
       updateOnlineUsersUI();
     }
 
     if (presenceChannel) {
       presenceChannel.onmessage = (e) => {
-        if (e.data) handleIncomingPresenceMsg(e.data);
+        if (e.data.type === 'PING') {
+          if (e.data.data.id !== myClientId) {
+            onlinePeers.set(e.data.data.id, e.data.data);
+            updateOnlineUsersUI();
+          }
+        }
       };
     }
 
@@ -694,7 +812,7 @@
       const now = Date.now();
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('jg_hb_v7_')) {
+        if (key && key.startsWith('jg_hb_')) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
             if (data.id !== myClientId && (now - data.time < 5000)) {
@@ -715,32 +833,28 @@
       const now = Date.now();
 
       onlinePeers.forEach((peer, id) => {
-        if (now - peer.time > 5500) onlinePeers.delete(id);
+        if (now - peer.time > 6000 && !peer.isP2PDirect) onlinePeers.delete(id);
       });
 
-      countEl.innerText = onlinePeers.size + 1;
+      const totalCount = onlinePeers.size + 1;
+      countEl.innerText = totalCount;
 
       let html = `
-        <div class="flex items-center justify-between bg-slate-900/90 px-2.5 py-1.5 rounded-xl border border-slate-700/80 text-xs">
+        <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-700/60 text-xs">
           <span class="font-medium text-slate-200 flex items-center gap-1.5">
-            <span class="text-emerald-400">●</span> <span>${customNickname || myChar.name}</span> <span class="text-[10px] text-emerald-400 font-bold">(나)</span>
+            <span class="text-emerald-400">●</span> <span>${customNickname || myChar.name}</span> (나)
           </span>
-          <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-2 py-0.5 rounded font-bold">${isHost ? '방 생성중' : (conn && conn.open ? '대국중' : '대기중')}</span>
+          <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-1.5 py-0.2 rounded font-bold">${isSpectator ? '관전중' : (isHost ? '방 생성중' : (conn && conn.open ? '대국중' : '로비 대기중'))}</span>
         </div>
       `;
 
       onlinePeers.forEach(peer => {
         html += `
-          <div onclick="invitePeerToBattle('${peer.id}', '${peer.name}', '${peer.code}')" class="flex items-center justify-between bg-slate-900 hover:bg-slate-800 active:scale-98 cursor-pointer px-2.5 py-1.5 rounded-xl border border-blue-600/40 text-xs transition">
-            <div class="flex items-center gap-1.5">
-              <span class="text-emerald-400">●</span>
-              <span class="font-bold text-slate-200">${peer.name}</span>
-              <span class="text-[10px] text-amber-300">(${peer.char})</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-[10px] bg-blue-950 text-blue-300 border border-blue-600/50 px-1.5 py-0.5 rounded">${peer.status}</span>
-              <span class="text-[10px] bg-gradient-to-r from-amber-600 to-amber-700 text-white font-black px-2 py-0.5 rounded shadow">대결신청 ⚔️</span>
-            </div>
+          <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-700/60 text-xs">
+            <span class="font-medium text-slate-200 flex items-center gap-1.5">
+              <span class="text-emerald-400">●</span> <span>${peer.name}</span> <span class="text-[10px] text-amber-300 font-normal">(${peer.char})</span>
+            </span>
+            <span class="text-[10px] bg-blue-950 text-blue-300 border border-blue-600/50 px-1.5 py-0.2 rounded font-bold">${peer.status}</span>
           </div>
         `;
       });
@@ -748,84 +862,43 @@
       listEl.innerHTML = html;
     }
 
-    function invitePeerToBattle(targetId, targetName, targetCode) {
-      if (targetCode && targetCode.length === 4) {
-        joinRoomByCode(targetCode);
-        return;
-      }
-      openHostWaitingRoom();
-      const packet = {
-        type: 'CHALLENGE_INVITE',
-        targetId: targetId,
-        senderId: myClientId,
-        senderName: customNickname || myChar.name,
-        roomCode: hostRoomCode
-      };
-      if (presenceChannel) presenceChannel.postMessage(packet);
-      if (lobbyPeer) {
-        try {
-          const directConn = lobbyPeer.connect('sd-jg-usr-' + targetId);
-          directConn.on('open', () => directConn.send(packet));
-        } catch(e) {}
-      }
-      alert(`[${targetName}]님에게 1:1 대결 초대장을 전송했습니다!\n상대방이 수락하면 즉시 대국실로 이동합니다.`);
-    }
-
-    function acceptIncomingChallenge() {
-      if (!pendingChallengeData) return;
-      document.getElementById('battle-challenge-modal').classList.add('hidden');
-      const packet = {
-        type: 'CHALLENGE_ACCEPT',
-        targetId: pendingChallengeData.senderId
-      };
-      if (presenceChannel) presenceChannel.postMessage(packet);
-      joinRoomByCode(pendingChallengeData.roomCode);
-    }
-
-    function rejectIncomingChallenge() {
-      document.getElementById('battle-challenge-modal').classList.add('hidden');
-      pendingChallengeData = null;
-    }
-
     setInterval(() => {
       broadcastPresence();
       scanLocalStoragePeers();
-    }, 1800);
+    }, 2000);
 
-    /* ==========================================================================
-       초대 공유 메시지 시스템
-       ========================================================================== */
+    /* 초대 공유 시스템 */
     function getInviteUrl() {
       return `${window.location.origin}${window.location.pathname}?room=${hostRoomCode}`;
     }
 
-    function getFormattedShareMessage() {
+    async function shareViaKakao() {
       const inviteUrl = getInviteUrl();
       const myName = customNickname || myChar.name;
-      return `[세미니의 멀티센터 장기1]\n⚔️ ${myName}님이 1:1 장기 대국에 초대했습니다!\n\n👇 아래 링크를 터치하면 바로 대기방에 자동 접속됩니다:\n${inviteUrl}\n\n초대코드: ${hostRoomCode}\n(※ 링크로 접속이 안 될 경우, 로비에서 위 4자리 코드를 입력해주세요)`;
-    }
+      const shareTitle = '세미니의 멀티센터 전설장기1';
+      const shareText = `[${shareTitle}]\n⚔️ ${myName}님이 1:1 대국에 초대했습니다!\n초대코드: [${hostRoomCode}]\n링크를 터치하면 대국/관전실로 바로 이동합니다! 👇`;
 
-    async function shareViaKakao() {
-      const fullText = getFormattedShareMessage();
       if (navigator.share) {
         try {
           await navigator.share({
-            title: '세미니의 멀티센터 장기1',
-            text: fullText
+            title: shareTitle,
+            text: shareText,
+            url: inviteUrl
           });
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
         }
       }
-      fallbackCopy(getInviteUrl(), fullText);
+
+      fallbackCopy(inviteUrl, `${shareText}\n${inviteUrl}`);
     }
 
     function fallbackCopy(url, customText) {
-      const fullCopyContent = customText || getFormattedShareMessage();
+      const fullCopyContent = customText || url;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullCopyContent).then(() => {
-          alert('초대 메시지와 코드가 복사되었습니다!\n카카오톡에 붙여넣어 친구를 바로 초대하세요.');
+          showToast('📋', '초대 메시지 및 링크가 복사되었습니다!');
         }).catch(() => {
           legacyExecCopy(fullCopyContent);
         });
@@ -845,20 +918,18 @@
       ta.select();
       try {
         document.execCommand('copy');
-        alert('초대 메시지와 코드가 복사되었습니다!\n카카오톡에 붙여넣어 전송하세요.');
+        showToast('📋', '초대 링크가 복사되었습니다!');
       } catch (e) {
-        prompt('아래 문구를 복사하여 전송하세요:', text);
+        prompt('아래 링크를 복사하여 카카오톡에 전송하세요:', text);
       }
       document.body.removeChild(ta);
     }
 
     function copyHostInviteLink() {
-      fallbackCopy(getInviteUrl(), getFormattedShareMessage());
+      fallbackCopy(getInviteUrl());
     }
 
-    /* ==========================================================================
-       2. 고해상도 사운드 FX 엔진 (기물별 특화 사운드 포함)
-       ========================================================================== */
+    /* 사운드 시스템 */
     let isMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -869,94 +940,36 @@
       btn.classList.toggle('bg-rose-950', isMuted);
     }
 
-    function playDeadlockWarningSound() {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.setValueAtTime(110, now + 0.08);
-        gain.gain.setValueAtTime(0.7, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.3);
-      } catch(e) {}
-    }
-
     function playPiecePlaceSound() {
       if (isMuted) return;
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1800, now);
-        osc.frequency.exponentialRampToValueAtTime(320, now + 0.05);
-        gain.gain.setValueAtTime(0.85, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 0.07);
+
+        const clickOsc = audioCtx.createOscillator();
+        const clickGain = audioCtx.createGain();
+        clickOsc.type = 'triangle';
+        clickOsc.frequency.setValueAtTime(1600, now);
+        clickOsc.frequency.exponentialRampToValueAtTime(320, now + 0.045);
+        clickGain.gain.setValueAtTime(0.85, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        clickOsc.connect(clickGain);
+        clickGain.connect(audioCtx.destination);
+        clickOsc.start(now);
+        clickOsc.stop(now + 0.055);
+
+        const bodyOsc = audioCtx.createOscillator();
+        const bodyGain = audioCtx.createGain();
+        bodyOsc.type = 'sine';
+        bodyOsc.frequency.setValueAtTime(300, now);
+        bodyOsc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+        bodyGain.gain.setValueAtTime(0.95, now);
+        bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        bodyOsc.connect(bodyGain);
+        bodyGain.connect(audioCtx.destination);
+        bodyOsc.start(now);
+        bodyOsc.stop(now + 0.13);
       } catch (e) {}
-    }
-
-    // [요청 반영] 각 기물별 특화 전투/처치 사운드 FX
-    function playPieceSpecificAttackSound(pieceType) {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-
-        if (pieceType === 'cha') {
-          // 차: 탱크 돌격 및 묵직한 포격음
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(90, now);
-          osc.frequency.linearRampToValueAtTime(20, now + 0.6);
-          gain.gain.setValueAtTime(1.0, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.7);
-
-        } else if (pieceType === 'po') {
-          // 포: 다련장 미사일 연발 굉음
-          for (let i = 0; i < 4; i++) {
-            setTimeout(() => {
-              playTone(350 - i * 50, 'square', 0.12, 0.4);
-            }, i * 90);
-          }
-
-        } else if (pieceType === 'ma') {
-          // 마: 창기사 "츄츅" + 말발굽 소리
-          playTone(850, 'triangle', 0.08, 0.3);
-          setTimeout(() => playTone(1100, 'sawtooth', 0.1, 0.35), 70);
-
-        } else if (pieceType === 'sang') {
-          // 상: 코끼리 발로 밟는 묵직한 지각 변동음
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(160, now);
-          osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-          gain.gain.setValueAtTime(0.9, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(now); osc.stop(now + 0.48);
-
-        } else if (pieceType === 'sa') {
-          // 사: 방패로 밀어내는 타격음
-          playTone(400, 'square', 0.15, 0.4);
-
-        } else {
-          // 졸/병: 검으로 두 번 휙휙 베는 참격 소리
-          playTone(2200, 'triangle', 0.06, 0.3);
-          setTimeout(() => playTone(2800, 'triangle', 0.08, 0.35), 80);
-        }
-      } catch(e) {}
     }
 
     function playTone(freq, type, duration, gainVal = 0.25) {
@@ -969,14 +982,68 @@
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
       } catch (e) {}
     }
 
     function playCheckSound() {
       playTone(550, 'square', 0.12, 0.35);
       setTimeout(() => playTone(380, 'sawtooth', 0.3, 0.45), 110);
+    }
+
+    function playIllegalMoveBuzzer() {
+      if (isMuted) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'square';
+        osc1.frequency.setValueAtTime(140, now);
+        osc1.frequency.setValueAtTime(110, now + 0.1);
+        osc2.frequency.setValueAtTime(144, now);
+        osc2.frequency.setValueAtTime(114, now + 0.1);
+
+        gain.gain.setValueAtTime(0.7, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.33);
+        osc2.stop(now + 0.33);
+      } catch (e) {}
+    }
+
+    function triggerIllegalMoveAlert() {
+      if (navigator.vibrate) {
+        try { navigator.vibrate([100, 50, 100, 50, 150]); } catch (e) {}
+      }
+
+      playIllegalMoveBuzzer();
+
+      const container = document.getElementById('board-container');
+      container.classList.remove('illegal-move-warning', 'shake-active');
+      void container.offsetWidth;
+      container.classList.add('illegal-move-warning', 'shake-active');
+      setTimeout(() => {
+        container.classList.remove('illegal-move-warning', 'shake-active');
+      }, 700);
+
+      const banner = document.getElementById('suicide-warning-banner');
+      banner.classList.remove('hidden');
+      setTimeout(() => banner.classList.add('hidden'), 1600);
+
+      showToast('🚫', '내 왕이 장군/외통수에 걸리는 자살수입니다!', 2000);
     }
 
     function playFanfare() {
@@ -999,18 +1066,18 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(70, now);
-        osc.frequency.exponentialRampToValueAtTime(8, now + 2.2);
+        osc.frequency.setValueAtTime(60, now);
+        osc.frequency.exponentialRampToValueAtTime(8, now + 2.0);
         gain.gain.setValueAtTime(1.0, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now); osc.stop(now + 2.45);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 2.2);
       } catch (e) {}
     }
 
-    /* ==========================================================================
-       3. 주사위 렌더러
-       ========================================================================== */
+    /* 3D 주사위 결투 렌더링 */
     function render3DDiceFace(canvasId, value, angle = 0) {
       const c = document.getElementById(canvasId);
       if (!c) return;
@@ -1043,6 +1110,15 @@
       ctx.lineWidth = 4;
       ctx.stroke();
 
+      ctx.beginPath();
+      ctx.roundRect(-sz/2 + 5, -sz/2 + 5, sz - 10, sz - 10, [rad - 4]);
+      const innerGrad = ctx.createLinearGradient(-sz/2, -sz/2, sz/2, sz/2);
+      innerGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+      innerGrad.addColorStop(0.4, 'rgba(255,255,255,0.1)');
+      innerGrad.addColorStop(1, 'rgba(0,0,0,0.06)');
+      ctx.fillStyle = innerGrad;
+      ctx.fill();
+
       const dotRad = sz * 0.11;
       const offset = sz * 0.26;
 
@@ -1062,8 +1138,25 @@
         ctx.beginPath();
         const currentRad = isOne ? dotRad * 1.55 : dotRad;
         ctx.arc(dx, dy, currentRad, 0, Math.PI * 2);
-        ctx.fillStyle = isOne ? '#dc2626' : '#1e293b';
+
+        const dGrad = ctx.createRadialGradient(dx - 2, dy - 2, 1, dx, dy, currentRad);
+        if (isOne) {
+          dGrad.addColorStop(0, '#f87171');
+          dGrad.addColorStop(0.4, '#dc2626');
+          dGrad.addColorStop(1, '#991b1b');
+        } else {
+          dGrad.addColorStop(0, '#475569');
+          dGrad.addColorStop(0.4, '#1e293b');
+          dGrad.addColorStop(1, '#020617');
+        }
+        ctx.fillStyle = dGrad;
         ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(dx, dy, currentRad, Math.PI * 0.2, Math.PI * 0.8);
+        ctx.stroke();
       });
 
       ctx.restore();
@@ -1073,10 +1166,6 @@
     let oppDiceVal = 1;
 
     function startDiceRollSequence() {
-      if (!isCharManuallyPicked) {
-        pickRandomCharacter();
-      }
-
       document.getElementById('mode-modal').classList.add('hidden');
       document.getElementById('host-waiting-modal').classList.add('hidden');
       document.getElementById('mate-banner').classList.add('hidden');
@@ -1091,7 +1180,8 @@
       document.getElementById('dice-score-opp').innerText = '회전 중...';
 
       let frame = 0;
-      const totalFrames = 30;
+      const totalFrames = 36;
+      playTone(350, 'square', 0.25);
 
       function rollAnim() {
         frame++;
@@ -1111,15 +1201,17 @@
             myDiceVal = Math.floor(Math.random() * 6) + 1;
             oppDiceVal = Math.floor(Math.random() * 6) + 1;
             renderDiceResults();
-          } else if (isHost) {
-            myDiceVal = Math.floor(Math.random() * 6) + 1;
-            oppDiceVal = Math.floor(Math.random() * 6) + 1;
-            conn.send({
-              type: 'DICE_RESULT',
-              guestVal: oppDiceVal,
-              hostVal: myDiceVal
-            });
-            renderDiceResults();
+          } else {
+            if (isHost) {
+              myDiceVal = Math.floor(Math.random() * 6) + 1;
+              oppDiceVal = Math.floor(Math.random() * 6) + 1;
+              broadcastToAllConnections({
+                type: 'DICE_RESULT',
+                hostVal: myDiceVal,
+                guestVal: oppDiceVal
+              });
+              renderDiceResults();
+            }
           }
         }
       }
@@ -1141,25 +1233,25 @@
 
       if (myDiceVal > oppDiceVal) {
         playFanfare();
-        document.getElementById('dice-status-desc').innerText = '🎉 내가 승리했습니다! 원하는 진영을 선택하세요.';
+        document.getElementById('dice-status-desc').innerText = '🎉 내가 승리했습니다! 원하는 진영(선공/후공)을 고르세요.';
         document.getElementById('dice-winner-control').classList.remove('hidden');
       } else {
         playDefeatSound();
         if (gameMode === 'ai') {
           const aiChoice = Math.random() < 0.5 ? 'cho' : 'han';
           mySide = (aiChoice === 'cho') ? 'han' : 'cho';
-          document.getElementById('dice-status-desc').innerText = `COM이 ${aiChoice === 'cho' ? '초(선공)' : '한(후공)'}을 선택했습니다!`;
+          document.getElementById('dice-status-desc').innerText = `COM이 ${aiChoice === 'cho' ? '초(선공)' : '한(후공)'}을 선택했습니다! 잠시 후 대국이 시작됩니다.`;
           setTimeout(finalizeGameStartAfterDice, 1500);
         } else {
-          document.getElementById('dice-status-desc').innerText = '상대방이 주사위에서 승리하여 진영을 선택 중입니다...';
+          document.getElementById('dice-status-desc').innerText = '상대방이 주사위에서 승리하여 선/후공을 선택 중입니다...';
         }
       }
     }
 
     function confirmDiceChoice(chosenSide) {
       mySide = chosenSide;
-      if (gameMode === 'p2p' && conn && conn.open) {
-        conn.send({
+      if (gameMode === 'p2p') {
+        broadcastToAllConnections({
           type: 'DICE_SIDE_CHOSEN',
           winnerSide: chosenSide,
           otherSide: (chosenSide === 'cho') ? 'han' : 'cho'
@@ -1178,7 +1270,6 @@
       currentTurn = 'cho';
       selectedPos = null;
       validMoves = [];
-      invalidDeadlockMoves = [];
       lastMove = null;
       myTimeouts = 0;
       oppTimeouts = 0;
@@ -1197,9 +1288,7 @@
       }
     }
 
-    /* ==========================================================================
-       4. 장기 보드 엔진 & 외통수(자살수) 필터링
-       ========================================================================== */
+    /* 장기 보드 엔진 & 이동 규칙 */
     const ROWS = 10;
     const COLS = 9;
     let board = [];
@@ -1211,7 +1300,6 @@
 
     let selectedPos = null;
     let validMoves = [];
-    let invalidDeadlockMoves = [];
     let lastMove = null;
 
     let timeLimit = 45;
@@ -1244,7 +1332,7 @@
       if (badge) badge.innerText = myUndoRemaining;
       const btn = document.getElementById('undo-btn');
       if (btn) {
-        if (myUndoRemaining <= 0) {
+        if (myUndoRemaining <= 0 || isSpectator) {
           btn.classList.add('opacity-40', 'cursor-not-allowed');
         } else {
           btn.classList.remove('opacity-40', 'cursor-not-allowed');
@@ -1337,6 +1425,29 @@
             nr += dr; nc += dc;
           }
         });
+        if (inPalace(r, c)) {
+          const diagPaths = [
+            [[0, 3], [1, 4], [2, 5]], [[0, 5], [1, 4], [2, 3]],
+            [[7, 3], [8, 4], [9, 5]], [[7, 5], [8, 4], [9, 3]]
+          ];
+          diagPaths.forEach(path => {
+            const idx = path.findIndex(p => p[0] === r && p[1] === c);
+            if (idx !== -1) {
+              [-1, 1].forEach(step => {
+                let cur = idx + step;
+                while (cur >= 0 && cur < path.length) {
+                  const [nr, nc] = path[cur];
+                  if (!b[nr][nc]) { moves.push({ r: nr, c: nc }); }
+                  else {
+                    if (b[nr][nc].side !== side) moves.push({ r: nr, c: nc });
+                    break;
+                  }
+                  cur += step;
+                }
+              });
+            }
+          });
+        }
       }
 
       if (piece.type === 'po') {
@@ -1449,42 +1560,54 @@
       return false;
     }
 
-    function isSuicideOrDeadlockMove(from, to, side) {
-      const tempB = cloneBoard(board);
-      tempB[to.r][to.c] = tempB[from.r][from.c];
-      tempB[from.r][from.c] = null;
-      return isKingInCheck(side, tempB);
+    function getLegalMoves(r, c, b = board) {
+      const piece = b[r][c];
+      if (!piece) return [];
+      const raw = getRawMoves(r, c, b);
+      const legal = [];
+
+      for (const m of raw) {
+        const simulated = cloneBoard(b);
+        simulated[m.r][m.c] = simulated[r][c];
+        simulated[r][c] = null;
+
+        if (!isKingInCheck(piece.side, simulated)) {
+          legal.push(m);
+        }
+      }
+      return legal;
     }
 
-    /* ==========================================================================
-       5. 캔버스 렌더링 & 장기 기본 기물 이미지 표현 엔진
-       ========================================================================== */
+    /* 캔버스 렌더링 & 칼베기 절단 및 8대 킬 연출 */
     const canvas = document.getElementById('boardCanvas');
     const ctx = canvas.getContext('2d');
     let cellW = 0, cellH = 0, padX = 0, padY = 0;
 
     let attackAnim = null;
     let victimAnim = null;
+    let explosions = [];
     let nuclearEffect = null;
-    let particles = [];
 
     function resizeCanvas() {
       const container = document.getElementById('board-container');
       const w = container.clientWidth;
       const h = container.clientHeight;
 
-      canvas.width = w * window.devicePixelRatio;
-      canvas.height = h * window.devicePixelRatio;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
+      let targetW = w;
+      let targetH = h;
+
+      canvas.width = targetW * window.devicePixelRatio;
+      canvas.height = targetH * window.devicePixelRatio;
+      canvas.style.width = `${targetW}px`;
+      canvas.style.height = `${targetH}px`;
 
       ctx.resetTransform();
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-      padX = w * 0.055;
-      padY = h * 0.048;
-      cellW = (w - padX * 2) / (COLS - 1);
-      cellH = (h - padY * 2) / (ROWS - 1);
+      padX = targetW * 0.055;
+      padY = targetH * 0.048;
+      cellW = (targetW - padX * 2) / (COLS - 1);
+      cellH = (targetH - padY * 2) / (ROWS - 1);
 
       drawBoard();
     }
@@ -1496,9 +1619,9 @@
       ctx.clearRect(0, 0, w, h);
 
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, '#c26d0a');
-      bgGrad.addColorStop(0.5, '#92400e');
-      bgGrad.addColorStop(1, '#662208');
+      bgGrad.addColorStop(0, '#d97706');
+      bgGrad.addColorStop(0.5, '#b45309');
+      bgGrad.addColorStop(1, '#78350f');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
 
@@ -1540,7 +1663,7 @@
         ctx.setLineDash([]);
       }
 
-      if (selectedPos) {
+      if (selectedPos && !isSpectator) {
         validMoves.forEach(m => {
           const px = padX + m.c * cellW;
           const py = padY + m.r * cellH;
@@ -1559,30 +1682,6 @@
             ctx.fill();
           }
         });
-
-        invalidDeadlockMoves.forEach(m => {
-          const px = padX + m.c * cellW;
-          const py = padY + m.r * cellH;
-
-          ctx.save();
-          ctx.shadowColor = '#dc2626';
-          ctx.shadowBlur = 15;
-          ctx.fillStyle = 'rgba(220, 38, 38, 0.45)';
-          ctx.beginPath();
-          ctx.arc(px, py, Math.min(cellW, cellH) * 0.45, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-
-          ctx.shadowBlur = 0;
-          ctx.font = `${Math.min(cellW, cellH) * 0.52}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('☠️', px, py);
-          ctx.restore();
-        });
       }
 
       for (let r = 0; r < ROWS; r++) {
@@ -1599,42 +1698,53 @@
 
       renderAttackCinematics();
       renderVictimReaction();
-      renderParticles();
       renderNuclearExplosion();
     }
 
-    function drawCustomPiece(r, c, piece, isSelected) {
+    function drawCustomPiece(r, c, piece, isSelected, customScale = 1.0, alpha = 1.0) {
       const x = padX + c * cellW;
       const y = padY + r * cellH;
       const isCho = piece.side === 'cho';
       const isKing = piece.type === 'king';
       const charObj = isKing ? (piece.side === mySide ? myChar : oppChar) : null;
 
-      const baseRad = Math.min(cellW, cellH);
-      let radiusX = baseRad * 0.45;
-      let radiusY = baseRad * 0.45;
+      const baseRad = Math.min(cellW, cellH) * customScale;
+      let radiusX = baseRad * 0.44;
+      let radiusY = baseRad * 0.44;
 
       if (isKing) {
-        radiusX = baseRad * 0.53;
-        radiusY = baseRad * 0.53;
+        radiusX = baseRad * 0.52;
+        radiusY = baseRad * 0.52;
         if (charObj && charObj.id === 'semini') {
           radiusX = baseRad * 0.58;
           radiusY = baseRad * 0.50;
         }
       } else if (piece.type === 'sa' || piece.type === 'jol' || piece.type === 'byung') {
-        radiusX = radiusY = baseRad * 0.40;
+        radiusX = radiusY = baseRad * 0.38;
       }
 
       ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.translate(x, y);
 
       if (isSelected) {
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 22;
+        ctx.shadowBlur = 20;
       }
 
       let baseColor = isCho ? '#064e3b' : '#7f1d1d';
       let strokeColor = isCho ? '#6ee7b7' : '#fca5a5';
+
+      if (isKing && charObj) {
+        if (charObj.id === 'hadori') {
+          baseColor = isCho ? '#292524' : '#451a03';
+          strokeColor = '#d97706';
+        } else if (charObj.id === 'honggu') {
+          strokeColor = '#eab308';
+        } else if (charObj.id === 'changwon') {
+          strokeColor = '#94a3b8';
+        }
+      }
 
       ctx.beginPath();
       ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
@@ -1644,7 +1754,9 @@
       ctx.beginPath();
       ctx.ellipse(0, 0, radiusX * 0.88, radiusY * 0.88, 0, 0, Math.PI * 2);
       const innerGrad = ctx.createRadialGradient(-radiusX * 0.3, -radiusY * 0.3, 2, 0, 0, radiusX * 0.9);
-      if (isCho) {
+      if (isKing && charObj && charObj.id === 'hadori') {
+        innerGrad.addColorStop(0, '#78350f'); innerGrad.addColorStop(1, '#292524');
+      } else if (isCho) {
         innerGrad.addColorStop(0, '#10b981'); innerGrad.addColorStop(1, '#047857');
       } else {
         innerGrad.addColorStop(0, '#f87171'); innerGrad.addColorStop(1, '#991b1b');
@@ -1655,6 +1767,14 @@
       ctx.strokeStyle = strokeColor;
       ctx.lineWidth = 2.6;
       ctx.stroke();
+
+      if (isKing && charObj && charObj.id === 'semini') {
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(0, radiusY * 0.45, radiusX * 0.72, radiusY * 0.3, 0, 0, Math.PI);
+        ctx.stroke();
+      }
 
       if (isKing && charObj && photoCanvases[charObj.id]) {
         const photoC = photoCanvases[charObj.id];
@@ -1668,12 +1788,12 @@
         ctx.restore();
 
         ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, -radiusY * 0.05, photoRad, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
         ctx.beginPath();
         ctx.roundRect(-radiusX * 0.65, radiusY * 0.44, radiusX * 1.3, radiusY * 0.44, [4]);
         ctx.fill();
@@ -1682,8 +1802,8 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(charObj.name, 0, radiusY * 0.66);
+
       } else {
-        // [요청 반영] 대장군을 제외한 나머지 말들은 전통 장기 기본 한자 이미지로 깔끔하게 표현[cite: 1]
         let hanja = '';
         if (piece.type === 'cha') hanja = '車';
         else if (piece.type === 'po') hanja = '包';
@@ -1693,9 +1813,10 @@
         else if (piece.type === 'jol') hanja = '卒';
         else if (piece.type === 'byung') hanja = '兵';
 
-        ctx.font = `900 ${radiusY * 1.1}px 'Noto Serif KR', serif`;
+        ctx.font = `900 ${radiusY * 1.05}px 'Noto Serif KR', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
         ctx.fillStyle = isCho ? '#022c22' : '#450a0a';
         ctx.fillText(hanja, 1.2, 1.8);
         ctx.fillStyle = isCho ? '#ecfdf5' : '#fef2f2';
@@ -1705,44 +1826,8 @@
       ctx.restore();
     }
 
-    /* ==========================================================================
-       6. 기물별 특화 전투 애니메이션 및 처치 이펙트 엔진
-       ========================================================================== */
-    function spawnExplosionParticles(x, y, count = 28) {
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 6.5;
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: 3 + Math.random() * 5,
-          color: ['#f59e0b', '#ef4444', '#f97316', '#fbbf24', '#ffffff'][Math.floor(Math.random() * 5)],
-          alpha: 1,
-          decay: 0.025 + Math.random() * 0.03
-        });
-      }
-    }
-
-    function renderParticles() {
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= p.decay;
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
+    /* 8대 킬 연출 & 칼베기 절단 물리 효과 */
+    const KILL_STYLES = ['blade_slash', 'frost_shatter', 'blackhole', 'incinerate', 'lightning_strike', 'cannon_meteor', 'divine_smite', 'sonic_crush'];
 
     function triggerCinematicAttack(mover, from, to, capturedPiece, onComplete) {
       const startX = padX + from.c * cellW;
@@ -1757,8 +1842,6 @@
         showAttackShout(kingObj.name, kingObj.shout);
       }
 
-      playPieceSpecificAttackSound(mover.type);
-
       attackAnim = {
         type: mover.type,
         side: mover.side,
@@ -1766,9 +1849,22 @@
         from, to, capturedPiece,
         startX, startY, endX, endY,
         progress: 0,
-        speed: (mover.type === 'cha' || mover.type === 'po') ? 0.032 : 0.025,
+        speed: isKing ? 0.018 : 0.024,
         onComplete
       };
+
+      if (isKing && kingObj) {
+        if (kingObj.id === 'semini') playTone(75, 'triangle', 0.8, 0.7);
+        else if (kingObj.id === 'honggu') playTone(360, 'square', 0.4, 0.5);
+        else if (kingObj.id === 'changwon') playTone(130, 'sawtooth', 0.8, 0.6);
+        else playTone(240, 'sine', 0.6, 0.5);
+      } else if (mover.type === 'cha') {
+        playTone(55, 'sawtooth', 0.5, 0.6);
+      } else if (mover.type === 'po') {
+        playTone(340, 'sine', 0.3, 0.4);
+      } else {
+        playTone(400, 'triangle', 0.2, 0.4);
+      }
 
       requestAnimationFrame(runAttackLoop);
     }
@@ -1790,31 +1886,32 @@
         const targetY = attackAnim.endY;
         const captured = attackAnim.capturedPiece;
 
-        // [요청 반영] 포 처치 시 다련장 미사일 연속 폭발 (3회 바운스 폭발)
-        if (attackAnim.type === 'po') {
-          for (let k = 0; k < 3; k++) {
-            setTimeout(() => {
-              spawnExplosionParticles(targetX + (k-1)*12, targetY + (k-1)*8, 20);
-            }, k * 140);
-          }
-        } else if (captured.type === 'king') {
+        if (captured.type === 'king') {
           attackAnim = null;
           triggerNuclearExplosion(targetX, targetY, () => {
             if (attackAnim && attackAnim.onComplete) attackAnim.onComplete();
           });
           return;
-        } else {
-          // [요청 반영] 차 처치 시 3단 폭발
-          if (attackAnim.type === 'cha') {
-            for (let k = 0; k < 3; k++) {
-              setTimeout(() => spawnExplosionParticles(targetX, targetY, 18), k * 120);
-            }
-          } else {
-            spawnExplosionParticles(targetX, targetY, 28);
-          }
         }
 
-        triggerVictimReaction(attackAnim.to, captured, attackAnim.type);
+        // 8대 킬 스타일 매칭
+        let chosenStyle = 'blade_slash';
+        if (attackAnim.type === 'cha') {
+          chosenStyle = Math.random() < 0.5 ? 'sonic_crush' : 'cannon_meteor';
+        } else if (attackAnim.type === 'po') {
+          chosenStyle = Math.random() < 0.5 ? 'cannon_meteor' : 'incinerate';
+        } else if (attackAnim.type === 'sang') {
+          chosenStyle = Math.random() < 0.5 ? 'lightning_strike' : 'frost_shatter';
+        } else if (attackAnim.type === 'ma') {
+          chosenStyle = Math.random() < 0.5 ? 'blade_slash' : 'divine_smite';
+        } else if (attackAnim.type === 'sa') {
+          chosenStyle = Math.random() < 0.5 ? 'blackhole' : 'blade_slash';
+        } else {
+          chosenStyle = KILL_STYLES[Math.floor(Math.random() * KILL_STYLES.length)];
+        }
+
+        triggerVictimReaction(attackAnim.to, captured, chosenStyle);
+        spawnExplosion(targetX, targetY, 2.2, chosenStyle);
         triggerBoardShake();
 
         const cb = attackAnim.onComplete;
@@ -1827,14 +1924,26 @@
       requestAnimationFrame(runAttackLoop);
     }
 
-    function triggerVictimReaction(pos, piece, moverType) {
-      victimAnim = { pos, piece, moverType, progress: 0 };
+    function triggerVictimReaction(pos, piece, style) {
+      victimAnim = {
+        pos,
+        piece,
+        style,
+        progress: 0,
+        slashAngle: (Math.random() * 0.6 - 0.3) + Math.PI / 4, // 약 45도 사선 각도
+        shards: [
+          { dx: -12, dy: -10, rot: -0.4, scale: 0.9 },
+          { dx: 14, dy: -8, rot: 0.5, scale: 0.85 },
+          { dx: -10, dy: 14, rot: 0.6, scale: 0.8 },
+          { dx: 12, dy: 12, rot: -0.5, scale: 0.9 }
+        ]
+      };
       requestAnimationFrame(runVictimLoop);
     }
 
     function runVictimLoop() {
       if (!victimAnim) return;
-      victimAnim.progress += 0.055;
+      victimAnim.progress += 0.038;
       if (victimAnim.progress >= 1) {
         victimAnim = null;
         drawBoard();
@@ -1849,28 +1958,104 @@
       const p = victimAnim.progress;
       const x = padX + victimAnim.pos.c * cellW;
       const y = padY + victimAnim.pos.r * cellH;
+      const piece = victimAnim.piece;
+      const style = victimAnim.style;
 
       ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = Math.max(0, 1 - p);
 
-      if (victimAnim.moverType === 'sang') {
-        // [요청 반영] 상: 코끼리 발로 밟는 충격파 링
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 5 * (1 - p);
+      // [핵심] 칼로 베일 때 반으로 쪼개지는 애니메이션
+      if (style === 'blade_slash') {
+        const splitDist = p * (cellW * 0.75);
+        const alpha = Math.max(0, 1 - p * 1.1);
+        const ang = victimAnim.slashAngle;
+
+        // 조각 1 (윗쪽/왼쪽 절반)
+        ctx.save();
+        ctx.translate(x - Math.cos(ang + Math.PI/2) * splitDist, y - Math.sin(ang + Math.PI/2) * splitDist);
+        ctx.rotate(-p * 0.35);
         ctx.beginPath();
-        ctx.arc(0, 0, cellW * 0.8 * (1 + p * 0.6), 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (victimAnim.moverType === 'sa') {
-        // [요청 반영] 사: 방패 밀어내기 이펙트
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(-cellW * 0.5 * (1-p), -cellHeight = 6, cellW * (1-p), 12);
-      } else {
-        ctx.fillStyle = '#ef4444';
+        ctx.moveTo(Math.cos(ang) * cellW * 1.2, Math.sin(ang) * cellH * 1.2);
+        ctx.lineTo(-Math.cos(ang) * cellW * 1.2, -Math.sin(ang) * cellH * 1.2);
+        ctx.lineTo(-Math.cos(ang) * cellW * 1.2 - Math.sin(ang) * cellW * 1.5, -Math.sin(ang) * cellH * 1.2 + Math.cos(ang) * cellH * 1.5);
+        ctx.lineTo(Math.cos(ang) * cellW * 1.2 - Math.sin(ang) * cellW * 1.5, Math.sin(ang) * cellH * 1.2 + Math.cos(ang) * cellH * 1.5);
+        ctx.closePath();
+        ctx.clip();
+        drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, 1.0, alpha);
+        ctx.restore();
+
+        // 조각 2 (아랫쪽/오른쪽 절반)
+        ctx.save();
+        ctx.translate(x + Math.cos(ang + Math.PI/2) * splitDist, y + Math.sin(ang + Math.PI/2) * splitDist);
+        ctx.rotate(p * 0.35);
         ctx.beginPath();
-        ctx.arc(0, 0, cellW * 0.45 * (1 - p * 0.4), 0, Math.PI * 2);
+        ctx.moveTo(Math.cos(ang) * cellW * 1.2, Math.sin(ang) * cellH * 1.2);
+        ctx.lineTo(-Math.cos(ang) * cellW * 1.2, -Math.sin(ang) * cellH * 1.2);
+        ctx.lineTo(-Math.cos(ang) * cellW * 1.2 + Math.sin(ang) * cellW * 1.5, -Math.sin(ang) * cellH * 1.2 - Math.cos(ang) * cellH * 1.5);
+        ctx.lineTo(Math.cos(ang) * cellW * 1.2 + Math.sin(ang) * cellW * 1.5, Math.sin(ang) * cellH * 1.2 - Math.cos(ang) * cellH * 1.5);
+        ctx.closePath();
+        ctx.clip();
+        drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, 1.0, alpha);
+        ctx.restore();
+
+        // 번쩍이는 광선 칼자국 선
+        if (p < 0.6) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(ang);
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 6 * (1 - p / 0.6);
+          ctx.beginPath();
+          ctx.moveTo(-cellW * 1.3, 0); ctx.lineTo(cellW * 1.3, 0);
+          ctx.stroke();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 14 * (1 - p / 0.6);
+          ctx.beginPath();
+          ctx.moveTo(-cellW * 1.3, 0); ctx.lineTo(cellW * 1.3, 0);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+      } else if (style === 'frost_shatter') {
+        // 얼어붙어 4개 조각으로 산산조각
+        const alpha = Math.max(0, 1 - p);
+        victimAnim.shards.forEach(sh => {
+          ctx.save();
+          ctx.translate(x + sh.dx * p * 2.5, y + sh.dy * p * 2.5);
+          ctx.rotate(sh.rot * p * 3);
+          drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, sh.scale * (1 - p * 0.3), alpha);
+          ctx.restore();
+        });
+
+      } else if (style === 'blackhole') {
+        // 블랙홀 소용돌이 속으로 빨려 들어감
+        const scale = Math.max(0, 1 - p);
+        const rot = p * Math.PI * 4;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, scale, scale);
+        ctx.restore();
+
+      } else if (style === 'incinerate') {
+        // 주황 불꽃에 휩싸여 소각
+        const alpha = Math.max(0, 1 - p);
+        drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, 1.0 - p * 0.2, alpha);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = `rgba(249, 115, 22, ${Math.max(0, 0.85 - p)})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, cellW * 0.55 * (1 + p * 0.4), 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
+
+      } else {
+        // 기본 충격파 분쇄
+        const alpha = Math.max(0, 1 - p * 1.2);
+        drawCustomPiece(victimAnim.pos.r, victimAnim.pos.c, piece, false, 1.0 + p * 0.3, alpha);
       }
+
       ctx.restore();
     }
 
@@ -1879,23 +2064,109 @@
         const p = attackAnim.progress;
         const curX = attackAnim.startX + (attackAnim.endX - attackAnim.startX) * p;
         const curY = attackAnim.startY + (attackAnim.endY - attackAnim.startY) * p;
-        const sz = Math.min(cellW, cellH) * 0.75;
+        const angle = Math.atan2(attackAnim.endY - attackAnim.startY, attackAnim.endX - attackAnim.startX);
+        const sz = Math.min(cellW, cellH) * 0.72;
 
         ctx.save();
         ctx.translate(curX, curY);
 
-        if (attackAnim.type === 'po') {
-          // [요청 반영] 포 공격 시 다련장 미사일 투사체 렌더링
-          ctx.fillStyle = '#f97316';
-          ctx.beginPath(); ctx.arc(0, 0, sz * 0.35, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = '#ef4444';
-          ctx.fillRect(-sz*0.4, -4, sz*0.8, 8);
+        if (attackAnim.type === 'king' && attackAnim.kingId) {
+          ctx.rotate(angle);
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath(); ctx.arc(0, 0, sz * 0.6, 0, Math.PI * 2); ctx.fill();
+        } else if (attackAnim.type === 'cha') {
+          ctx.rotate(angle);
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(-sz * 0.85, -sz * 0.5, sz * 1.5, sz * 1.0);
+          ctx.fillStyle = attackAnim.side === 'cho' ? '#047857' : '#b91c1c';
+          ctx.fillRect(-sz * 0.7, -sz * 0.35, sz * 1.2, sz * 0.7);
+        } else if (attackAnim.type === 'po') {
+          const arcHeight = Math.sin(p * Math.PI) * (cellH * 3.4);
+          ctx.translate(0, -arcHeight);
+          ctx.fillStyle = '#ea580c';
+          ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
         } else {
-          ctx.fillStyle = attackAnim.side === 'cho' ? '#10b981' : '#ef4444';
-          ctx.beginPath(); ctx.arc(0, 0, sz * 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.rotate(angle);
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath(); ctx.arc(0, 0, sz * 0.45, 0, Math.PI * 2); ctx.fill();
         }
+
         ctx.restore();
       }
+
+      for (let i = explosions.length - 1; i >= 0; i--) {
+        const exp = explosions[i];
+        exp.radius += (exp.maxRadius - exp.radius) * 0.22;
+        exp.alpha -= 0.034;
+
+        if (exp.alpha <= 0) {
+          explosions.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, exp.alpha);
+        ctx.translate(exp.x, exp.y);
+        ctx.globalCompositeOperation = 'lighter';
+
+        if (exp.kind === 'blade_slash') {
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius * 0.9, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (exp.kind === 'frost_shatter') {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (exp.kind === 'blackhole') {
+          ctx.fillStyle = '#7c3aed';
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius * 0.65, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (exp.kind === 'incinerate' || exp.kind === 'cannon_meteor') {
+          const fg = ctx.createRadialGradient(0, 0, 2, 0, 0, exp.radius);
+          fg.addColorStop(0, '#ffffff');
+          fg.addColorStop(0.3, '#f97316');
+          fg.addColorStop(0.7, '#ea580c');
+          fg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = fg;
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (exp.kind === 'lightning_strike') {
+          ctx.strokeStyle = '#67e8f9';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (exp.kind === 'divine_smite') {
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(-exp.radius * 0.15, -exp.radius * 1.2, exp.radius * 0.3, exp.radius * 2.4);
+          ctx.fillRect(-exp.radius * 1.2, -exp.radius * 0.15, exp.radius * 2.4, exp.radius * 0.3);
+        } else {
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, exp.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = '#ffffff';
+        exp.particles.forEach(pt => {
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+        });
+
+        ctx.restore();
+      }
+
+      if (explosions.length > 0) requestAnimationFrame(drawBoard);
     }
 
     function triggerNuclearExplosion(x, y, onComplete) {
@@ -1911,7 +2182,8 @@
 
     function runNuclearLoop() {
       if (!nuclearEffect) return;
-      nuclearEffect.progress += 0.02;
+
+      nuclearEffect.progress += 0.016;
       if (nuclearEffect.progress >= 1) {
         const cb = nuclearEffect.onComplete;
         nuclearEffect = null;
@@ -1919,6 +2191,7 @@
         endGameVictory(mySide, '장군 격파 승리!');
         return;
       }
+
       drawBoard();
       requestAnimationFrame(runNuclearLoop);
     }
@@ -1926,13 +2199,66 @@
     function renderNuclearExplosion() {
       if (!nuclearEffect) return;
       const p = nuclearEffect.progress;
+      const x = nuclearEffect.x;
+      const y = nuclearEffect.y;
       const w = parseFloat(canvas.style.width);
       const h = parseFloat(canvas.style.height);
 
       ctx.save();
-      ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p) * 0.85})`;
-      ctx.fillRect(0, 0, w, h);
+      if (p < 0.2) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${(1 - p / 0.2) * 0.92})`;
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.translate(x, y);
+
+      const groundShock = p * w * 0.88;
+      ctx.strokeStyle = `rgba(251, 191, 36, ${Math.max(0, 1 - p)})`;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.ellipse(0, 15, groundShock, groundShock * 0.35, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const stemHeight = p * (cellH * 5.0);
+      const stemGrad = ctx.createLinearGradient(0, 0, 0, -stemHeight);
+      stemGrad.addColorStop(0, '#78350f');
+      stemGrad.addColorStop(0.3, '#ea580c');
+      stemGrad.addColorStop(0.7, '#fef08a');
+      stemGrad.addColorStop(1, '#ffffff');
+
+      ctx.fillStyle = stemGrad;
+      ctx.beginPath();
+      ctx.moveTo(-cellW * 0.4 * (1 - p * 0.3), 10);
+      ctx.quadraticCurveTo(-cellW * 0.16, -stemHeight * 0.5, -cellW * 0.3, -stemHeight);
+      ctx.lineTo(cellW * 0.3, -stemHeight);
+      ctx.quadraticCurveTo(cellW * 0.16, -stemHeight * 0.5, cellW * 0.4 * (1 - p * 0.3), 10);
+      ctx.closePath();
+      ctx.fill();
+
       ctx.restore();
+    }
+
+    function spawnExplosion(x, y, scale = 1.0, kind = 'blade_slash') {
+      const count = Math.floor(36 * scale);
+      const particles = [];
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = (2.5 + Math.random() * 8) * scale;
+        particles.push({
+          x: 0, y: 0,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2 + Math.random() * 3.5
+        });
+      }
+
+      explosions.push({
+        x, y,
+        radius: 6,
+        maxRadius: (cellW * 1.1) * scale,
+        alpha: 1.0,
+        kind,
+        particles
+      });
     }
 
     function triggerBoardShake() {
@@ -1941,11 +2267,13 @@
       setTimeout(() => container.classList.remove('shake-active'), 650);
     }
 
-    /* ==========================================================================
-       7. 착수 및 대국 로직 (외통수 차단 & 경고음 연동)
-       ========================================================================== */
+    /* 착수 및 플레이어 조작 */
     canvas.addEventListener('click', e => {
       if (isGameOver || attackAnim || nuclearEffect) return;
+      if (isSpectator) {
+        showToast('👁️', '관전자 모드입니다. 대국 수읽기를 관전하세요.');
+        return;
+      }
       if (currentTurn !== mySide) return;
 
       const rect = canvas.getBoundingClientRect();
@@ -1961,51 +2289,31 @@
 
       if (clickedPiece && clickedPiece.side === mySide) {
         selectedPos = { r, c };
-        const raw = getRawMoves(r, c, board);
-
-        if (clickedPiece.type === 'king') {
-          validMoves = [];
-          invalidDeadlockMoves = [];
-
-          raw.forEach(target => {
-            if (isSuicideOrDeadlockMove(selectedPos, target, mySide)) {
-              invalidDeadlockMoves.push(target);
-            } else {
-              validMoves.push(target);
-            }
-          });
-        } else {
-          validMoves = raw;
-          invalidDeadlockMoves = [];
-        }
-
+        validMoves = getLegalMoves(r, c, board);
         drawBoard();
         return;
       }
 
       if (selectedPos) {
-        const isDeadlock = invalidDeadlockMoves.some(m => m.r === r && m.c === c);
-        if (isDeadlock) {
-          playDeadlockWarningSound();
-          showDeadlockAlert();
-          return;
-        }
-
         const targetMove = validMoves.find(m => m.r === r && m.c === c);
         if (targetMove) {
           executePlayerMove(selectedPos, targetMove);
           selectedPos = null;
           validMoves = [];
-          invalidDeadlockMoves = [];
+        } else {
+          const rawPossibilities = getRawMoves(selectedPos.r, selectedPos.c, board);
+          const isRawSquare = rawPossibilities.some(m => m.r === r && m.c === c);
+
+          if (isRawSquare) {
+            triggerIllegalMoveAlert();
+          } else {
+            selectedPos = null;
+            validMoves = [];
+            drawBoard();
+          }
         }
       }
     });
-
-    function showDeadlockAlert() {
-      const banner = document.getElementById('deadlock-alert-banner');
-      banner.classList.remove('hidden');
-      setTimeout(() => banner.classList.add('hidden'), 1800);
-    }
 
     function executePlayerMove(from, to) {
       saveBoardSnapshot();
@@ -2027,8 +2335,8 @@
       board[from.r][from.c] = null;
       lastMove = { from, to };
 
-      if (gameMode === 'p2p' && conn && conn.open) {
-        conn.send({
+      if (gameMode === 'p2p') {
+        broadcastToAllConnections({
           type: 'MOVE',
           from: { r: 9 - from.r, c: 8 - from.c },
           to: { r: 9 - to.r, c: 8 - to.c }
@@ -2052,81 +2360,52 @@
       }
     }
 
-    /* ==========================================================================
-       [요청 반영] 물리기 시스템 (30초 제한시간 + 거절 시에도 횟수 차감 + 30초 무응답 시 자동 승낙)
-       ========================================================================== */
-    let undoTimerInterval = null;
-    let undoTimeLeft = 30;
-
+    /* 물리기 파이프라인 */
     function requestUndoMove() {
-      if (isGameOver) return;
+      if (isGameOver || isSpectator) return;
       if (myUndoRemaining <= 0) {
-        alert('이번 판의 물리기 횟수(최대 2회)를 모두 소진했습니다[cite: 1].');
+        showToast('⚠', '물리기 기회(최대 2회)를 모두 소진했습니다.');
         return;
       }
       if (boardHistory.length < 2) {
-        alert('물릴 수 있는 이전 수가 없습니다[cite: 1].');
+        showToast('⚠️', '물릴 수 있는 이전 수가 없습니다.');
         return;
       }
-
-      // [요청 반영] 물리기를 시도하는 즉시 내 횟수 1회 즉시 차감
-      myUndoRemaining--;
-      updateUndoButtonUI();
 
       if (gameMode === 'ai') {
+        myUndoRemaining--;
+        updateUndoButtonUI();
         executeUndoApply();
-        alert('물리기가 완료되었습니다[cite: 1].');
+        showToast('↩️', '물리기가 승낙되어 한 수 물렀습니다.');
         return;
       }
+
+      myUndoRemaining--;
+      updateUndoButtonUI();
 
       if (conn && conn.open) {
         conn.send({
           type: 'UNDO_REQUEST',
           sender: customNickname || myChar.name
         });
-        // [요청 반영] 로딩창(알림창)이 뜨지 않고 메시지 창이 바로 닫힌 뒤 상대의 응답 대기 상태로 전환
-        alert('상대방에게 물리기 요청을 보냈습니다. (상대방 응답 대기 30초)[cite: 1]');
+        showToast('📡', '물리기를 요청했습니다. (거절되어도 기회 1회 차감)', 2500);
       }
     }
 
-    function startUndoModalTimer() {
-      clearInterval(undoTimerInterval);
-      undoTimeLeft = 30;
-      document.getElementById('undo-modal-timer').innerText = `${undoTimeLeft}s`;
-      document.getElementById('undo-confirm-modal').classList.remove('hidden');
-
-      undoTimerInterval = setInterval(() => {
-        undoTimeLeft--;
-        document.getElementById('undo-modal-timer').innerText = `${undoTimeLeft}s`;
-
-        if (undoTimeLeft <= 0) {
-          clearInterval(undoTimerInterval);
-          // [요청 반영] 30초 안에 결정을 못 내리면 자동 승낙 처리
-          respondUndo(true, true);
-        }
-      }, 1000);
-    }
-
-    function respondUndo(accepted, isAuto = false) {
-      clearInterval(undoTimerInterval);
+    function respondUndo(accepted) {
       document.getElementById('undo-confirm-modal').classList.add('hidden');
-
       if (gameMode === 'p2p' && conn && conn.open) {
         conn.send({
           type: 'UNDO_RESPONSE',
-          accepted: accepted
+          accepted: accepted,
+          responder: customNickname || myChar.name
         });
       }
-
       if (accepted) {
         executeUndoApply();
-        if (isAuto) {
-          alert('30초 초과로 물리기가 자동으로 승낙되었습니다[cite: 1]!');
-        } else {
-          alert('물리기가 수락되어 한 수 물렀습니다[cite: 1].');
-        }
+        showToast('🤝', '상대방의 물리기를 허락했습니다.');
       } else {
-        alert('상대방이 물리기 요청을 거절했습니다. (이미 횟수는 차감되었습니다)[cite: 1]');
+        showToast('🚫', '상대방의 물리기 요청을 거절했습니다.');
       }
     }
 
@@ -2142,7 +2421,6 @@
         lastMove = prev.lastMove ? { ...prev.lastMove } : null;
         selectedPos = null;
         validMoves = [];
-        invalidDeadlockMoves = [];
         resetTurnTimer();
         drawBoard();
         updateUI();
@@ -2158,24 +2436,29 @@
       const isMeWinner = (winnerSide === mySide);
       const winnerName = (winnerSide === 'cho') ? '초(楚)' : '한(漢)';
 
-      if (isMeWinner) {
-        playFanfare();
-        document.getElementById('mate-title-text').innerText = '👑 승 리 👑';
-        document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-amber-300';
+      if (!isSpectator) {
+        if (isMeWinner) {
+          playFanfare();
+          document.getElementById('mate-title-text').innerText = '👑 승 리 👑';
+          document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-amber-300';
+        } else {
+          playDefeatSound();
+          document.getElementById('mate-title-text').innerText = '💀 패 배 💀';
+          document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-rose-500';
+        }
       } else {
-        playDefeatSound();
-        document.getElementById('mate-title-text').innerText = '💀 패 배 💀';
-        document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-rose-500';
+        document.getElementById('mate-title-text').innerText = '🏆 대 국 종 료 🏆';
+        document.getElementById('mate-title-text').className = 'text-2xl font-black title-font text-yellow-300';
       }
 
-      let desc = reasonMsg || `${winnerName} 진영의 완전한 승리입니다[cite: 1]!`;
+      let desc = reasonMsg || `${winnerName} 진영의 완전한 승리입니다!`;
       document.getElementById('mate-winner-text').innerText = desc;
       
       const banner = document.getElementById('mate-banner');
       banner.classList.remove('hidden');
 
-      if (gameMode === 'p2p' && conn && conn.open) {
-        conn.send({
+      if (gameMode === 'p2p') {
+        broadcastToAllConnections({
           type: 'GAME_OVER',
           winnerSide: winnerSide,
           reason: reasonMsg
@@ -2185,23 +2468,23 @@
     }
 
     function requestResign() {
-      if (isGameOver) return;
-      if (confirm('정말 기권하시겠습니까?[cite: 1]')) {
-        const oppSide = (mySide === 'cho') ? 'han' : 'cho';
-        if (gameMode === 'p2p' && conn && conn.open) {
-          conn.send({
-            type: 'RESIGN',
-            resignerSide: mySide
-          });
-        }
-        endGameVictory(oppSide, '내가 기권하여 패배했습니다[cite: 1].');
+      if (isGameOver || isSpectator) return;
+      const oppSide = (mySide === 'cho') ? 'han' : 'cho';
+
+      if (gameMode === 'p2p' && conn && conn.open) {
+        conn.send({
+          type: 'RESIGN',
+          resignerSide: mySide
+        });
       }
+      endGameVictory(oppSide, '내가 기권하여 패배했습니다.');
     }
 
     function requestRematch() {
+      if (isSpectator) return;
       if (gameMode === 'p2p' && conn && conn.open) {
         conn.send({ type: 'REMATCH_REQUEST' });
-        document.getElementById('mate-winner-text').innerText = '상대방에게 재대결을 요청했습니다[cite: 1]...';
+        showToast('🔄', '상대방에게 재대결을 요청했습니다...');
       } else {
         startDiceRollSequence();
       }
@@ -2215,185 +2498,209 @@
     function returnToLobby() {
       if (conn) {
         try { conn.send({ type: 'LEAVE_ROOM' }); } catch(e){}
-        try { conn.close(); } catch(e){}
+        conn.close();
         conn = null;
       }
+      spectatorConnections.forEach(sc => {
+        try { sc.close(); } catch(e){}
+      });
+      spectatorConnections.length = 0;
+
       if (peer) {
-        try { peer.destroy(); } catch(e){}
+        peer.destroy();
         peer = null;
       }
-
-      isHost = false;
-      hostRoomCode = '';
-      savedGuestLayout = 'ms_sm';
-      selectedPos = null;
-      validMoves = [];
-      invalidDeadlockMoves = [];
-      boardHistory = [];
       isGameOver = true;
+      isSpectator = false;
       clearInterval(timerInterval);
-
-      if (window.history && window.history.replaceState) {
-        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-      }
-      const codeInput = document.getElementById('join-code-input');
-      if (codeInput) codeInput.value = '';
 
       document.getElementById('undo-confirm-modal').classList.add('hidden');
       document.getElementById('mate-banner').classList.add('hidden');
       document.getElementById('dice-modal').classList.add('hidden');
       document.getElementById('host-waiting-modal').classList.add('hidden');
-      document.getElementById('battle-challenge-modal').classList.add('hidden');
       document.getElementById('mode-modal').classList.remove('hidden');
+      document.getElementById('spectator-center-box').classList.add('hidden');
 
-      switchModeTab('p2p');
+      configureUIPanelForRole();
       broadcastPresence();
     }
 
-    /* ==========================================================================
-       8. 프로기사 기보 및 기물 가치 AI 엔진
-       ========================================================================== */
-    const PIECE_VALS = {
-      cha: 1300,
-      po: 700,
-      ma: 500,
-      sang: 300,
-      sa: 300,
-      jol: 200,
-      byung: 200,
-      king: 100000
-    };
+    /* COM AI 엔진 */
+    const PIECE_VALS = { cha: 130, po: 75, ma: 50, sang: 32, sa: 18, jol: 20, byung: 20, king: 100000 };
 
     function cloneBoard(b) {
       return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
     }
 
-    const PRO_OPENING_BOOK = [
-      { turnCount: 0, from: { r: 0, c: 1 }, to: { r: 2, c: 2 } },
-      { turnCount: 0, from: { r: 0, c: 7 }, to: { r: 2, c: 6 } },
-      { turnCount: 1, from: { r: 2, c: 1 }, to: { r: 2, c: 4 } },
-      { turnCount: 1, from: { r: 2, c: 7 }, to: { r: 2, c: 4 } },
-      { turnCount: 2, from: { r: 3, c: 4 }, to: { r: 4, c: 4 } },
-      { turnCount: 2, from: { r: 3, c: 2 }, to: { r: 4, c: 2 } }
-    ];
-
-    function evaluateMoveSafetyAndGain(mover, from, to, currentBoard, aiSide) {
-      const captured = currentBoard[to.r][to.c];
-      const gain = captured ? PIECE_VALS[captured.type] : 0;
-      const moverVal = PIECE_VALS[mover.type];
-
-      const simB = cloneBoard(currentBoard);
-      simB[to.r][to.c] = simB[from.r][from.c];
-      simB[from.r][from.c] = null;
-
-      const enemySide = (aiSide === 'cho') ? 'han' : 'cho';
-      let willBeCaptured = false;
-
+    function isSquareAttackedBy(targetR, targetC, attackerSide, b) {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          if (simB[r][c] && simB[r][c].side === enemySide) {
-            const oppMoves = getRawMoves(r, c, simB);
-            if (oppMoves.some(m => m.r === to.r && m.c === to.c)) {
-              willBeCaptured = true;
-              break;
-            }
+          if (b[r][c] && b[r][c].side === attackerSide) {
+            const moves = getRawMoves(r, c, b);
+            if (moves.some(m => m.r === targetR && m.c === targetC)) return true;
           }
         }
-        if (willBeCaptured) break;
       }
-
-      if (willBeCaptured) {
-        return gain - moverVal;
-      }
-
-      let score = gain;
-      if (to.r >= 3 && to.r <= 6 && to.c >= 2 && to.c <= 6) {
-        score += 15;
-      }
-      return score;
+      return false;
     }
 
     function makeAIMove() {
       if (isGameOver) return;
       const aiSide = (mySide === 'cho') ? 'han' : 'cho';
+      const playerSide = mySide;
       const allMoves = [];
 
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if (board[r][c] && board[r][c].side === aiSide) {
-            const ms = getRawMoves(r, c, board);
-            ms.forEach(to => {
-              if (board[r][c].type === 'king' && isSuicideOrDeadlockMove({ r, c }, to, aiSide)) {
-                return;
-              }
-              allMoves.push({ from: { r, c }, to, piece: board[r][c] });
-            });
+            const ms = getLegalMoves(r, c, board);
+            ms.forEach(to => allMoves.push({ from: { r, c }, to, piece: board[r][c] }));
           }
         }
       }
       if (allMoves.length === 0) return;
 
-      const currentTurnNumber = boardHistory.length;
-      let chosenMove = null;
+      let chosen = null;
 
-      if (currentTurnNumber <= 6 && (aiDifficulty === 'expert' || aiDifficulty === 'medium')) {
-        const bookMatches = PRO_OPENING_BOOK.filter(bMove => {
-          return allMoves.some(m => 
-            m.from.r === bMove.from.r && m.from.c === bMove.from.c &&
-            m.to.r === bMove.to.r && m.to.c === bMove.to.c
-          );
-        });
+      if (aiDifficulty === 'novice1') {
+        chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+      } else if (aiDifficulty === 'novice2') {
+        const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c]);
+        chosen = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
+      } else {
+        const scoredMoves = [];
 
-        if (bookMatches.length > 0) {
-          const pick = bookMatches[Math.floor(Math.random() * bookMatches.length)];
-          chosenMove = allMoves.find(m => 
-            m.from.r === pick.from.r && m.from.c === pick.from.c &&
-            m.to.r === pick.to.r && m.to.c === pick.to.c
-          );
+        for (const m of allMoves) {
+          let score = 0;
+          const target = board[m.to.r][m.to.c];
+          const myPieceType = m.piece.type;
+
+          if (target) {
+            score += PIECE_VALS[target.type] * 3.0;
+            if (target.type === 'king') score += 500000;
+          }
+
+          const simulatedBoard = cloneBoard(board);
+          simulatedBoard[m.to.r][m.to.c] = simulatedBoard[m.from.r][m.from.c];
+          simulatedBoard[m.from.r][m.from.c] = null;
+
+          const isAttacked = isSquareAttackedBy(m.to.r, m.to.c, playerSide, simulatedBoard);
+          if (isAttacked) {
+            if (!target || PIECE_VALS[target.type] < PIECE_VALS[myPieceType]) {
+              score -= PIECE_VALS[myPieceType] * 2.2;
+            }
+          }
+
+          if (isKingInCheck(playerSide, simulatedBoard)) score += 120;
+          if (myPieceType === 'cha') score += 25;
+          if (myPieceType === 'po') score += 20;
+
+          score += (Math.random() * 8);
+          scoredMoves.push({ move: m, score });
         }
+
+        scoredMoves.sort((a, b) => b.score - a.score);
+        chosen = scoredMoves[0].move;
       }
 
-      if (!chosenMove) {
-        let scoredMoves = allMoves.map(m => {
-          let score = evaluateMoveSafetyAndGain(m.piece, m.from, m.to, board, aiSide);
-          return { ...m, score };
-        });
-
-        if (aiDifficulty === 'expert') {
-          scoredMoves.sort((a, b) => b.score - a.score);
-          chosenMove = scoredMoves[0];
-        } else if (aiDifficulty === 'medium') {
-          const filtered = scoredMoves.filter(m => m.score >= -100);
-          const candidates = filtered.length > 0 ? filtered : scoredMoves;
-          candidates.sort((a, b) => b.score - a.score);
-          chosenMove = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
-        } else {
-          const filtered = scoredMoves.filter(m => m.score >= -400);
-          const candidates = filtered.length > 0 ? filtered : scoredMoves;
-          chosenMove = candidates[Math.floor(Math.random() * candidates.length)];
-        }
-      }
-
-      if (!chosenMove) chosenMove = allMoves[0];
+      if (!chosen) chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
 
       saveBoardSnapshot();
-      const mover = board[chosenMove.from.r][chosenMove.from.c];
-      const captured = board[chosenMove.to.r][chosenMove.to.c];
+      const mover = board[chosen.from.r][chosen.from.c];
+      const captured = board[chosen.to.r][chosen.to.c];
 
       if (captured) {
-        triggerCinematicAttack(mover, chosenMove.from, chosenMove.to, captured, () => {
-          finalizeMove(chosenMove.from, chosenMove.to, captured);
+        triggerCinematicAttack(mover, chosen.from, chosen.to, captured, () => {
+          finalizeMove(chosen.from, chosen.to, captured);
         });
       } else {
         playPiecePlaceSound();
-        finalizeMove(chosenMove.from, chosenMove.to, captured);
+        finalizeMove(chosen.from, chosen.to, captured);
       }
     }
 
-    /* ==========================================================================
-       9. 도발 엔진
-       ========================================================================== */
+    /* 관전자 훈수/응원 시스템 & 장기판 정중앙 배너 */
+    function setSpectatorTargetSide(side) {
+      spectatorTargetSide = side;
+      document.getElementById('spec-side-cho').className = (side === 'cho') 
+        ? 'px-2.5 py-1 rounded-xl bg-emerald-600 text-white border border-emerald-400 font-black shadow transition active:scale-95'
+        : 'px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:text-white transition active:scale-95';
+
+      document.getElementById('spec-side-han').className = (side === 'han') 
+        ? 'px-2.5 py-1 rounded-xl bg-rose-600 text-white border border-rose-400 font-black shadow transition active:scale-95'
+        : 'px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:text-white transition active:scale-95';
+
+      document.getElementById('spec-side-neutral').className = (side === 'neutral') 
+        ? 'px-2.5 py-1 rounded-xl bg-amber-600 text-white border border-amber-400 font-black shadow transition active:scale-95'
+        : 'px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold hover:text-white transition active:scale-95';
+
+      showToast('🎯', `응원 진영: [${side === 'cho' ? '초나라 🟢' : (side === 'han' ? '한나라 🔴' : '중립 🍿')}] 설정됨`);
+    }
+
+    function sendSpectatorQuickChant(msg) {
+      sendSpectatorMessageInternal(msg);
+    }
+
+    function sendSpectatorCustomChat() {
+      const input = document.getElementById('spectator-msg-input');
+      const text = input.value.trim();
+      if (!text) return;
+      sendSpectatorMessageInternal(text);
+      input.value = '';
+    }
+
+    function sendSpectatorMessageInternal(text) {
+      const sender = customNickname || '관전자';
+      const targetSide = spectatorTargetSide;
+
+      displaySpectatorCenterMessage(sender, targetSide, text);
+
+      broadcastToAllConnections({
+        type: 'SPECTATOR_MSG',
+        sender,
+        targetSide,
+        msg: text
+      });
+    }
+
+    let specCenterTimeout = null;
+
+    function displaySpectatorCenterMessage(sender, targetSide, text) {
+      const box = document.getElementById('spectator-center-box');
+      const senderEl = document.getElementById('spec-sender-display');
+      const targetTagEl = document.getElementById('spec-target-tag');
+      const contentEl = document.getElementById('spec-content-text');
+
+      senderEl.innerText = `[관전] ${sender}`;
+      contentEl.innerText = `"${text}"`;
+
+      if (targetSide === 'cho') {
+        targetTagEl.innerText = '초나라 응원 🟢';
+        targetTagEl.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-600/90 text-emerald-100 border border-emerald-400 shadow';
+        contentEl.className = 'text-base sm:text-2xl font-black tracking-tight leading-relaxed break-keep text-emerald-300 text-stroke-spec-cho';
+      } else if (targetSide === 'han') {
+        targetTagEl.innerText = '한나라 응원 🔴';
+        targetTagEl.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-600/90 text-rose-100 border border-rose-400 shadow';
+        contentEl.className = 'text-base sm:text-2xl font-black tracking-tight leading-relaxed break-keep text-rose-300 text-stroke-spec-han';
+      } else {
+        targetTagEl.innerText = '중립 관전 🍿';
+        targetTagEl.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-600/90 text-amber-100 border border-amber-400 shadow';
+        contentEl.className = 'text-base sm:text-2xl font-black tracking-tight leading-relaxed break-keep text-amber-300 text-stroke-spec-neutral';
+      }
+
+      playTone(480, 'sine', 0.22, 0.35);
+
+      box.classList.remove('hidden', 'animate-spec-float');
+      void box.offsetWidth;
+      box.classList.add('animate-spec-float');
+
+      if (specCenterTimeout) clearTimeout(specCenterTimeout);
+      specCenterTimeout = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 4200);
+    }
+
+    /* 플레이어 도발 시스템 */
     function getKingPosition(targetSide) {
       if (!board || board.length === 0) return null;
       for (let r = 0; r < ROWS; r++) {
@@ -2408,7 +2715,7 @@
     }
 
     function triggerCooldownTaunt(cat) {
-      if (isTauntCooldown) return;
+      if (isTauntCooldown || isSpectator) return;
       isTauntCooldown = true;
 
       const overlays = document.querySelectorAll('.cooldown-overlay');
@@ -2433,24 +2740,56 @@
     }
 
     function generateInfiniteModularTaunt(cat) {
+      const oppId = oppChar.id;
       const oppName = (gameMode === 'ai') ? 'COM' : oppChar.name;
       const myKingName = myChar.name;
       const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-      const intro = ["어이쿠,", "세상에나,", "풉!", "아이고~", "실화냐?", "야 이 사람아,"];
-      const outro = ["😏", "🤣", "손 떼지 마라!", "외통수다 인마!", "어휴 ㅉㅉ"];
+      const intro = ["어이쿠,", "세상에나,", "풉!", "아이고~", "어허~", "실화냐?", "진짜 레전드네,"];
+      const outro = ["😏", "🤣", "푸하하~", "손 떼지 마라!", "외통수다 인마!", "눈물 닦아라~ 👋"];
 
-      const phrases = {
-        mock: [`${oppName}야 장기판보다 네 뱃살이 먼저 터지겠다!`, `기물 잃을 때마다 피눈물 흘리네!`],
-        fact: [`방구석에서 게임만 하더니 장기 실력도 심각하네!`, `장기판에서 길 잃고 미아 됐네!`],
-        rush: [`장고 때리지 말고 빨리 둬!`, `오늘 안에 둘 수는 있냐?`]
+      const modularParts = {
+        semini: {
+          mock: [`${oppName}야 장기판보다 네 뱃살이 먼저 터지겠다!`, `고도비만 뚱땡이답게 장기알도 육중하게 굴리네~`],
+          fact: [`배 나와서 발끝도 안 보이는데 장기판 길목이 보이겠냐?`, `통장 잔고 0원에 체지방률 40% 찍은 세미니 외통수 컷!`],
+          rush: [`뚱땡아 숨차냐? 장고 때리지 말고 빨리 둬!`, `배달 음식 도착하기 전에 한 수라도 둬라!`]
+        },
+        honggu: {
+          mock: [`${oppName}야 장기알 아끼는 꼬라지가 딱 스크루지네!`, `돈 아까워서 외통수 맞고도 기권 못 누르는 구두쇠!`],
+          fact: [`장기판 여야 합의가 안 돼서 진 거냐? 남 탓 장인!`, `네 장기판은 탄핵 직전이네!`],
+          rush: [`뉴스 댓글 쓰러 갈 시간이다 1초 컷으로 둬라!`, `짠돌이 영감 어서 둬!`]
+        },
+        changwon: {
+          mock: [`창궈니야 차 바꿀 돈으로 장기 학원이나 등록해라!`, `차는 미친듯이 바꾸더니 장기 수는 똥차네!`],
+          fact: [`창궈니 카푸어답게 기물 다 털리고 껍데기만 남았네!`, `신차 출고는 칼같이 하면서 장기는 왜 이리 굼뜨냐!`],
+          rush: [`창궈니야 시승 예약 늦겠다 빨리 둬라!`, `기변병 걸린 속도 반만 따라와 봐라!`]
+        },
+        hyeonjo: {
+          mock: [`현조야 장군 맞았는데 엄마한테 전화해서 물어보고 둘래?`, `눈치 밥 말아먹어서 헤벌레하고 있네!`],
+          fact: [`마마보이라 기물 하나 잃을 때마다 턱 빠지게 놀라는 중!`, `유리 멘탈 현조 외통수!`],
+          rush: [`현조야 엄마가 밥 먹으래~ 질질 끌지 말고 빨리 둬라!`, `소심하게 손 떨지 말고 그냥 둬!`]
+        },
+        hadori: {
+          mock: [`돌돌아 머리는 장식이냐? 생각이라는 걸 해봐라!`, `방콕 야시장 가서 망고나 팔아라 사와디캅!`],
+          fact: [`하도리 무식해서 장기 룰도 잘 모르는 거 팩트 아니냐?`, `장기판에서 길 잃고 미아 됐네!`],
+          rush: [`돌돌아 생각할 뇌도 없으면서 왜 장고를 때리냐?`, `망고 썩는다 빨리빨리 둬라!`]
+        }
       };
 
-      const finalSentence = `${pick(intro)} ${pick(phrases[cat] || phrases.mock)} ${pick(outro)}`;
+      const charPool = (gameMode === 'ai') ? null : (modularParts[oppId] ? modularParts[oppId][cat] : null);
+      let finalSentence = '';
+
+      if (charPool) {
+        finalSentence = `${pick(intro)} ${pick(charPool)} ${pick(outro)}`;
+      } else {
+        const comMock = [`COM아 계산 회로에 과부하 걸렸냐? 💻`, `인공지능이라더니 렉 걸린 거 실화냐? 🤖`];
+        finalSentence = `${pick(intro)} ${pick(comMock)} ${pick(outro)}`;
+      }
+
       showDramaticTauntPopup(myKingName, `"${finalSentence}"`, true);
 
-      if (gameMode === 'p2p' && conn && conn.open) {
-        conn.send({
+      if (gameMode === 'p2p') {
+        broadcastToAllConnections({
           type: 'TAUNT',
           sender: myKingName,
           msg: `"${finalSentence}"`
@@ -2482,16 +2821,22 @@
         const ky = offsetTop + padY + kingPos.r * cellH;
 
         box.style.left = `${kx}px`;
-        box.style.top = kingPos.r >= 5 ? `${Math.max(50, ky - cellH * 0.9)}px` : `${Math.min(containerRect.height - 50, ky + cellH * 0.9)}px`;
+
+        if (kingPos.r >= 5) {
+          box.style.top = `${Math.max(50, ky - cellH * 0.9)}px`;
+        } else {
+          box.style.top = `${Math.min(containerRect.height - 50, ky + cellH * 0.9)}px`;
+        }
       } else {
         box.style.left = '50%';
         box.style.top = '50%';
       }
 
       playTone(520, 'triangle', 0.25, 0.4);
-      box.classList.remove('hidden');
 
+      box.classList.remove('hidden');
       if (tauntTimeout) clearTimeout(tauntTimeout);
+      
       tauntTimeout = setTimeout(() => {
         box.classList.add('hidden');
       }, 4000);
@@ -2532,14 +2877,14 @@
         myTimeouts++;
         document.getElementById('my-status-badge').innerText = `경고 ${myTimeouts}/3`;
         if (myTimeouts > 3) {
-          endGameVictory(mySide === 'cho' ? 'han' : 'cho', '생각 시간 3회 초과로 시간패했습니다[cite: 1].');
+          endGameVictory(mySide === 'cho' ? 'han' : 'cho', '생각 시간 3회 초과로 시간패했습니다.');
           return;
         }
       } else {
         oppTimeouts++;
         document.getElementById('opp-status-badge').innerText = `경고 ${oppTimeouts}/3`;
         if (oppTimeouts > 3) {
-          endGameVictory(mySide, '상대방이 생각 시간 3회 초과로 시간패했습니다[cite: 1].');
+          endGameVictory(mySide, '상대방이 생각 시간 3회 초과로 시간패했습니다.');
           return;
         }
       }
@@ -2550,7 +2895,7 @@
     }
 
     function requestPass() {
-      if (currentTurn !== mySide || isGameOver) return;
+      if (currentTurn !== mySide || isGameOver || isSpectator) return;
       saveBoardSnapshot();
       currentTurn = (currentTurn === 'cho') ? 'han' : 'cho';
       resetTurnTimer();
@@ -2559,9 +2904,18 @@
       if (gameMode === 'ai' && currentTurn !== mySide) setTimeout(makeAIMove, 600);
     }
 
-    /* ==========================================================================
-       10. 캐릭터 및 P2P 설정
-       ========================================================================== */
+    /* P2P 브로드캐스트 & 네트워크 핸들링 */
+    function broadcastToAllConnections(payload) {
+      if (conn && conn.open) {
+        try { conn.send(payload); } catch(e){}
+      }
+      spectatorConnections.forEach(sc => {
+        if (sc && sc.open) {
+          try { sc.send(payload); } catch(e){}
+        }
+      });
+    }
+
     function renderCharSelector() {
       const container = document.getElementById('char-selection-container');
       container.innerHTML = '';
@@ -2572,9 +2926,8 @@
           isMine ? 'border-amber-400 bg-amber-950/60 scale-105 shadow-[0_0_14px_rgba(251,191,36,0.6)]' : 'border-slate-700 bg-slate-800'
         }`;
         btn.onclick = () => {
-          isCharManuallyPicked = true;
           myChar = char;
-          saveCurrentNickname();
+          localStorage.setItem('jg_saved_char', myChar.id);
           oppChar = CHARACTERS.find(c => c.id !== char.id) || CHARACTERS[1];
           renderCharSelector();
           broadcastPresence();
@@ -2603,14 +2956,9 @@
       gameMode = tab;
       document.getElementById('tab-p2p').className = tab === 'p2p' ? 'py-2 text-xs font-bold rounded-xl bg-blue-600 text-white shadow transition' : 'py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition';
       document.getElementById('tab-ai').className = tab === 'ai' ? 'py-2 text-xs font-bold rounded-xl bg-blue-600 text-white shadow transition' : 'py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition';
-      
       document.getElementById('p2p-subpanel').classList.toggle('hidden', tab !== 'p2p');
       document.getElementById('ai-subpanel').classList.toggle('hidden', tab !== 'ai');
-      
-      const directBtn = document.getElementById('start-direct-btn');
-      if (directBtn) {
-        directBtn.classList.toggle('hidden', tab === 'p2p');
-      }
+      document.getElementById('start-direct-btn').classList.toggle('hidden', tab === 'p2p');
     }
 
     function setAiDiff(diff) {
@@ -2622,9 +2970,9 @@
     }
 
     function openHostWaitingRoom() {
-      saveCurrentNickname();
       hostRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
       isHost = true;
+      isSpectator = false;
       gameMode = 'p2p';
       broadcastPresence();
 
@@ -2632,66 +2980,105 @@
       document.getElementById('host-waiting-modal').classList.remove('hidden');
       document.getElementById('host-room-code').innerText = hostRoomCode;
 
-      if (peer) peer.destroy();
       peer = new Peer('sd-jg-' + hostRoomCode);
 
-      peer.on('connection', c => {
-        conn = c;
-        bindP2PEvents();
+      peer.on('connection', incomingConn => {
+        if (!conn || !conn.open) {
+          conn = incomingConn;
+          bindPlayerEvents(conn);
+        } else {
+          spectatorConnections.push(incomingConn);
+          bindSpectatorHubEvents(incomingConn);
+          setTimeout(() => {
+            incomingConn.send({
+              type: 'SYNC_GAME_STATE_FOR_SPECTATOR',
+              board,
+              currentTurn,
+              lastMove,
+              timeLimit,
+              hostChar: myChar,
+              hostNick: customNickname || myChar.name,
+              oppChar: oppChar,
+              oppNick: document.getElementById('opp-name').innerText
+            });
+          }, 300);
+        }
       });
     }
 
     function cancelHostWaiting() {
       if (peer) peer.destroy();
       isHost = false;
-      hostRoomCode = '';
       broadcastPresence();
       document.getElementById('host-waiting-modal').classList.add('hidden');
       document.getElementById('mode-modal').classList.remove('hidden');
     }
 
-    function joinRoomByCode(code) {
-      if (!code || code.length !== 4) return alert('방 코드 4자리를 정확히 입력해주세요.');
-      saveCurrentNickname();
+    function joinRoomAsPlayer() {
+      const code = document.getElementById('join-code-input').value.trim();
+      if (code.length !== 4) return showToast('⚠️', '방 코드 4자리를 정확히 입력해주세요.');
 
       isHost = false;
-      hostRoomCode = code;
+      isSpectator = false;
       gameMode = 'p2p';
-
-      document.getElementById('mode-modal').classList.add('hidden');
-      document.getElementById('waiting-status-title').innerText = '호스트 대기방 연결 중...';
-      document.getElementById('waiting-status-desc').innerText = `코드 [${code}] 방에 입장하고 있습니다.`;
-      document.getElementById('host-room-code').innerText = code;
-      document.getElementById('host-waiting-modal').classList.remove('hidden');
-
-      if (peer) peer.destroy();
       peer = new Peer();
 
       peer.on('open', () => {
         conn = peer.connect('sd-jg-' + code);
-        bindP2PEvents();
-      });
-
-      peer.on('error', (err) => {
-        alert('방에 접속할 수 없습니다. 방 코드가 만료되었거나 이미 종료된 방입니다[cite: 1].');
-        returnToLobby();
+        bindPlayerEvents(conn);
       });
     }
 
-    function bindP2PEvents() {
-      conn.on('open', () => {
+    function joinRoomAsSpectator() {
+      const code = document.getElementById('join-code-input').value.trim();
+      if (code.length !== 4) return showToast('⚠️', '방 코드 4자리를 정확히 입력해주세요.');
+
+      isHost = false;
+      isSpectator = true;
+      gameMode = 'p2p';
+      peer = new Peer();
+
+      peer.on('open', () => {
+        conn = peer.connect('sd-jg-' + code);
+        bindSpectatorClientEvents(conn);
+        showToast('👁️', '관전자로 대국실에 접속 중...');
+      });
+    }
+
+    function configureUIPanelForRole() {
+      const playerPanel = document.getElementById('player-controls-panel');
+      const specPanel = document.getElementById('spectator-controls-panel');
+      const specTag = document.getElementById('spectator-view-tag');
+      const rematchBtn = document.getElementById('rematch-btn');
+
+      if (isSpectator) {
+        playerPanel.classList.add('hidden');
+        specPanel.classList.remove('hidden');
+        specTag.classList.remove('hidden');
+        rematchBtn.classList.add('hidden');
+      } else {
+        playerPanel.classList.remove('hidden');
+        specPanel.classList.add('hidden');
+        specTag.classList.add('hidden');
+        rematchBtn.classList.remove('hidden');
+      }
+    }
+
+    function bindPlayerEvents(targetConn) {
+      targetConn.on('open', () => {
         if (isHost) {
           playFanfare();
           const hostCard = document.getElementById('host-card');
           hostCard.classList.add('neon-pulse', 'border-emerald-500');
           document.getElementById('waiting-status-title').innerText = '도전자 접속 완료! 🎉';
+          document.getElementById('waiting-status-title').className = 'text-xl font-black text-amber-300 title-font animate-bounce';
           document.getElementById('joined-guest-info').classList.remove('hidden');
 
           const startBtn = document.getElementById('host-start-battle-btn');
           startBtn.disabled = false;
           startBtn.className = 'flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg animate-pulse';
 
-          conn.send({
+          targetConn.send({
             type: 'HOST_INFO',
             char: myChar,
             layout: document.getElementById('layout-select').value,
@@ -2701,111 +3088,157 @@
         }
       });
 
-      conn.on('data', data => {
-        if (data.type === 'HOST_INFO') {
-          oppChar = data.char;
-          timeLimit = data.time;
-          initBoardLayout(document.getElementById('layout-select').value, data.layout);
-          document.getElementById('mode-modal').classList.add('hidden');
-          document.getElementById('waiting-status-title').innerText = '호스트와 연결되었습니다! 곧 주사위를 던집니다.';
-          resizeCanvas();
-          updateUI(data.nickname);
-
-        } else if (data.type === 'START_DICE') {
-          savedGuestLayout = data.guestLayout;
-          startDiceRollSequence();
-
-        } else if (data.type === 'DICE_RESULT') {
-          myDiceVal = data.guestVal;
-          oppDiceVal = data.hostVal;
-          renderDiceResults();
-
-        } else if (data.type === 'DICE_SIDE_CHOSEN') {
-          mySide = data.otherSide;
-          finalizeGameStartAfterDice();
-
-        } else if (data.type === 'MOVE') {
-          saveBoardSnapshot();
-          const from = data.from;
-          const to = data.to;
-          const mover = board[from.r][from.c];
-          const captured = board[to.r][to.c];
-
-          if (captured) {
-            triggerCinematicAttack(mover, from, to, captured, () => {
-              finalizeMove(from, to, captured);
-            });
-          } else {
-            playPiecePlaceSound();
-            finalizeMove(from, to, captured);
-          }
-
-        } else if (data.type === 'UNDO_REQUEST') {
-          // [요청 반영] 상대가 물리기 요청을 보냈을 때 30초 타이머와 함께 모달 팝업 오픈
-          startUndoModalTimer();
-
-        } else if (data.type === 'UNDO_RESPONSE') {
-          if (data.accepted) {
-            executeUndoApply();
-            alert('상대방이 물리기를 승낙했습니다[cite: 1]!');
-          } else {
-            alert('상대방이 물리기 요청을 거절했습니다[cite: 1].');
-          }
-
-        } else if (data.type === 'TAUNT') {
-          showDramaticTauntPopup(data.sender, data.msg, false);
-
-        } else if (data.type === 'RESIGN') {
-          endGameVictory(mySide, '상대방이 기권하여 승리했습니다! 🎉');
-
-        } else if (data.type === 'GAME_OVER') {
-          endGameVictory(data.winnerSide, data.reason);
-
-        } else if (data.type === 'REMATCH_REQUEST') {
-          if (confirm('상대방이 재대결을 신청했습니다! 수락하시겠습니까?[cite: 1]')) {
-            conn.send({ type: 'REMATCH_ACCEPT' });
-            acceptRematch();
-          }
-
-        } else if (data.type === 'REMATCH_ACCEPT') {
-          acceptRematch();
-
-        } else if (data.type === 'LEAVE_ROOM') {
-          alert('상대방이 방을 나갔습니다[cite: 1].');
-          returnToLobby();
-        }
+      targetConn.on('data', data => {
+        handleSharedNetworkData(data);
       });
 
-      conn.on('close', () => {
+      targetConn.on('close', () => {
         if (!isGameOver) {
-          alert('상대방과의 연결이 끊어졌습니다[cite: 1].');
-          endGameVictory(mySide, '상대방의 연결이 끊어져 승리 처리되었습니다[cite: 1].');
+          showToast('⚠️', '상대 플레이어와의 연결이 종료되었습니다.');
+          endGameVictory(mySide, '상대 플레이어 퇴장으로 승리 처리되었습니다.');
         }
       });
+    }
+
+    function bindSpectatorClientEvents(targetConn) {
+      targetConn.on('open', () => {
+        isSpectator = true;
+        configureUIPanelForRole();
+        document.getElementById('mode-modal').classList.add('hidden');
+        showToast('👁️', '관전 모드로 접속되었습니다. 환영합니다!');
+      });
+
+      targetConn.on('data', data => {
+        if (data.type === 'SYNC_GAME_STATE_FOR_SPECTATOR') {
+          board = data.board;
+          currentTurn = data.turn || data.currentTurn;
+          lastMove = data.lastMove;
+          timeLimit = data.timeLimit || 45;
+          oppChar = data.oppChar || CHARACTERS[2];
+          myChar = data.hostChar || CHARACTERS[0];
+          document.getElementById('mode-modal').classList.add('hidden');
+          resizeCanvas();
+          updateUI(data.oppNick, data.hostNick);
+        } else {
+          handleSharedNetworkData(data);
+        }
+      });
+
+      targetConn.on('close', () => {
+        showToast('🚪', '대국이 종료되었거나 방이 닫혔습니다.');
+        returnToLobby();
+      });
+    }
+
+    function bindSpectatorHubEvents(specConn) {
+      specConn.on('data', data => {
+        if (data.type === 'SPECTATOR_MSG') {
+          displaySpectatorCenterMessage(data.sender, data.targetSide, data.msg);
+          broadcastToAllConnections(data);
+        }
+      });
+    }
+
+    function handleSharedNetworkData(data) {
+      if (data.type === 'HOST_INFO') {
+        oppChar = data.char;
+        timeLimit = data.time;
+        initBoardLayout(document.getElementById('layout-select').value, data.layout);
+        document.getElementById('mode-modal').classList.add('hidden');
+        resizeCanvas();
+        updateUI(data.nickname);
+
+      } else if (data.type === 'START_DICE') {
+        savedGuestLayout = data.guestLayout;
+        startDiceRollSequence();
+
+      } else if (data.type === 'DICE_RESULT') {
+        myDiceVal = data.guestVal;
+        oppDiceVal = data.hostVal;
+        renderDiceResults();
+
+      } else if (data.type === 'DICE_SIDE_CHOSEN') {
+        mySide = data.otherSide;
+        finalizeGameStartAfterDice();
+
+      } else if (data.type === 'MOVE') {
+        saveBoardSnapshot();
+        const from = data.from;
+        const to = data.to;
+        const mover = board[from.r][from.c];
+        const captured = board[to.r][to.c];
+
+        if (captured) {
+          triggerCinematicAttack(mover, from, to, captured, () => {
+            finalizeMove(from, to, captured);
+          });
+        } else {
+          playPiecePlaceSound();
+          finalizeMove(from, to, captured);
+        }
+
+      } else if (data.type === 'SPECTATOR_MSG') {
+        displaySpectatorCenterMessage(data.sender, data.targetSide, data.msg);
+
+      } else if (data.type === 'UNDO_REQUEST' && !isSpectator) {
+        document.getElementById('undo-request-msg').innerText = `${data.sender}님이 물리기(한 수 무르기)를 요청했습니다. 허락하시겠습니까?`;
+        document.getElementById('undo-confirm-modal').classList.remove('hidden');
+
+      } else if (data.type === 'UNDO_RESPONSE') {
+        if (data.accepted) {
+          executeUndoApply();
+          showToast('✅', `${data.responder || '상대방'}님이 물리기를 승낙했습니다!`);
+        } else {
+          showToast('❌', `${data.responder || '상대방'}님이 물리기 요청을 거절했습니다. (기회 1회 차감)`);
+        }
+
+      } else if (data.type === 'TAUNT') {
+        showDramaticTauntPopup(data.sender, data.msg, false);
+
+      } else if (data.type === 'RESIGN') {
+        endGameVictory(mySide, '상대방이 기권하여 승리했습니다! 🎉');
+
+      } else if (data.type === 'GAME_OVER') {
+        endGameVictory(data.winnerSide, data.reason);
+
+      } else if (data.type === 'REMATCH_REQUEST' && !isSpectator) {
+        showToast('🔄', '상대방이 재대결을 신청했습니다! 자동 수락됩니다.');
+        setTimeout(() => {
+          if (conn && conn.open) conn.send({ type: 'REMATCH_ACCEPT' });
+          acceptRematch();
+        }, 1000);
+
+      } else if (data.type === 'REMATCH_ACCEPT') {
+        acceptRematch();
+
+      } else if (data.type === 'LEAVE_ROOM') {
+        showToast('🚪', '상대방이 방을 나갔습니다.');
+        returnToLobby();
+      }
     }
 
     function startHostBattle() {
       const myLayout = document.getElementById('layout-select').value;
-      conn.send({ type: 'START_DICE', guestLayout: myLayout });
+      broadcastToAllConnections({ type: 'START_DICE', guestLayout: myLayout });
       startDiceRollSequence();
     }
 
     function startDirectGame() {
-      if (gameMode !== 'ai') return;
-      saveCurrentNickname();
-      isHost = false;
-      hostRoomCode = '';
-      if (conn) { try { conn.close(); } catch(e){} conn = null; }
-      if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
-
+      isSpectator = false;
       timeLimit = parseInt(document.getElementById('time-select').value);
+      configureUIPanelForRole();
       startDiceRollSequence();
     }
 
-    function updateUI(oppCustomNick) {
-      document.getElementById('my-name').innerText = customNickname ? `${customNickname} (${myChar.name})` : myChar.name;
-      document.getElementById('opp-name').innerText = (gameMode === 'ai') ? 'COM (컴퓨터)' : (oppCustomNick ? `${oppCustomNick} (${oppChar.name})` : oppChar.name);
-      
+    function updateUI(oppCustomNick, hostCustomNick) {
+      if (!isSpectator) {
+        document.getElementById('my-name').innerText = customNickname ? `${customNickname} (${myChar.name})` : myChar.name;
+        document.getElementById('opp-name').innerText = (gameMode === 'ai') ? 'COM (컴퓨터)' : (oppCustomNick ? `${oppCustomNick} (${oppChar.name})` : oppChar.name);
+      } else {
+        document.getElementById('my-name').innerText = hostCustomNick || '초나라 플레이어';
+        document.getElementById('opp-name').innerText = oppCustomNick || '한나라 플레이어';
+      }
+
       document.getElementById('my-badge').innerText = (mySide === 'cho') ? '초' : '한';
       document.getElementById('opp-badge').innerText = (mySide === 'cho') ? '한' : '초';
 
@@ -2832,31 +3265,26 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      loadSavedNickname();
+      loadSavedNicknameAndPreferences();
+      renderCharSelector();
       setAiDiff('expert');
       resizeCanvas();
-      
-      initGlobalLobbyNetwork();
       broadcastPresence();
       scanLocalStoragePeers();
 
       render3DDiceFace('dice-canvas-my', 5, 0);
       render3DDiceFace('dice-canvas-opp', 3, 0);
 
-      switchModeTab('p2p');
-
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
-      if (roomParam && roomParam.length === 4) {
+      if (roomParam) {
         document.getElementById('join-code-input').value = roomParam;
-        setTimeout(() => {
-          joinRoomByCode(roomParam);
-        }, 300);
+        switchModeTab('p2p');
       }
     });
 
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('jg_hb_v7_' + myClientId);
+      localStorage.removeItem('jg_hb_' + myClientId);
     });
   </script>
 </body>

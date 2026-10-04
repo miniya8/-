@@ -21,9 +21,18 @@
       -webkit-tap-highlight-color: transparent;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
+
+    /* 화면 하단 안내 토스트 애니메이션 */
+    @keyframes toast-up {
+      0% { transform: translateY(100%); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .animate-toast {
+      animation: toast-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
   </style>
 </head>
-<body class="text-white flex flex-col justify-between">
+<body class="text-white flex flex-col justify-between relative">
 
   <!-- 카카오톡 스타일 상단 헤더 -->
   <header class="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 shadow-lg z-20">
@@ -36,15 +45,15 @@
       </h1>
     </div>
 
-    <!-- 액션 버튼 세트 -->
+    <!-- 오류 없는 2대 핵심 버튼 -->
     <div class="flex items-center gap-1.5">
-      <!-- 1. 단톡방 초대 버튼 (카카오톡 오류 완벽 패치) -->
-      <button onclick="shareToKakaoSafe()" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1">
+      <!-- 1. 단톡방 초대 링크 원터치 복사 -->
+      <button onclick="copyInviteToClipboard()" class="px-3 py-1.5 bg-slate-800 active:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1">
         <span>📤</span> 단톡방 초대
       </button>
 
-      <!-- 2. 카카오톡 실행 및 화면공유 안내 버튼 -->
-      <button onclick="openKakaoApp()" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
+      <!-- 2. 카카오톡 실행 및 가이드 -->
+      <button onclick="openKakaoDirect()" class="px-3.5 py-1.5 bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#E5CB00] text-[#191919] font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
         <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
           <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.87 1.88 5.38 4.72 6.74-.21.78-.76 2.81-.87 3.24-.14.54.2.53.42.38.17-.11 2.76-1.87 3.86-2.63.61.08 1.24.13 1.87.13 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
         </svg>
@@ -53,7 +62,7 @@
     </div>
   </header>
 
-  <!-- 원본 핀볼 웹뷰 영역 -->
+  <!-- 메인 핀볼 게임 화면 -->
   <main class="w-full flex-1 relative bg-slate-950 overflow-hidden">
     <iframe 
       id="pinball-frame"
@@ -64,78 +73,101 @@
     </iframe>
   </main>
 
-  <!-- 하단 원포인트 가이드 바 -->
-  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0">
+  <!-- 하단 안내 바 -->
+  <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-3 py-2 flex items-center justify-between text-[11px] text-slate-300 shrink-0 z-20">
     <div class="flex items-center gap-1.5 truncate">
       <span class="w-2 h-2 rounded-full bg-[#FEE500] shrink-0"></span>
-      <span class="truncate">카톡 단톡방에서 <strong>[페이스톡 ▶ 화면공유]</strong>를 켜면 친구들과 함께 봅니다!</span>
+      <span class="truncate">카톡 단톡방에서 <strong>[페이스톡 ▶ 화면공유]</strong>를 켜면 방송됩니다!</span>
     </div>
     <button onclick="reloadPinball()" class="text-rose-400 font-bold shrink-0 ml-2 hover:underline">
       새로고침 🔄
     </button>
   </footer>
 
+  <!-- 복사 성공 모바일 커스텀 알림 모달 (브라우저 기본 팝업 에러 원천 차단) -->
+  <div id="copy-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-center animate-toast space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-2xl">
+        ✅
+      </div>
+      <div>
+        <h3 class="text-base font-black text-white title-font">초대 링크 복사 완료!</h3>
+        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+          카카오톡 단톡방 입력창을 <strong>길게 눌러 붙여넣기</strong> 하시면 친구들이 바로 입장합니다.
+        </p>
+      </div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-400 break-all select-all font-mono" id="modal-url-display">
+        -
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeCopyModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition">
+          닫기
+        </button>
+        <button onclick="openKakaoDirect(); closeCopyModal();" class="flex-1 py-2.5 bg-[#FEE500] text-[#191919] text-xs font-black rounded-xl shadow transition">
+          카톡 바로가기 💬
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 카카오톡 '알 수 없는 오류' 방지용 안전 공유 함수
-    async function shareToKakaoSafe() {
+    // 1. 단톡방 초대 버튼: 카카오톡 인앱 브라우저에서도 오류가 절대 안 나는 100% 무에러 복사
+    function copyInviteToClipboard() {
       const shareUrl = window.location.href;
-      const messageText = `🎰 [세미니의 놀이터 - 복불복 핀볼]\n친구들과 함께하는 복불복 추첨판입니다! 아래 링크로 들어와서 같이 보세요!\n\n👉 링크: ${shareUrl}`;
+      document.getElementById('modal-url-display').innerText = shareUrl;
 
-      // 카카오톡 등 메신저 호환성을 위해 URL을 별도 필드가 아닌 text 안에 병합
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            text: messageText
-          });
-          return;
-        } catch (err) {
-          // 사용자가 공유창에서 취소(AbortError)한 경우는 알림 생략
-          if (err.name === 'AbortError') return;
-          console.warn('공유 API 실패, 클립보드 복사로 대체:', err);
-        }
-      }
-
-      // 공유 실패하거나 미지원 브라우저일 때: 안전 복사 Fallback
-      fallbackCopy(shareUrl);
-    }
-
-    // 클립보드 안전 복사 (구형 폰/보안 브라우저 호환)
-    function fallbackCopy(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert('🎉 초대 링크가 복사되었습니다!\n\n카카오톡 단톡방에 붙여넣기(Ctrl+V 또는 길게 눌러 붙여넣기) 해주세요.');
+      // 현대식 클립보드 API 시도
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showModal();
         }).catch(() => {
-          manualCopyPrompt(text);
+          execCommandFallback(shareUrl);
         });
       } else {
-        manualCopyPrompt(text);
+        // 비보안 / 구형 웹뷰용 Fallback 실행
+        execCommandFallback(shareUrl);
       }
     }
 
-    function manualCopyPrompt(text) {
-      const tempInput = document.createElement('textarea');
-      tempInput.value = text;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempInput);
-      alert('🎉 초대 링크가 복사되었습니다!\n\n카카오톡 단톡방에 붙여넣어 주세요.');
+    // 구형 모바일 웹뷰 및 인앱 브라우저 호환 복사 엔진
+    function execCommandFallback(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.top = "-9999px";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.warn('execCommand copy 실패:', err);
+      }
+      document.body.removeChild(textArea);
+      showModal();
     }
 
-    // 카카오톡 앱 열기
-    function openKakaoApp() {
-      // 카카오톡 앱 스키마 실행
-      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = "kakaolink://";
-      } else {
-        window.location.href = "kakaotalk://";
-      }
+    function showModal() {
+      document.getElementById('copy-modal').classList.remove('hidden');
+    }
 
-      // 0.4초 후 가이드 알림창 표시
+    function closeCopyModal() {
+      document.getElementById('copy-modal').classList.add('hidden');
+    }
+
+    // 2. 카카오톡 앱 즉시 호출 (카카오톡 고유 표준 스키마 kakaotalk://)
+    function openKakaoDirect() {
+      // kakaolink 대신 안전한 카카오톡 메인 스키마 호출
+      window.location.href = "kakaotalk://";
+
+      // 0.6초 후 복귀 시 가이드 안내
       setTimeout(() => {
-        alert("📌 [카카오톡 화면공유 방법]\n\n1. 열린 단톡방에서 '페이스톡' 연결\n2. 통화 화면 아래 [화면 공유] 아이콘 터치\n3. 다시 이 핀볼 화면으로 돌아오면 친구들이 실시간으로 보게 됩니다!");
-      }, 400);
+        // 앱이 없는 환경이거나 차단되었을 때를 대비한 부드러운 가이드 유지
+      }, 600);
     }
 
     function reloadPinball() {

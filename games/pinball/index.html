@@ -2,323 +2,277 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <!-- 모바일 뷰포트 안정화: 불필요한 확대 방지 및 safe-area 대응 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>복불복 핀볼 룰렛 - 세미니의 놀이터</title>
+  <title>🎰 복불복 핀볼 룰렛</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
-    
+
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh;
-      min-height: -webkit-fill-available;
-      overflow: hidden;
+      min-height: 100dvh; /* 모바일 동적 주소창 대응 */
       margin: 0;
       padding: 0;
+      background-color: #09090b;
       font-family: 'Noto Sans KR', sans-serif;
-      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
-      overscroll-behavior: none;
+      touch-action: manipulation;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
 
-    /* 모바일 하단 제스처 바 및 소프트키 네비게이션 보호 */
-    .mobile-safe-bottom {
-      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-      margin-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    /* 캔버스 비율 유지 */
+    #pinballCanvas {
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 380 / 500;
+      box-shadow: 0 0 25px rgba(244, 63, 94, 0.25);
+      border: 3px solid #fb7185;
+      border-radius: 1.5rem;
+      background: #0f172a;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .safe-padding {
+      padding-top: max(12px, env(safe-area-inset-top));
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
   </style>
 </head>
-<body id="app-root" class="text-white flex flex-col justify-between items-center p-2 sm:p-3 overflow-hidden box-border">
+<body class="text-white flex flex-col items-center justify-between p-3 safe-padding">
 
-  <!-- 상단 네비게이션 및 로고 -->
-  <header class="w-full max-w-md flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-700/80 shadow-xl z-20 flex-shrink-0">
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="w-full max-w-sm flex items-center justify-between bg-slate-900/90 border border-slate-700/80 rounded-2xl px-4 py-2.5 shadow-xl backdrop-blur-md flex-shrink-0 mb-2">
     <div class="flex items-center gap-2">
-      <span class="text-2xl">🎰</span>
-      <div>
-        <h1 class="text-sm sm:text-base font-black text-rose-400 title-font leading-tight">복불복 핀볼 룰렛</h1>
-        <p class="text-[9px] text-slate-400">구슬 낙하 벌칙/당첨 추첨기</p>
-      </div>
+      <span class="text-xl">🎰</span>
+      <h1 class="text-base font-black text-rose-400 title-font">복불복 핀볼</h1>
     </div>
-    <button onclick="location.href='../../index.html'" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 shadow">
-      🏠 로비
-    </button>
+    <!-- 상위 메인 로비로 이동 -->
+    <a href="../../index.html" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-bold text-amber-300 transition-colors flex items-center gap-1 active:scale-95">
+      <span>🏠</span> 메인으로
+    </a>
   </header>
 
-  <!-- 메인 핀볼 보드 영역 -->
-  <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
-    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-slate-950 border-2 border-slate-800 p-1 flex items-center justify-center">
-      <canvas id="pinballCanvas" class="rounded-xl block touch-none"></canvas>
+  <!-- 항목 수정 영역 -->
+  <section class="w-full max-w-sm bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 mb-2 text-xs flex-shrink-0">
+    <div class="flex items-center justify-between mb-1.5 px-1">
+      <span class="font-bold text-slate-300">벌칙/당첨 칸 설정:</span>
+      <span class="text-[10px] text-slate-400">쉼표(,)로 구분</span>
+    </div>
+    <div class="flex gap-1.5">
+      <input id="slotInput" type="text" value="커피, 꽝, 만원, 댄스, 치킨, 당번" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-400">
+      <button onclick="updateSlots()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 font-bold rounded-xl border border-rose-500/40 text-xs active:scale-95 transition-all">적용</button>
+    </div>
+  </section>
 
-      <!-- 결과 팝업 모달 -->
-      <div id="result-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border-2 border-rose-500 text-white p-5 rounded-3xl text-center max-w-xs w-full shadow-2xl">
-          <div class="text-3xl mb-1">🎉</div>
-          <div id="result-slot-name" class="text-xl font-black title-font text-rose-400">당첨!</div>
-          <p id="result-slot-desc" class="text-xs text-slate-300 mt-2">구슬이 슬롯에 안전하게 안착했습니다.</p>
-          <button onclick="closeResultModal()" class="w-full mt-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-black rounded-xl text-xs shadow">
-            다시 하기
-          </button>
-        </div>
-      </div>
+  <!-- 메인 게임 보드 (캔버스) -->
+  <main class="w-full max-w-sm flex-1 flex flex-col justify-center items-center relative my-auto">
+    <canvas id="pinballCanvas" width="380" height="500"></canvas>
+
+    <!-- 결과 알림 팝업 창 -->
+    <div id="resultModal" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-950/95 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl backdrop-blur-md w-4/5 max-w-xs z-30">
+      <span class="text-4xl">🎊</span>
+      <h3 class="text-xs text-slate-400 font-bold mt-2">추첨 결과</h3>
+      <p id="resultText" class="text-2xl font-black text-rose-400 title-font mt-1 mb-4">-</p>
+      <button onclick="closeModal()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 font-black rounded-xl text-white shadow-lg transition-transform active:scale-95 text-sm">확인</button>
     </div>
   </main>
 
-  <!-- 하단 컨트롤 메뉴 바 (네비게이션 바와 겹치지 않도록 Safe Area 적용) -->
-  <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2.5 z-20 flex-shrink-0 flex flex-col gap-2 shadow-2xl mobile-safe-bottom">
-    <div class="flex items-center justify-between gap-2">
-      <button onclick="openSettingsModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-bold text-slate-200 flex items-center gap-1 shadow">
-        ⚙️ 슬롯 설정
-      </button>
-      <button id="drop-btn" onclick="dropBall()" class="flex-1 py-2.5 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-black text-sm rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-1.5">
-        <span>⚪</span> 구슬 발사!
-      </button>
-    </div>
+  <!-- 하단 구슬 발사 버튼 -->
+  <footer class="w-full max-w-sm flex-shrink-0 mt-2">
+    <button id="dropBtn" onclick="dropBall()" class="w-full py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:opacity-95 text-white font-black text-base title-font rounded-2xl shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2">
+      <span>🟡 구슬 떨어뜨리기!</span>
+    </button>
   </footer>
-
-  <!-- 슬롯 설정 모달 -->
-  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-xs w-full shadow-2xl">
-      <h3 class="text-base font-black text-rose-400 mb-3 title-font">⚙️ 슬롯 이름 설정 (최대 5개)</h3>
-      <div id="slot-inputs-container" class="space-y-2 mb-4">
-        <!-- JS로 동적 생성 -->
-      </div>
-      <div class="flex gap-2">
-        <button onclick="saveSettings()" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 font-black text-xs rounded-xl">저장</button>
-        <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs rounded-xl">취소</button>
-      </div>
-    </div>
-  </div>
 
   <script>
     const canvas = document.getElementById('pinballCanvas');
     const ctx = canvas.getContext('2d');
 
-    let slots = ['커피 쏘기', '꽝 (생존)', '간식 사기', '설거지', '생존'];
-    const slotColors = ['#f43f5e', '#3b82f6', '#eab308', '#10b981', '#8b5cf6'];
-
+    let slots = ['커피', '꽝', '만원', '댄스', '치킨', '당번'];
     let pins = [];
     let ball = null;
-    let isDropping = false;
-    let boardWidth = 0;
-    let boardHeight = 0;
+    let isPlaying = false;
 
-    function resizeBoard() {
-      const mainArea = document.getElementById('main-area');
-      const container = document.getElementById('board-container');
-
-      const maxW = mainArea.clientWidth - 16;
-      const maxH = mainArea.clientHeight - 16;
-
-      const targetRatio = 9 / 14;
-      let w = maxW;
-      let h = w / targetRatio;
-
-      if (h > maxH) {
-        h = maxH;
-        w = h * targetRatio;
-      }
-
-      container.style.width = `${Math.floor(w)}px`;
-      container.style.height = `${Math.floor(h)}px`;
-
-      boardWidth = Math.floor(w - 8);
-      boardHeight = Math.floor(h - 8);
-
-      canvas.width = boardWidth * window.devicePixelRatio;
-      canvas.height = boardHeight * window.devicePixelRatio;
-      canvas.style.width = `${boardWidth}px`;
-      canvas.style.height = `${boardHeight}px`;
-
-      ctx.resetTransform();
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-      initPins();
-    }
-
+    // 핀 생성
     function initPins() {
       pins = [];
-      const rows = 8;
-      const startY = boardHeight * 0.18;
-      const endY = boardHeight * 0.78;
-      const spacingY = (endY - startY) / (rows - 1);
+      const rows = 7;
+      const startY = 70;
+      const rowGap = 48;
 
       for (let r = 0; r < rows; r++) {
         const isOdd = r % 2 === 1;
         const count = isOdd ? 6 : 7;
-        const spacingX = boardWidth / (count + 1);
-        const y = startY + r * spacingY;
-
-        for (let c = 1; c <= count; c++) {
-          const x = c * spacingX;
-          pins.push({ x, y, r: 3.5 });
+        const colGap = canvas.width / (count + 1);
+        for (let c = 0; c < count; c++) {
+          pins.push({
+            x: colGap * (c + 1),
+            y: startY + r * rowGap,
+            radius: 4.5
+          });
         }
+      }
+    }
+
+    function updateSlots() {
+      const val = document.getElementById('slotInput').value;
+      const list = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      if (list.length >= 2) {
+        slots = list;
+        draw();
+      } else {
+        alert('최소 2개 이상의 항목을 입력해 주세요.');
       }
     }
 
     function dropBall() {
-      if (isDropping) return;
-      isDropping = true;
-      document.getElementById('drop-btn').disabled = true;
-      document.getElementById('drop-btn').classList.add('opacity-50');
+      if (isPlaying) return;
+      isPlaying = true;
+      const dropBtn = document.getElementById('dropBtn');
+      dropBtn.disabled = true;
+      dropBtn.classList.add('opacity-50');
 
       ball = {
-        x: boardWidth / 2 + (Math.random() - 0.5) * (boardWidth * 0.2),
-        y: boardHeight * 0.05,
+        x: canvas.width / 2 + (Math.random() * 50 - 25),
+        y: 20,
         vx: (Math.random() - 0.5) * 2,
-        vy: 1,
-        r: boardWidth * 0.035,
-        alive: true
+        vy: 1.5,
+        radius: 8.5,
+        gravity: 0.22,
+        bounce: 0.55
       };
+
+      animate();
     }
 
-    function update() {
-      if (!ball || !ball.alive) return;
+    function animate() {
+      if (!ball) return;
 
-      ball.vy += 0.22; // 중력
+      ball.vy += ball.gravity;
       ball.x += ball.vx;
       ball.y += ball.vy;
 
-      // 좌우 벽 바운스
-      if (ball.x - ball.r < 0) {
-        ball.x = ball.r;
-        ball.vx = -ball.vx * 0.65;
-      } else if (ball.x + ball.r > boardWidth) {
-        ball.x = boardWidth - ball.r;
-        ball.vx = -ball.vx * 0.65;
+      // 벽면 반사
+      if (ball.x - ball.radius < 6) {
+        ball.x = 6 + ball.radius;
+        ball.vx *= -ball.bounce;
+      } else if (ball.x + ball.radius > canvas.width - 6) {
+        ball.x = canvas.width - 6 - ball.radius;
+        ball.vx *= -ball.bounce;
       }
 
       // 핀 충돌
-      for (const pin of pins) {
+      pins.forEach(pin => {
         const dx = ball.x - pin.x;
         const dy = ball.y - pin.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = ball.r + pin.r;
-
-        if (dist < minDist) {
+        if (dist < ball.radius + pin.radius) {
           const angle = Math.atan2(dy, dx);
-          ball.x = pin.x + Math.cos(angle) * minDist;
-          ball.y = pin.y + Math.sin(angle) * minDist;
-
-          const speed = Math.hypot(ball.vx, ball.vy) * 0.72;
-          ball.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 0.8;
-          ball.vy = Math.sin(angle) * speed;
+          const speed = Math.hypot(ball.vx, ball.vy) * ball.bounce;
+          ball.vx = Math.cos(angle) * (speed + 0.6) + (Math.random() - 0.5) * 0.4;
+          ball.vy = Math.sin(angle) * (speed + 0.6);
+          ball.x = pin.x + Math.cos(angle) * (ball.radius + pin.radius + 0.6);
+          ball.y = pin.y + Math.sin(angle) * (ball.radius + pin.radius + 0.6);
         }
-      }
+      });
 
       // 바닥 슬롯 도착
-      const slotY = boardHeight * 0.86;
-      if (ball.y >= slotY) {
-        ball.alive = false;
-        const slotWidth = boardWidth / slots.length;
-        const slotIdx = Math.min(slots.length - 1, Math.max(0, Math.floor(ball.x / slotWidth)));
-        showResult(slots[slotIdx]);
+      const bottomY = canvas.height - 48;
+      if (ball.y >= bottomY) {
+        finishGame(ball.x);
+        return;
       }
+
+      draw();
+      requestAnimationFrame(animate);
     }
 
-    function showResult(slotName) {
-      document.getElementById('result-slot-name').innerText = `[${slotName}]`;
-      document.getElementById('result-modal').classList.remove('hidden');
+    function finishGame(endX) {
+      const slotWidth = canvas.width / slots.length;
+      let slotIndex = Math.floor(endX / slotWidth);
+      if (slotIndex < 0) slotIndex = 0;
+      if (slotIndex >= slots.length) slotIndex = slots.length - 1;
+
+      draw();
+
+      setTimeout(() => {
+        document.getElementById('resultText').innerText = slots[slotIndex];
+        document.getElementById('resultModal').classList.remove('hidden');
+        isPlaying = false;
+        const dropBtn = document.getElementById('dropBtn');
+        dropBtn.disabled = false;
+        dropBtn.classList.remove('opacity-50');
+      }, 150);
     }
 
-    function closeResultModal() {
-      document.getElementById('result-modal').classList.add('hidden');
-      isDropping = false;
+    function closeModal() {
+      document.getElementById('resultModal').classList.add('hidden');
       ball = null;
-      document.getElementById('drop-btn').disabled = false;
-      document.getElementById('drop-btn').classList.remove('opacity-50');
+      draw();
     }
 
     function draw() {
-      ctx.clearRect(0, 0, boardWidth, boardHeight);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 슬롯 바닥 구분선 및 텍스트 렌더링
-      const slotY = boardHeight * 0.85;
-      const slotW = boardWidth / slots.length;
+      const slotWidth = canvas.width / slots.length;
+      const bottomY = canvas.height - 48;
 
+      // 슬롯 배경 및 라벨
       for (let i = 0; i < slots.length; i++) {
-        const x = i * slotW;
-        ctx.fillStyle = slotColors[i % slotColors.length] + '22';
-        ctx.fillRect(x, slotY, slotW, boardHeight - slotY);
+        const sx = i * slotWidth;
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, slotY, slotW, boardHeight - slotY);
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(30, 41, 59, 0.75)' : 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(sx, bottomY, slotWidth, 48);
+
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sx, bottomY);
+        ctx.lineTo(sx, canvas.height);
+        ctx.stroke();
 
         ctx.fillStyle = '#f8fafc';
-        ctx.font = `bold ${Math.max(10, Math.floor(slotW * 0.18))}px 'Jua'`;
+        ctx.font = 'bold 11px Noto Sans KR';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(slots[i], x + slotW / 2, slotY + (boardHeight - slotY) / 2);
+
+        let label = slots[i];
+        if (label.length > 4) label = label.slice(0, 3) + '..';
+        ctx.fillText(label, sx + slotWidth / 2, bottomY + 24);
       }
 
       // 핀 렌더링
-      ctx.fillStyle = '#fbcfe8';
-      for (const pin of pins) {
+      pins.forEach(pin => {
         ctx.beginPath();
-        ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
+        ctx.arc(pin.x, pin.y, pin.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#f43f5e';
+        ctx.shadowColor = '#fb7185';
+        ctx.shadowBlur = 6;
         ctx.fill();
-      }
+        ctx.shadowBlur = 0;
+      });
 
       // 구슬 렌더링
-      if (ball && ball.alive) {
-        ctx.save();
-        ctx.fillStyle = '#f43f5e';
-        ctx.shadowColor = '#f43f5e';
-        ctx.shadowBlur = 10;
+      if (ball) {
         ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowColor = '#fde047';
+        ctx.shadowBlur = 10;
         ctx.fill();
-        ctx.restore();
+        ctx.shadowBlur = 0;
       }
     }
 
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    function openSettingsModal() {
-      const container = document.getElementById('slot-inputs-container');
-      container.innerHTML = '';
-      slots.forEach((s, idx) => {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = s;
-        input.className = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white';
-        input.id = `slot-val-${idx}`;
-        container.appendChild(input);
-      });
-      document.getElementById('settings-modal').classList.remove('hidden');
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settings-modal').classList.add('hidden');
-    }
-
-    function saveSettings() {
-      const newSlots = [];
-      for (let i = 0; i < slots.length; i++) {
-        const val = document.getElementById(`slot-val-${i}`).value.trim();
-        newSlots.push(val || `슬롯 ${i + 1}`);
-      }
-      slots = newSlots;
-      closeSettingsModal();
-    }
-
-    window.addEventListener('resize', resizeBoard);
-    window.addEventListener('orientationchange', () => setTimeout(resizeBoard, 200));
-
-    window.addEventListener('DOMContentLoaded', () => {
-      resizeBoard();
-      loop();
-    });
+    initPins();
+    draw();
   </script>
 </body>
 </html>

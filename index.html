@@ -8,49 +8,58 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
-    html {
-      height: 100%;
-      scroll-behavior: smooth;
-    }
-
-    body {
+    html, body {
+      width: 100%;
       min-height: 100%;
-      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
-      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
-      background-attachment: fixed; /* 배경 리페인트 방지로 스크롤 버벅임 해결 */
+      background-color: #09090b;
       user-select: none;
       -webkit-user-select: none;
-      /* 모바일 부드러운 모멘텀 스크롤 활성화 */
-      overflow-y: auto;
+      /* 모바일 네이티브 스크롤 부드러움 극대화 */
+      overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior-y: contain;
+      overscroll-behavior-y: auto;
+    }
+
+    /* 리페인트 없는 고정 배경 레이어 */
+    .bg-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      z-index: -1;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
     }
 
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
 
     .neon-card {
-      transform: translateZ(0); /* GPU 가속 활성화 */
-      will-change: transform;
+      contain: content;
+      transform: translate3d(0, 0, 0);
+      -webkit-tap-highlight-color: transparent;
     }
     .neon-card:hover {
       box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
       border-color: rgba(245, 158, 11, 0.8);
     }
 
-    /* 반짝반짝 무지개 샤인 애니메이션 */
     @keyframes rainbow-sparkle {
       0% {
         background-position: 0% 50%;
-        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+        filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
       }
       50% {
         background-position: 100% 50%;
-        filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.85));
+        filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.7));
       }
       100% {
         background-position: 0% 50%;
-        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+        filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
       }
     }
 
@@ -60,27 +69,28 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: rainbow-sparkle 4s ease infinite;
-      transform: translateZ(0);
+      display: inline-block;
+      contain: layout paint;
     }
 
-    /* 앙증맞은 통통 튀는 모션 */
     @keyframes cute-bounce {
       0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(8deg); }
+      50% { transform: translateY(-4px) rotate(6deg); }
     }
     .bounce-cute {
       display: inline-block;
       animation: cute-bounce 2s ease-in-out infinite;
-      transform: translateZ(0);
+      contain: layout paint;
     }
 
-    /* 모바일 하단 제스처/소프트키 네비게이션 바 잘림 방지 */
     .mobile-safe-footer {
       padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
     }
   </style>
 </head>
 <body class="text-white flex flex-col items-center justify-between p-3 sm:p-6">
+  <!-- 고정 배경 레이어 (스크롤 버벅임 방지) -->
+  <div class="bg-layer"></div>
 
   <!-- 상단 헤더 & 통합 프로필 -->
   <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md flex-shrink-0">
@@ -120,7 +130,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       
       <!-- 1. 전설장기 1 카드 -->
-      <div onclick="goToGame('janggi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+      <a href="games/janggi/index.html" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group block text-left">
         <div>
           <div class="flex items-center justify-between mb-3">
             <span class="text-4xl group-hover:scale-110 transition-transform">⚔️</span>
@@ -135,10 +145,10 @@
           <span>대국실 입장하기</span>
           <span class="group-hover:translate-x-1 transition-transform">👉</span>
         </div>
-      </div>
+      </a>
 
       <!-- 2. 전설의 알까기 카드 -->
-      <div onclick="goToGame('alkkagi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+      <a href="games/alkkagi/alkkagi.html" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group block text-left">
         <div>
           <div class="flex items-center justify-between mb-3">
             <span class="text-4xl group-hover:scale-110 transition-transform">💥</span>
@@ -153,10 +163,10 @@
           <span>알까기판 입장하기</span>
           <span class="group-hover:translate-x-1 transition-transform">👉</span>
         </div>
-      </div>
+      </a>
 
       <!-- 3. 복불복 핀볼 룰렛 카드 -->
-      <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+      <a href="games/pinball/index.html" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group block text-left">
         <div>
           <div class="flex items-center justify-between mb-3">
             <span class="text-4xl group-hover:scale-110 transition-transform">🎰</span>
@@ -171,7 +181,7 @@
           <span>추첨장 입장하기</span>
           <span class="group-hover:translate-x-1 transition-transform">👉</span>
         </div>
-      </div>
+      </a>
 
     </div>
   </main>
@@ -202,16 +212,6 @@
       if (trimmed) {
         localStorage.setItem('jg_permanent_nickname', trimmed);
         localStorage.setItem('jg_nick_is_custom', 'true');
-      }
-    }
-
-    function goToGame(game) {
-      if (game === 'janggi') {
-        window.location.href = 'games/janggi/index.html';
-      } else if (game === 'alkkagi') {
-        window.location.href = 'games/alkkagi/index.html';
-      } else if (game === 'pinball') {
-        window.location.href = 'games/pinball/index.html';
       }
     }
 

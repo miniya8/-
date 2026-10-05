@@ -31,6 +31,11 @@
       user-select: none;
     }
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
+    /* 모바일 하단 제스처/소프트키 영역 보호 */
+    .mobile-safe-bottom {
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+      margin-bottom: max(6px, env(safe-area-inset-bottom, 6px)) !important;
+    }
   </style>
 </head>
 <body id="app-root" class="text-white flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
@@ -133,8 +138,8 @@
     </div>
   </main>
 
-  <!-- 하단 컨트롤 바 -->
-  <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-xl">
+  <!-- 하단 컨트롤 바 (모바일 소프트키/제스처 바와 겹치지 않도록 안전 패딩 및 하단 여백 추가) -->
+  <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2.5 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-2xl mobile-safe-bottom">
     
     <!-- 1. 배치 단계 패널 -->
     <div id="placement-panel" class="flex flex-col gap-1.5">
@@ -216,21 +221,21 @@
       </div>
 
       <!-- 타이밍 파워 게이지 바 & 조준 취소 & 발사 버튼 -->
-      <div id="power-control-group" class="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-700">
-        <button id="cancel-aim-btn" onclick="cancelAiming()" disabled class="px-2.5 py-1.5 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700">
+      <div id="power-control-group" class="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-700">
+        <button id="cancel-aim-btn" onclick="cancelAiming()" disabled class="px-3 py-2 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700">
           ↩ 취소
         </button>
 
         <span class="text-[10px] font-black text-amber-300 whitespace-nowrap">파워</span>
         
-        <div id="power-track" class="flex-1 h-5 bg-slate-800 rounded-lg overflow-hidden relative border border-slate-600">
+        <div id="power-track" class="flex-1 h-6 bg-slate-800 rounded-lg overflow-hidden relative border border-slate-600">
           <div id="power-fill" class="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-rose-600" style="width: 0%;"></div>
           <!-- 98~100% 크리티컬 존 표시선 -->
           <div class="absolute right-0 top-0 bottom-0 w-[4%] bg-rose-400/40 border-l border-yellow-300 animate-pulse"></div>
           <span id="power-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white drop-shadow">0%</span>
         </div>
 
-        <button id="shoot-btn" onclick="executeTimingShot()" disabled class="px-3.5 py-1.5 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow transition-all whitespace-nowrap">
+        <button id="shoot-btn" onclick="executeTimingShot()" disabled class="px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow transition-all whitespace-nowrap">
           조준 대기
         </button>
       </div>
@@ -575,7 +580,7 @@
       }, 200);
     });
 
-    // 중앙 벽 및 장애물 생성 (모두 HP 부여 및 파괴 가능)
+    // 중앙 벽 및 장애물 생성
     function generateRandomMap() {
       const w = boardBounds.width;
       const h = boardBounds.height;
@@ -587,9 +592,8 @@
 
       const midY = by + h * 0.5;
       const segW = w / 5;
-      const wallBaseHp = 95; // 중앙 성벽 기본 HP
+      const wallBaseHp = 95;
 
-      // [핵심] 중앙 성벽에 HP 및 maxHp 속성 부여
       currentMap.walls.push({ x1: bx, y1: midY, x2: bx + segW * 1.35, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
       currentMap.walls.push({ x1: bx + segW * 1.85, y1: midY, x2: bx + segW * 3.15, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
       currentMap.walls.push({ x1: bx + segW * 3.65, y1: midY, x2: bx + w, y2: midY, color: '#38bdf8', hp: wallBaseHp, maxHp: wallBaseHp });
@@ -719,10 +723,17 @@
           if (!isHost && data.map) currentMap = data.map;
         } else if (data.type === 'READY_SYNC') {
           isPeerReady = true;
+          const oppSide = (mySide === 'cho') ? 'han' : 'cho';
           const oppPieces = data.pieces.map(p => ({
             ...p,
+            side: oppSide,
+            color: (oppSide === 'cho') ? '#064e3b' : '#7f1d1d',
             alive: true,
-            vx: 0, vy: 0,
+            vx: 0,
+            vy: 0,
+            isJumping: false,
+            jumpTime: 0,
+            curveTimer: 0,
             hitCooldown: 0
           }));
           pieces = pieces.filter(p => p.side === mySide).concat(oppPieces);
@@ -786,12 +797,12 @@
 
       document.getElementById('placement-panel').classList.remove('hidden');
       document.getElementById('battle-panel').classList.add('hidden');
-      document.getElementById('ready-btn').innerText = '배치 완료 & 준비 ⚔️';
-      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-black shadow transition-all';
+      document.getElementById('ready-btn').innerText = '배치 완료 ⚔️';
+      document.getElementById('ready-btn').className = 'px-3 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-[10px] font-black shadow transition-all';
 
       const badge = document.getElementById('game-phase-badge');
       badge.innerText = '비공개 배치';
-      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white shadow';
+      badge.className = 'px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow';
       document.getElementById('opp-pieces-count').innerText = '배치 중 (비공개)';
 
       if (isAIMode) setupAIHanArmy();
@@ -989,6 +1000,7 @@
     }
 
     function setupAIHanArmy() {
+      pieces = pieces.filter(p => p.side !== 'han');
       const aiRoster = [
         { type: 'HERO_홍구' },
         { type: '車' },
@@ -1009,7 +1021,7 @@
 
         const r = boardBounds.width * conf.radiusRatio;
         const x = boardBounds.left + r + Math.random() * (boardBounds.width - r * 2);
-        const y = boardBounds.top + r + Math.random() * (boardBounds.height * 0.25 - r * 2);
+        const y = oppSpawnZone.top + r + Math.random() * (oppSpawnZone.bottom - oppSpawnZone.top - r * 2);
 
         pieces.push({
           id: 'han_' + Math.random().toString(36).substring(2, 9),
@@ -1043,7 +1055,7 @@
 
       isMyReady = true;
       document.getElementById('ready-btn').innerText = '준비 완료됨 ✅';
-      document.getElementById('ready-btn').className = 'px-4 py-1.5 bg-slate-700 rounded-xl text-xs font-black shadow cursor-not-allowed';
+      document.getElementById('ready-btn').className = 'px-3 py-1 bg-slate-700 rounded-xl text-[10px] font-black shadow cursor-not-allowed';
 
       if (peerConn && peerConn.open) {
         peerConn.send({
@@ -1076,10 +1088,17 @@
         document.getElementById('placement-panel').classList.add('hidden');
         document.getElementById('battle-panel').classList.remove('hidden');
 
+        currentTurn = 'cho';
         const badge = document.getElementById('game-phase-badge');
-        badge.innerText = '초(청군) 차례';
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
+        if (mySide === 'cho') {
+          badge.innerText = '초(내 턴)';
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-600 text-white shadow animate-pulse';
+        } else {
+          badge.innerText = '상대 턴 진행 중...';
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-red-600 text-white shadow animate-pulse';
+        }
 
+        updateBattleControlUI();
         updateUI();
         startTimer(20);
       }
@@ -1220,23 +1239,23 @@
       if (isPowerBouncing && selectedPiece) {
         shootBtn.disabled = false;
         cancelBtn.disabled = false;
-        cancelBtn.className = 'px-2.5 py-1.5 bg-rose-900/60 hover:bg-rose-800 text-rose-200 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-rose-500/80 cursor-pointer';
+        cancelBtn.className = 'px-3 py-2 bg-rose-900/60 hover:bg-rose-800 text-rose-200 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-rose-500/80 cursor-pointer';
         shootBtn.innerText = `⚡ HIT! 발사!`;
-        shootBtn.className = 'px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white rounded-xl text-xs font-black shadow-lg transition-all animate-pulse';
+        shootBtn.className = 'px-4 py-2 bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white rounded-xl text-xs font-black shadow-lg transition-all animate-pulse';
         msg.innerHTML = `<span class="text-yellow-300 font-bold">화면 탭으로 발사! (98~100% 크리티컬)</span>`;
       } else if (isAimDragging && selectedPiece) {
         shootBtn.disabled = true;
         cancelBtn.disabled = false;
-        cancelBtn.className = 'px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-600 cursor-pointer';
+        cancelBtn.className = 'px-3 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-600 cursor-pointer';
         shootBtn.innerText = `조준 중...`;
-        shootBtn.className = 'px-3.5 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow';
+        shootBtn.className = 'px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black shadow';
         msg.innerHTML = `<span class="text-emerald-300 font-bold">[${selectedPiece.char}]</span> 방향 조준 후 손을 떼세요!`;
       } else {
         shootBtn.disabled = true;
         cancelBtn.disabled = true;
-        cancelBtn.className = 'px-2.5 py-1.5 bg-slate-800 text-slate-600 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700/50 cursor-not-allowed';
+        cancelBtn.className = 'px-3 py-2 bg-slate-800 text-slate-600 rounded-xl text-xs font-bold shadow transition-all whitespace-nowrap border border-slate-700/50 cursor-not-allowed';
         shootBtn.innerText = '조준 대기';
-        shootBtn.className = 'px-3.5 py-1.5 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow cursor-not-allowed';
+        shootBtn.className = 'px-4 py-2 bg-slate-700 text-slate-400 rounded-xl text-xs font-black shadow cursor-not-allowed';
         msg.innerHTML = `<span class="text-amber-400 font-bold">1단계:</span> 내 기물을 터치하고 조준하세요.`;
       }
     }
@@ -1251,7 +1270,6 @@
       document.getElementById('power-text').innerText = '0%';
     }
 
-    // [핵심] 98~100% 충전 시 파워 가중치 & 특수 크리티컬 이펙트
     function executeTimingShot() {
       if (!selectedPiece || !isPowerBouncing || isSimulating || isGameOver || currentTurn !== mySide) return;
 
@@ -1260,9 +1278,8 @@
       const finalPowerPct = Math.max(5, Math.round(bouncePower));
       isPowerBouncing = false;
 
-      // 98% ~ 100% 크리티컬 보너스 판정
       const isCritical = (finalPowerPct >= 98);
-      const criticalMult = isCritical ? 1.4 : 1.0; // 1.4배 폭발적 파워 부스트
+      const criticalMult = isCritical ? 1.4 : 1.0;
 
       let powerRatio = finalPowerPct / 100;
       let maxSpeed = 15.0;
@@ -1277,7 +1294,6 @@
       selectedPiece.vy = vy;
 
       if (isCritical) {
-        // [특수 이펙트] 98~100% 발동 시 크리티컬 광원 및 번개 이펙트
         spawnShockwave(selectedPiece.x, selectedPiece.y, '#f59e0b', 180);
         spawnShockwave(selectedPiece.x, selectedPiece.y, '#ef4444', 120);
         visualEffects.push({ type: 'lightning', x: selectedPiece.x, y: selectedPiece.y, color: '#fef08a', life: 20 });
@@ -1378,7 +1394,6 @@
       return { dist, projX, projY };
     }
 
-    // 장애물 및 성벽 데미지 처리
     function damageObstacle(target, piece, speed, isWall = false) {
       const dmg = Math.round((piece.mass * 0.42 + 0.8) * speed);
       target.hp -= dmg;
@@ -1439,7 +1454,6 @@
         let currentFriction = 0.981;
 
         if (!p.isJumping) {
-          // [핵심] 성벽 충돌 & 파괴 로직
           for (let wi = currentMap.walls.length - 1; wi >= 0; wi--) {
             const w = currentMap.walls[wi];
             const { dist, projX, projY } = pointToSegmentDistance(p.x, p.y, w.x1, w.y1, w.x2, w.y2);
@@ -1464,7 +1478,6 @@
             }
           }
 
-          // 장애물 충돌 & 파괴
           for (let oi = currentMap.obstacles.length - 1; oi >= 0; oi--) {
             const obs = currentMap.obstacles[oi];
             const spd = Math.hypot(p.vx, p.vy);
@@ -1571,7 +1584,6 @@
         }
       });
 
-      // 기물끼리 충돌
       for (let i = 0; i < pieces.length; i++) {
         for (let j = i + 1; j < pieces.length; j++) {
           const p1 = pieces[i];
@@ -1721,7 +1733,6 @@
         }
         document.getElementById('power-fill').style.width = `${Math.round(bouncePower)}%`;
         
-        // 98~100% 도달 시 게이지 텍스트 강조
         const isCrit = (bouncePower >= 98);
         document.getElementById('power-text').innerHTML = isCrit 
           ? `<span class="text-yellow-300 font-black animate-ping">CRITICAL! 100%</span>` 
@@ -1757,7 +1768,6 @@
         ctx.beginPath(); ctx.moveTo(boardBounds.left, y); ctx.lineTo(boardBounds.right, y); ctx.stroke();
       }
 
-      // [핵심] 중앙 성벽 렌더링 & 성벽 HP 바 표시
       currentMap.walls.forEach(w => {
         ctx.save();
         ctx.strokeStyle = w.color;
@@ -1768,7 +1778,6 @@
         ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); ctx.stroke();
         ctx.restore();
 
-        // 성벽 상단 HP 바
         if (w.hp !== undefined && w.maxHp) {
           const midX = (w.x1 + w.x2) / 2;
           const midY = (w.y1 + w.y2) / 2;
@@ -1790,7 +1799,6 @@
         }
       });
 
-      // 장애물 렌더링 & 상단 HP 바 표시
       currentMap.obstacles.forEach(obs => {
         ctx.save();
         if (obs.type === 'mountain') {
@@ -1869,7 +1877,6 @@
         }
       });
 
-      // 배치 존 안내
       if (gamePhase === 'placement') {
         ctx.save();
         ctx.fillStyle = mySide === 'cho' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
@@ -1901,7 +1908,6 @@
       ctx.lineWidth = 2.5;
       ctx.strokeRect(boardBounds.left, boardBounds.top, boardBounds.width, boardBounds.height);
 
-      // 충격파
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         const sw = shockwaves[i];
         ctx.save();
@@ -1915,7 +1921,6 @@
         if (sw.alpha <= 0 || sw.r >= sw.maxR) shockwaves.splice(i, 1);
       }
 
-      // 파티클
       for (let i = particles.length - 1; i >= 0; i--) {
         const pt = particles[i];
         ctx.save();
@@ -1929,7 +1934,6 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
-      // 기물 렌더링
       pieces.forEach(p => {
         if (!p.alive) return;
         if (gamePhase === 'placement' && p.side !== mySide) return;
@@ -2012,7 +2016,6 @@
         ctx.restore();
       });
 
-      // 조준선 및 발사 방향 가이드 (98% 이상일 때 크리티컬 이펙트 궤적 렌더링)
       if (selectedPiece && gamePhase === 'battle' && !isSimulating) {
         ctx.save();
 

@@ -8,6 +8,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    
     html, body {
       width: 100%;
       height: 100%;
@@ -23,7 +24,15 @@
       -webkit-touch-callout: none;
       background: radial-gradient(circle at 50% 20%, #0b0f19, #020408);
       overscroll-behavior: none;
+      position: fixed;
     }
+
+    #sidebar, #side-menu, .side-drawer, .sidebar, aside {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
     canvas {
       touch-action: none;
       -webkit-touch-callout: none;
@@ -42,7 +51,6 @@
   <!-- 상단 상태바 & 타이머 -->
   <header class="w-full max-w-md flex flex-col gap-1 bg-slate-900/95 backdrop-blur-md px-2.5 py-1 sm:py-1.5 rounded-2xl border border-slate-700/80 shadow-2xl z-20 flex-shrink-0">
     <div class="flex items-center justify-between">
-      <!-- 상대방 상태 -->
       <div class="flex items-center gap-1.5">
         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center font-black text-xs text-red-300">한</div>
         <div class="flex flex-col">
@@ -51,7 +59,6 @@
         </div>
       </div>
 
-      <!-- 중앙 상태 & 타이머 -->
       <div class="flex flex-col items-center">
         <div class="flex items-center gap-1">
           <div id="game-phase-badge" class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-600 text-white shadow">비공개 배치</div>
@@ -60,7 +67,6 @@
         <span id="guide-text" class="text-[8px] sm:text-[9px] text-amber-300 mt-0.5 truncate max-w-[170px] text-center">98~100% 크리티컬 파워를 노리세요!</span>
       </div>
 
-      <!-- 내 정보 & 메인 복귀 -->
       <div class="flex items-center gap-1.5 flex-row-reverse text-right">
         <button onclick="location.href='../../index.html'" class="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[10px] sm:text-xs font-bold text-slate-200 shadow">
           🏠 로비
@@ -73,7 +79,6 @@
       </div>
     </div>
 
-    <!-- 타이머 프로그레스 바 -->
     <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
       <div id="timer-progress" class="bg-gradient-to-r from-emerald-500 to-amber-500 h-full w-full transition-all duration-300"></div>
     </div>
@@ -139,8 +144,6 @@
 
   <!-- 하단 컨트롤 바 -->
   <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2 z-20 flex-shrink-0 flex flex-col gap-1.5 shadow-2xl mobile-safe-bottom">
-    
-    <!-- 1. 배치 단계 패널 -->
     <div id="placement-panel" class="flex flex-col gap-1.5">
       <div class="flex justify-between items-center px-1">
         <div class="text-[11px] font-bold text-amber-300">
@@ -156,7 +159,6 @@
         </div>
       </div>
 
-      <!-- 상단: 5대 영웅급 -->
       <div class="text-[9px] font-black text-amber-400 px-1">👑 5대 영웅 (8P 신급 / 성벽·장애물 원샷 파괴)</div>
       <div class="grid grid-cols-5 gap-1 text-center">
         <button onclick="buyPiece('HERO_세미니')" class="bg-gradient-to-b from-amber-600/30 to-slate-900 border-2 border-yellow-400/90 p-1 rounded-xl flex flex-col items-center shadow active:scale-95">
@@ -181,7 +183,6 @@
         </button>
       </div>
 
-      <!-- 하단: 장기 정규 기물 -->
       <div class="grid grid-cols-6 gap-1 text-center mt-0.5">
         <button onclick="buyPiece('楚')" class="bg-slate-800 hover:bg-slate-700 border border-emerald-400/80 p-0.5 rounded-xl flex flex-col items-center active:scale-95">
           <span class="text-[10px] font-black text-emerald-300">장(楚)</span>
@@ -210,7 +211,6 @@
       </div>
     </div>
 
-    <!-- 2. 배틀 단계: 타이밍 바운스 파워 패널 + 조준 취소 버튼 -->
     <div id="battle-panel" class="hidden flex flex-col gap-1.5">
       <div class="flex justify-between items-center px-1">
         <div id="battle-status-msg" class="text-[11px] text-slate-300 truncate">
@@ -246,6 +246,14 @@
     window.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
+    // 화면 왼쪽 에지 터치(사이드 메뉴) 차단
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0].clientX < 24) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // [핵심] 영웅 이미지 프리로드 & 다중 경로 자동 탐색
     const heroImageFiles = {
       '세미니': '세미니.jpeg',
       '홍구': '홍구.jpeg',
@@ -254,11 +262,36 @@
       '현조': '현조.jpeg'
     };
     const loadedImages = {};
-    for (const [key, filename] of Object.entries(heroImageFiles)) {
-      const img = new Image();
-      img.src = filename;
-      loadedImages[key] = img;
+
+    function loadHeroImages() {
+      for (const [key, filename] of Object.entries(heroImageFiles)) {
+        const img = new Image();
+        // 1차 시도: 현재 폴더
+        img.src = filename;
+        img.onload = () => {
+          img.isReady = true;
+        };
+        // 현재 폴더에 없을 경우 상위 폴더(../../)에서 탐색
+        img.onerror = () => {
+          const fallbackImg = new Image();
+          fallbackImg.src = '../../' + filename;
+          fallbackImg.onload = () => {
+            fallbackImg.isReady = true;
+            loadedImages[key] = fallbackImg;
+          };
+          fallbackImg.onerror = () => {
+            const rootImg = new Image();
+            rootImg.src = '/' + filename;
+            rootImg.onload = () => {
+              rootImg.isReady = true;
+              loadedImages[key] = rootImg;
+            };
+          };
+        };
+        loadedImages[key] = img;
+      }
     }
+    loadHeroImages();
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let lastClackTime = 0;
@@ -307,7 +340,7 @@
         osc.frequency.exponentialRampToValueAtTime(endPitch, t + 0.075);
 
         oscGain.gain.setValueAtTime(vol * 0.75, t);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
 
         osc.connect(oscGain);
         oscGain.connect(audioCtx.destination);
@@ -1713,7 +1746,7 @@
       isSimulating = true;
     }
 
-    /* 렌더링 루프 */
+    /* 렌더링 루프 - 영웅 사진 렌더링 강화 */
     function render(timestamp) {
       if (isPowerBouncing && selectedPiece && gamePhase === 'battle') {
         const delta = (timestamp - lastBounceTime) / 1000;
@@ -1932,7 +1965,7 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
-      /* 기물 렌더링 */
+      /* 기물 렌더링 (사진 즉시 출력 로직) */
       pieces.forEach(p => {
         if (!p.alive) return;
         if (gamePhase === 'placement' && p.side !== mySide) return;
@@ -1963,16 +1996,20 @@
           ctx.setLineDash([]);
         }
 
-        if (p.heroKey && loadedImages[p.heroKey] && loadedImages[p.heroKey].complete && loadedImages[p.heroKey].naturalWidth > 0) {
+        // [영웅 사진 렌더링]
+        const heroImg = p.heroKey ? loadedImages[p.heroKey] : null;
+        const hasValidHeroImage = heroImg && (heroImg.isReady || (heroImg.complete && heroImg.naturalWidth > 0));
+
+        if (p.heroKey && hasValidHeroImage) {
           ctx.save();
           ctx.beginPath();
           ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
           ctx.clip();
 
-          const img = loadedImages[p.heroKey];
-          ctx.drawImage(img, -p.radius, -p.radius, p.radius * 2, p.radius * 2);
+          ctx.drawImage(heroImg, -p.radius, -p.radius, p.radius * 2, p.radius * 2);
           ctx.restore();
 
+          // 황금빛 영웅 테두리 링
           ctx.save();
           ctx.lineWidth = p.ringWidth || 5;
           ctx.strokeStyle = '#facc15';
@@ -1981,14 +2018,20 @@
           ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.stroke();
           ctx.restore();
 
+          // 하단 이름 네임태그
+          ctx.save();
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.fillRect(-p.radius, p.radius * 0.35, p.radius * 2, p.radius * 0.65);
           ctx.fillStyle = '#fef08a';
-          ctx.font = `900 ${p.radius * 0.45}px 'Jua'`;
+          ctx.font = `900 ${p.radius * 0.46}px 'Jua'`;
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
+          ctx.textBaseline = 'middle';
           ctx.shadowColor = '#000000';
-          ctx.shadowBlur = 4;
-          ctx.fillText(p.char, 0, p.radius - 1);
+          ctx.shadowBlur = 3;
+          ctx.fillText(p.char, 0, p.radius * 0.68);
+          ctx.restore();
         } else {
+          // 일반 장기 기물 또는 이미지 로딩 대기 상태
           const grad = ctx.createRadialGradient(-p.radius * 0.3, -p.radius * 0.3, p.radius * 0.1, 0, 0, p.radius);
           if (isCho) {
             grad.addColorStop(0, '#059669');
@@ -2006,7 +2049,7 @@
           ctx.stroke();
 
           ctx.fillStyle = '#ffffff';
-          ctx.font = `900 ${p.radius * 1.15}px 'Jua'`;
+          ctx.font = `900 ${p.radius * (p.heroKey ? 0.8 : 1.15)}px 'Jua'`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(p.char, 0, 1.2);

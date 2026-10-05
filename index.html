@@ -129,21 +129,21 @@
         </div>
       </div>
 
-      <!-- 3. 복불복 핀볼 룰렛 카드 -->
-      <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+      <!-- 3. 복불복 핀볼 룰렛 카드 (선택 영역 및 크기 대폭 확장) -->
+      <div onclick="goToGame('pinball')" class="neon-card md:col-span-2 lg:col-span-1 bg-gradient-to-b from-slate-900 via-rose-950/20 to-slate-900/95 border-2 border-rose-500/60 rounded-3xl p-6 sm:p-7 min-h-[220px] transition-all duration-300 cursor-pointer flex flex-col justify-between group shadow-xl active:scale-[0.98]">
         <div>
           <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl group-hover:scale-110 transition-transform">🎰</span>
-            <span class="px-2.5 py-1 bg-rose-950 border border-rose-500 text-rose-300 text-[11px] font-black rounded-xl">벌칙 / 내기 추첨</span>
+            <span class="text-5xl group-hover:scale-110 transition-transform">🎰</span>
+            <span class="px-3 py-1.5 bg-rose-950 border border-rose-500 text-rose-300 text-xs font-black rounded-xl shadow">벌칙 / 내기 추첨</span>
           </div>
-          <h3 class="text-xl font-black text-rose-400 title-font">복불복 핀볼</h3>
-          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+          <h3 class="text-2xl font-black text-rose-400 title-font tracking-wide">복불복 핀볼</h3>
+          <p class="text-xs sm:text-sm text-slate-200 mt-2.5 leading-relaxed font-medium">
             사다리 타기보다 흥미진진한 구슬 낙하 핀볼! 디스코드 화면 공유나 팝업 모드로 친구들과 함께 즐기기.
           </p>
         </div>
-        <div class="mt-5 flex items-center justify-between text-xs font-bold text-rose-300 pt-3 border-t border-slate-800">
-          <span>추첨장 입장하기</span>
-          <span class="group-hover:translate-x-1 transition-transform">👉</span>
+        <div class="mt-6 flex items-center justify-between text-sm font-black text-rose-300 pt-3.5 border-t border-rose-900/50">
+          <span class="group-hover:text-rose-200">추첨장 입장하기</span>
+          <span class="group-hover:translate-x-1.5 transition-transform text-base">👉</span>
         </div>
       </div>
 

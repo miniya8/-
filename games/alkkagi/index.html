@@ -307,7 +307,7 @@
         osc.frequency.exponentialRampToValueAtTime(endPitch, t + 0.075);
 
         oscGain.gain.setValueAtTime(vol * 0.75, t);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
 
         osc.connect(oscGain);
         oscGain.connect(audioCtx.destination);
@@ -489,6 +489,8 @@
     let isSimulating = false;
     let isGameOver = false;
 
+    let cssWidth = 0;
+    let cssHeight = 0;
     let boardBounds = { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
     let mySpawnZone = { top: 0, bottom: 0 };
     let oppSpawnZone = { top: 0, bottom: 0 };
@@ -519,8 +521,8 @@
       const mainArea = document.getElementById('main-area');
       const container = document.getElementById('board-container');
 
-      const maxW = mainArea.clientWidth - 10;
-      const maxH = mainArea.clientHeight - 10;
+      const maxW = Math.max(280, (mainArea.clientWidth || window.innerWidth) - 12);
+      const maxH = Math.max(380, (mainArea.clientHeight || window.innerHeight) - 12);
 
       const targetRatio = 9 / 16;
       let w = maxW;
@@ -534,24 +536,22 @@
       container.style.width = `${Math.floor(w)}px`;
       container.style.height = `${Math.floor(h)}px`;
 
-      const drawW = Math.floor(w - 6);
-      const drawH = Math.floor(h - 6);
+      cssWidth = Math.floor(w - 6);
+      cssHeight = Math.floor(h - 6);
 
-      canvas.width = drawW * window.devicePixelRatio;
-      canvas.height = drawH * window.devicePixelRatio;
-      canvas.style.width = `${drawW}px`;
-      canvas.style.height = `${drawH}px`;
-
-      ctx.resetTransform();
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(cssWidth * dpr);
+      canvas.height = Math.floor(cssHeight * dpr);
+      canvas.style.width = `${cssWidth}px`;
+      canvas.style.height = `${cssHeight}px`;
 
       boardBounds = {
-        left: drawW * 0.03,
-        top: drawH * 0.025,
-        right: drawW * 0.97,
-        bottom: drawH * 0.975,
-        width: drawW * 0.94,
-        height: drawH * 0.95
+        left: cssWidth * 0.03,
+        top: cssHeight * 0.025,
+        right: cssWidth * 0.97,
+        bottom: cssHeight * 0.975,
+        width: cssWidth * 0.94,
+        height: cssHeight * 0.95
       };
 
       if (mySide === 'cho') {
@@ -878,9 +878,9 @@
       onTurnSwitched();
     }
 
-    /* 배치 단계 알 생성 좌표 보정 */
     function autoBalancedDeploy() {
       if (gamePhase !== 'placement') return;
+      if (!boardBounds.width || !boardBounds.height) resizeCanvas();
 
       pieces = pieces.filter(p => p.side !== mySide);
       budget = 20;
@@ -889,7 +889,7 @@
       const bLeft = boardBounds.left;
       const zTop = mySpawnZone.top;
       const zBottom = mySpawnZone.bottom;
-      const zH = zBottom - zTop;
+      const zH = Math.max(80, zBottom - zTop);
 
       const formation = [
         { type: 'HERO_세미니', x: bLeft + bW * 0.50, y: zTop + zH * 0.75 },
@@ -909,7 +909,7 @@
           charName = (mySide === 'cho') ? item.type : (item.type === '楚' ? '漢' : item.type);
         }
 
-        const r = bW * conf.radiusRatio;
+        const r = Math.max(12, bW * conf.radiusRatio);
         pieces.push({
           id: mySide + '_' + Math.random().toString(36).substring(2, 9),
           side: mySide,
@@ -940,6 +940,7 @@
 
     function buyPiece(typeCode) {
       if (gamePhase !== 'placement') return;
+      if (!boardBounds.width || !boardBounds.height) resizeCanvas();
 
       let conf, charName, heroKey = null;
       if (typeCode.startsWith('HERO_')) {
@@ -957,12 +958,12 @@
       }
       budget -= conf.cost;
 
-      const r = boardBounds.width * conf.radiusRatio;
-      const zoneW = boardBounds.width - r * 2;
-      const zoneH = (mySpawnZone.bottom - mySpawnZone.top) - r * 2;
+      const r = Math.max(12, boardBounds.width * conf.radiusRatio);
+      const zoneW = Math.max(30, boardBounds.width - r * 2);
+      const zoneH = Math.max(30, (mySpawnZone.bottom - mySpawnZone.top) - r * 2);
 
-      let spawnX = boardBounds.left + r + Math.random() * Math.max(10, zoneW);
-      let spawnY = mySpawnZone.top + r + Math.random() * Math.max(10, zoneH);
+      let spawnX = boardBounds.left + r + Math.random() * zoneW;
+      let spawnY = mySpawnZone.top + r + Math.random() * zoneH;
 
       pieces.push({
         id: mySide + '_' + Math.random().toString(36).substring(2, 9),
@@ -991,6 +992,7 @@
     }
 
     function setupAIHanArmy() {
+      if (!boardBounds.width || !boardBounds.height) resizeCanvas();
       pieces = pieces.filter(p => p.side !== 'han');
       const aiRoster = [
         { type: 'HERO_홍구' },
@@ -1010,9 +1012,9 @@
           charName = (item.type === '楚') ? '漢' : item.type;
         }
 
-        const r = boardBounds.width * conf.radiusRatio;
-        const x = boardBounds.left + r + Math.random() * (boardBounds.width - r * 2);
-        const y = oppSpawnZone.top + r + Math.random() * (oppSpawnZone.bottom - oppSpawnZone.top - r * 2);
+        const r = Math.max(12, boardBounds.width * conf.radiusRatio);
+        const x = boardBounds.left + r + Math.random() * Math.max(30, boardBounds.width - r * 2);
+        const y = oppSpawnZone.top + r + Math.random() * Math.max(30, (oppSpawnZone.bottom - oppSpawnZone.top) - r * 2);
 
         pieces.push({
           id: 'han_' + Math.random().toString(36).substring(2, 9),
@@ -1151,7 +1153,7 @@
       const pos = getCanvasPos(e);
 
       if (gamePhase === 'placement') {
-        const target = pieces.find(p => p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
+        const target = pieces.find(p => p.alive && p.side === mySide && Math.hypot(p.x - pos.x, p.y - pos.y) <= p.radius * 2.2);
         if (target) {
           isMovingPlacement = true;
           selectedPiece = target;
@@ -1711,7 +1713,7 @@
       isSimulating = true;
     }
 
-    /* 렌더링 루프 - 배치 단계 알 표시 버그 완벽 수정 */
+    /* 렌더링 루프 */
     function render(timestamp) {
       if (isPowerBouncing && selectedPiece && gamePhase === 'battle') {
         const delta = (timestamp - lastBounceTime) / 1000;
@@ -1732,10 +1734,14 @@
       }
       lastBounceTime = timestamp;
 
-      const w = parseFloat(canvas.style.width);
-      const h = parseFloat(canvas.style.height);
-      if (!w || !h) return;
-      ctx.clearRect(0, 0, w, h);
+      if (!cssWidth || !cssHeight) {
+        resizeCanvas();
+      }
+
+      const dpr = window.devicePixelRatio || 1;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(dpr, dpr);
 
       ctx.save();
       if (shakeIntensity > 0) {
@@ -1892,7 +1898,7 @@
         ctx.fillStyle = '#94a3b8';
         ctx.font = 'bold 11px "Jua"';
         ctx.textAlign = 'center';
-        ctx.fillText('🌫️ 상대방 진영 (비공개 배치) 🌫️️', boardBounds.left + boardBounds.width / 2, oppSpawnZone.top + (oppSpawnZone.bottom - oppSpawnZone.top) / 2);
+        ctx.fillText('🌫️ 상대방 진영 (비공개 배치) 🌫', boardBounds.left + boardBounds.width / 2, oppSpawnZone.top + (oppSpawnZone.bottom - oppSpawnZone.top) / 2);
         ctx.restore();
       }
 
@@ -1926,13 +1932,10 @@
         if (pt.alpha <= 0) particles.splice(i, 1);
       }
 
-      /* [기물 렌더링] 배치 단계에서 내 기물이 무조건 그려지도록 조건 명확화 */
+      /* 기물 렌더링 */
       pieces.forEach(p => {
         if (!p.alive) return;
-        if (gamePhase === 'placement') {
-          // 배치 단계에서는 오직 본인 사이드의 기물만 렌더링 (상대방은 비공개)
-          if (p.side !== mySide) return;
-        }
+        if (gamePhase === 'placement' && p.side !== mySide) return;
 
         const isCho = (p.side === 'cho');
 
@@ -1960,7 +1963,7 @@
           ctx.setLineDash([]);
         }
 
-        if (p.heroKey && loadedImages[p.heroKey] && loadedImages[p.heroKey].complete) {
+        if (p.heroKey && loadedImages[p.heroKey] && loadedImages[p.heroKey].complete && loadedImages[p.heroKey].naturalWidth > 0) {
           ctx.save();
           ctx.beginPath();
           ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
@@ -1999,7 +2002,7 @@
           ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill();
 
           ctx.lineWidth = p.ringWidth || 2.5;
-          ctx.strokeStyle = p.border;
+          ctx.strokeStyle = p.border || '#fbbf24';
           ctx.stroke();
 
           ctx.fillStyle = '#ffffff';

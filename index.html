@@ -2,18 +2,37 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>✨ 세미니의 놀이터^^* 🎈</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    html {
+      height: 100%;
+      scroll-behavior: smooth;
+    }
+
     body {
+      min-height: 100%;
+      min-height: 100dvh;
       font-family: 'Noto Sans KR', sans-serif;
       background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      background-attachment: fixed; /* 배경 리페인트 방지로 스크롤 버벅임 해결 */
       user-select: none;
       -webkit-user-select: none;
+      /* 모바일 부드러운 모멘텀 스크롤 활성화 */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
+
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
+
+    .neon-card {
+      transform: translateZ(0); /* GPU 가속 활성화 */
+      will-change: transform;
+    }
     .neon-card:hover {
       box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
       border-color: rgba(245, 158, 11, 0.8);
@@ -41,6 +60,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: rainbow-sparkle 4s ease infinite;
+      transform: translateZ(0);
     }
 
     /* 앙증맞은 통통 튀는 모션 */
@@ -51,18 +71,19 @@
     .bounce-cute {
       display: inline-block;
       animation: cute-bounce 2s ease-in-out infinite;
+      transform: translateZ(0);
     }
 
     /* 모바일 하단 제스처/소프트키 네비게이션 바 잘림 방지 */
     .mobile-safe-footer {
-      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
     }
   </style>
 </head>
-<body class="text-white min-h-screen flex flex-col items-center justify-between p-3 sm:p-6 overflow-x-hidden">
+<body class="text-white flex flex-col items-center justify-between p-3 sm:p-6">
 
-  <!-- 상단 헤더 & 통합 프로필 (원본 유지) -->
-  <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
+  <!-- 상단 헤더 & 통합 프로필 -->
+  <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md flex-shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl shadow-inner">
         <span class="bounce-cute">🎪</span>
@@ -98,7 +119,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       
-      <!-- 1. 전설장기 1 카드 (원본 복원) -->
+      <!-- 1. 전설장기 1 카드 -->
       <div onclick="goToGame('janggi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -116,7 +137,7 @@
         </div>
       </div>
 
-      <!-- 2. 전설의 알까기 카드 (원본 복원) -->
+      <!-- 2. 전설의 알까기 카드 -->
       <div onclick="goToGame('alkkagi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -134,7 +155,7 @@
         </div>
       </div>
 
-      <!-- 3. 복불복 핀볼 룰렛 카드 (터치 여백 확보 및 하단 짤림 방지 최적화) -->
+      <!-- 3. 복불복 핀볼 룰렛 카드 -->
       <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -155,8 +176,8 @@
     </div>
   </main>
 
-  <!-- 하단 상태바 (모바일 하단 내비게이션 바와 겹치지 않도록 안전 영역 보호 적용) -->
-  <footer class="w-full max-w-5xl bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-slate-400 mobile-safe-footer mb-1">
+  <!-- 하단 상태바 -->
+  <footer class="w-full max-w-5xl bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-slate-400 mobile-safe-footer mb-2 flex-shrink-0">
     <div class="flex items-center gap-2">
       <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
       <span class="font-bold text-slate-300">놀이터 상태: 친구 맞이 준비 완료! 🎉</span>

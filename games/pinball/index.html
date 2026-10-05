@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 뷰포트 최적화: 가로 잘림 방지 및 Safe Area(노치, 하단 바) 대응 -->
+  <!-- 모바일 뷰포트: safe-area 대응 및 확대 왜곡 방지 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <!-- 즉시 리다이렉트 메타 태그 -->
   <meta http-equiv="refresh" content="0; url=https://rd.dsms.kr/">
@@ -13,39 +13,43 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html, body {
       width: 100%;
       height: 100%;
-      min-height: 100dvh; /* 모바일 동적 브라우저 주소창 높이 대응 */
+      /* 구형/신형 모바일 브라우저 주소창 가변 높이 완벽 대응 */
+      min-height: 100vh;
+      min-height: 100dvh;
       background-color: #09090b;
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      /* 아이폰 노치 및 제스처 바 여백 처리 */
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     .container {
       width: 90%;
       max-width: 400px;
-      padding: 24px 20px;
+      margin: auto;
+      text-align: center;
       word-break: keep-all;
       line-height: 1.6;
+      
+      /* 핸드폰 하단 내비게이션 바 / 제스처 바에 가려지지 않도록 Safe Area 패딩 설정 */
+      padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 20px)) 20px;
     }
 
     .loading-spinner {
-      width: 38px;
-      height: 38px;
-      border: 3px solid rgba(255, 255, 255, 0.15);
+      width: 42px;
+      height: 42px;
+      border: 3.5px solid rgba(255, 255, 255, 0.15);
       border-top-color: #38bdf8;
       border-radius: 50%;
-      margin: 0 auto 18px auto;
+      margin: 0 auto 20px auto;
       animation: spin 0.8s linear infinite;
     }
 
@@ -53,32 +57,56 @@
       to { transform: rotate(360deg); }
     }
 
-    p {
-      font-size: 15px;
-      color: #e2e8f0;
-      margin-bottom: 12px;
+    .title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 8px;
     }
 
-    a {
-      color: #38bdf8;
-      text-decoration: underline;
-      font-weight: 600;
-      word-break: break-all;
+    .desc {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+
+    /* 손가락으로 누르기 편한 모바일 최적화 시작/이동 버튼 */
+    .btn-start {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 52px;
+      background-color: #38bdf8;
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-start:active {
+      background-color: #0284c7;
+      transform: scale(0.98);
+      color: #ffffff;
     }
   </style>
 
   <script>
-    // 자바스크립트로 즉시 이동 처리 (뒤로가기 방지 및 브라우저 호환성)
+    // 페이지 로드 시 즉시 이동 처리
     window.location.replace("https://rd.dsms.kr/");
   </script>
 </head>
 <body>
   <div class="container">
     <div class="loading-spinner"></div>
-    <p>사이트로 연결 중입니다...</p>
-    <p style="font-size: 13px; color: #94a3b8;">
-      자동으로 이동하지 않으면 <a href="https://rd.dsms.kr/">여기</a>를 터치해 주세요.
-    </p>
+    <p class="title">사이트로 연결 중입니다...</p>
+    <p class="desc">자동으로 이동하지 않으면 아래 버튼을 눌러주세요.</p>
+    
+    <!-- 모바일 내비게이션 바 위로 안전하게 올라오는 버튼 -->
+    <a href="https://rd.dsms.kr/" class="btn-start">지금 시작하기</a>
   </div>
 </body>
 </html>

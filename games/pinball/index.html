@@ -3,194 +3,322 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>✨ 세미니의 놀이터^^* 🎈</title>
+  <title>복불복 핀볼 룰렛 - 세미니의 놀이터</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-    body {
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
       font-family: 'Noto Sans KR', sans-serif;
-      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b, #09090b);
+      overscroll-behavior: none;
     }
+
     .title-font { font-family: 'Black Han Sans', 'Jua', sans-serif; }
-    .neon-card:hover {
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
-      border-color: rgba(245, 158, 11, 0.8);
-    }
 
-    /* 반짝반짝 무지개 샤인 애니메이션 */
-    @keyframes rainbow-sparkle {
-      0% {
-        background-position: 0% 50%;
-        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
-      }
-      50% {
-        background-position: 100% 50%;
-        filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.85));
-      }
-      100% {
-        background-position: 0% 50%;
-        filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
-      }
-    }
-
-    .sparkle-text {
-      background: linear-gradient(90deg, #fbbf24, #f43f5e, #ec4899, #8b5cf6, #38bdf8, #34d399, #fbbf24);
-      background-size: 300% 300%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: rainbow-sparkle 4s ease infinite;
-    }
-
-    /* 앙증맞은 통통 튀는 모션 */
-    @keyframes cute-bounce {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(8deg); }
-    }
-    .bounce-cute {
-      display: inline-block;
-      animation: cute-bounce 2s ease-in-out infinite;
+    /* 모바일 하단 제스처 바 및 소프트키 네비게이션 보호 */
+    .mobile-safe-bottom {
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+      margin-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
     }
   </style>
 </head>
-<body class="text-white min-h-screen flex flex-col items-center justify-between p-3 sm:p-6">
+<body id="app-root" class="text-white flex flex-col justify-between items-center p-2 sm:p-3 overflow-hidden box-border">
 
-  <!-- 상단 헤더 & 통합 프로필 -->
-  <header class="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-700/80 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl shadow-inner">
-        <span class="bounce-cute">🎪</span>
-      </div>
+  <!-- 상단 네비게이션 및 로고 -->
+  <header class="w-full max-w-md flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-700/80 shadow-xl z-20 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🎰</span>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-black title-font tracking-wide flex items-center gap-1.5">
-          <span class="text-amber-300">✨</span>
-          <span class="sparkle-text">세미니의 놀이터^^*</span>
-          <span class="bounce-cute text-xl sm:text-2xl">🎈</span>
-        </h1>
-        <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-          <span>💖 신나고 유쾌한 보드게임 & 파티 플레이 공간 🍭</span>
-        </p>
+        <h1 class="text-sm sm:text-base font-black text-rose-400 title-font leading-tight">복불복 핀볼 룰렛</h1>
+        <p class="text-[9px] text-slate-400">구슬 낙하 벌칙/당첨 추첨기</p>
       </div>
     </div>
-
-    <!-- 통합 닉네임 설정 -->
-    <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-2xl border border-slate-700 w-full sm:w-auto">
-      <span class="text-xs font-bold text-amber-300">내 닉네임:</span>
-      <input id="hub-nickname-input" type="text" maxlength="8" oninput="saveNickname(this.value)" onchange="saveNickname(this.value)" class="bg-transparent border-b border-amber-400/50 text-xs font-bold text-white focus:outline-none focus:border-amber-400 w-28 sm:w-32 px-1">
-      <span class="text-[10px] text-emerald-400 font-bold">● 영구저장</span>
-    </div>
+    <button onclick="location.href='../../index.html'" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 shadow">
+      🏠 로비
+    </button>
   </header>
 
-  <!-- 메인 게임 선택 카드 그리드 -->
-  <main class="w-full max-w-5xl my-6 flex-1 flex flex-col justify-center">
-    <div class="text-center mb-6">
-      <h2 class="text-2xl sm:text-3xl font-black text-slate-100 title-font flex items-center justify-center gap-2">
-        <span>⭐</span> 플레이할 놀이를 골라보세요! <span>🧸</span>
-      </h2>
-      <p class="text-xs sm:text-sm text-slate-400 mt-1">친구와 1:1 대결을 하거나 쫄깃한 복불복 핀볼을 즐겨보세요 🥳</p>
-    </div>
+  <!-- 메인 핀볼 보드 영역 -->
+  <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
+    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-slate-950 border-2 border-slate-800 p-1 flex items-center justify-center">
+      <canvas id="pinballCanvas" class="rounded-xl block touch-none"></canvas>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      
-      <!-- 1. 전설장기 1 카드 -->
-      <div onclick="goToGame('janggi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl group-hover:scale-110 transition-transform">⚔️</span>
-            <span class="px-2.5 py-1 bg-emerald-950 border border-emerald-500 text-emerald-300 text-[11px] font-black rounded-xl">온라인 P2P / COM</span>
-          </div>
-          <h3 class="text-xl font-black text-amber-400 title-font">전설장기 1</h3>
-          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-            탱크 돌진, 곡사 포격 모션 및 12대 초화려 킬 이펙트 탑재! 외통수 자동 판정과 관전자 훈수 지원.
-          </p>
-        </div>
-        <div class="mt-5 flex items-center justify-between text-xs font-bold text-amber-300 pt-3 border-t border-slate-800">
-          <span>대국실 입장하기</span>
-          <span class="group-hover:translate-x-1 transition-transform">👉</span>
+      <!-- 결과 팝업 모달 -->
+      <div id="result-modal" class="absolute inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-rose-500 text-white p-5 rounded-3xl text-center max-w-xs w-full shadow-2xl">
+          <div class="text-3xl mb-1">🎉</div>
+          <div id="result-slot-name" class="text-xl font-black title-font text-rose-400">당첨!</div>
+          <p id="result-slot-desc" class="text-xs text-slate-300 mt-2">구슬이 슬롯에 안전하게 안착했습니다.</p>
+          <button onclick="closeResultModal()" class="w-full mt-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-black rounded-xl text-xs shadow">
+            다시 하기
+          </button>
         </div>
       </div>
-
-      <!-- 2. 전설의 알까기 카드 -->
-      <div onclick="goToGame('alkkagi')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl group-hover:scale-110 transition-transform">💥</span>
-            <span class="px-2.5 py-1 bg-purple-950 border border-purple-500 text-purple-300 text-[11px] font-black rounded-xl">신규 오픈 배틀</span>
-          </div>
-          <h3 class="text-xl font-black text-purple-400 title-font">전설의 알까기</h3>
-          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-            슬링샷 드래그 물리 조준 & 바둑판 밖으로 장기알 날려버리기! 당구식 탄성 충돌과 장외 낙사 이펙트.
-          </p>
-        </div>
-        <div class="mt-5 flex items-center justify-between text-xs font-bold text-purple-300 pt-3 border-t border-slate-800">
-          <span>알까기판 입장하기</span>
-          <span class="group-hover:translate-x-1 transition-transform">👉</span>
-        </div>
-      </div>
-
-      <!-- 3. 복불복 핀볼 룰렛 카드 (터치 시 rd.dsms.kr 로 즉시 이동) -->
-      <div onclick="goToGame('pinball')" class="neon-card bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between group">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl group-hover:scale-110 transition-transform">🎰</span>
-            <span class="px-2.5 py-1 bg-rose-950 border border-rose-500 text-rose-300 text-[11px] font-black rounded-xl">벌칙 / 내기 추첨</span>
-          </div>
-          <h3 class="text-xl font-black text-rose-400 title-font">복불복 핀볼</h3>
-          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-            구슬 낙하 물리 핀볼 게임! 핸드폰 브라우저로 바로 접속하여 게임을 진행합니다.
-          </p>
-        </div>
-        <div class="mt-5 flex items-center justify-between text-xs font-bold text-rose-300 pt-3 border-t border-slate-800">
-          <span>핀볼판 바로가기</span>
-          <span class="group-hover:translate-x-1 transition-transform">👉</span>
-        </div>
-      </div>
-
     </div>
   </main>
 
-  <!-- 하단 상태바 -->
-  <footer class="w-full max-w-5xl bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-slate-400">
-    <div class="flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span class="font-bold text-slate-300">놀이터 상태: 친구 맞이 준비 완료! 🎉</span>
+  <!-- 하단 컨트롤 메뉴 바 (네비게이션 바와 겹치지 않도록 Safe Area 적용) -->
+  <footer class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl p-2.5 z-20 flex-shrink-0 flex flex-col gap-2 shadow-2xl mobile-safe-bottom">
+    <div class="flex items-center justify-between gap-2">
+      <button onclick="openSettingsModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-bold text-slate-200 flex items-center gap-1 shadow">
+        ⚙️ 슬롯 설정
+      </button>
+      <button id="drop-btn" onclick="dropBall()" class="flex-1 py-2.5 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-black text-sm rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-1.5">
+        <span>⚪</span> 구슬 발사!
+      </button>
     </div>
-    <span>© 2026 세미니의 놀이터. All rights reserved.</span>
   </footer>
 
+  <!-- 슬롯 설정 모달 -->
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-xs w-full shadow-2xl">
+      <h3 class="text-base font-black text-rose-400 mb-3 title-font">⚙️ 슬롯 이름 설정 (최대 5개)</h3>
+      <div id="slot-inputs-container" class="space-y-2 mb-4">
+        <!-- JS로 동적 생성 -->
+      </div>
+      <div class="flex gap-2">
+        <button onclick="saveSettings()" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 font-black text-xs rounded-xl">저장</button>
+        <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs rounded-xl">취소</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function loadSavedNickname() {
-      let saved = localStorage.getItem('jg_permanent_nickname');
-      if (!saved) {
-        const prefixes = ['질풍의', '전설의', '천하제일', '무적의', '바람의', '신궁', '패왕', '귀여운'];
-        const suffixes = ['차마', '포왕', '알까기왕', '슬링샷', '대장군', '마스터', '장인'];
-        saved = `${prefixes[Math.floor(Math.random() * prefixes.length)]}${suffixes[Math.floor(Math.random() * suffixes.length)]}_${Math.floor(10 + Math.random() * 90)}`;
-        localStorage.setItem('jg_permanent_nickname', saved);
+    const canvas = document.getElementById('pinballCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let slots = ['커피 쏘기', '꽝 (생존)', '간식 사기', '설거지', '생존'];
+    const slotColors = ['#f43f5e', '#3b82f6', '#eab308', '#10b981', '#8b5cf6'];
+
+    let pins = [];
+    let ball = null;
+    let isDropping = false;
+    let boardWidth = 0;
+    let boardHeight = 0;
+
+    function resizeBoard() {
+      const mainArea = document.getElementById('main-area');
+      const container = document.getElementById('board-container');
+
+      const maxW = mainArea.clientWidth - 16;
+      const maxH = mainArea.clientHeight - 16;
+
+      const targetRatio = 9 / 14;
+      let w = maxW;
+      let h = w / targetRatio;
+
+      if (h > maxH) {
+        h = maxH;
+        w = h * targetRatio;
       }
-      document.getElementById('hub-nickname-input').value = saved;
+
+      container.style.width = `${Math.floor(w)}px`;
+      container.style.height = `${Math.floor(h)}px`;
+
+      boardWidth = Math.floor(w - 8);
+      boardHeight = Math.floor(h - 8);
+
+      canvas.width = boardWidth * window.devicePixelRatio;
+      canvas.height = boardHeight * window.devicePixelRatio;
+      canvas.style.width = `${boardWidth}px`;
+      canvas.style.height = `${boardHeight}px`;
+
+      ctx.resetTransform();
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      initPins();
     }
 
-    function saveNickname(val) {
-      const trimmed = (val || '').trim();
-      if (trimmed) {
-        localStorage.setItem('jg_permanent_nickname', trimmed);
-        localStorage.setItem('jg_nick_is_custom', 'true');
+    function initPins() {
+      pins = [];
+      const rows = 8;
+      const startY = boardHeight * 0.18;
+      const endY = boardHeight * 0.78;
+      const spacingY = (endY - startY) / (rows - 1);
+
+      for (let r = 0; r < rows; r++) {
+        const isOdd = r % 2 === 1;
+        const count = isOdd ? 6 : 7;
+        const spacingX = boardWidth / (count + 1);
+        const y = startY + r * spacingY;
+
+        for (let c = 1; c <= count; c++) {
+          const x = c * spacingX;
+          pins.push({ x, y, r: 3.5 });
+        }
       }
     }
 
-    // 게임 이동 함수: pinball 선택 시 외부 링크로 바로 접속
-    function goToGame(game) {
-      if (game === 'janggi') {
-        window.location.href = 'games/janggi/index.html';
-      } else if (game === 'alkkagi') {
-        window.location.href = 'games/alkkagi/index.html';
-      } else if (game === 'pinball') {
-        window.location.href = 'https://rd.dsms.kr/';
+    function dropBall() {
+      if (isDropping) return;
+      isDropping = true;
+      document.getElementById('drop-btn').disabled = true;
+      document.getElementById('drop-btn').classList.add('opacity-50');
+
+      ball = {
+        x: boardWidth / 2 + (Math.random() - 0.5) * (boardWidth * 0.2),
+        y: boardHeight * 0.05,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 1,
+        r: boardWidth * 0.035,
+        alive: true
+      };
+    }
+
+    function update() {
+      if (!ball || !ball.alive) return;
+
+      ball.vy += 0.22; // 중력
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // 좌우 벽 바운스
+      if (ball.x - ball.r < 0) {
+        ball.x = ball.r;
+        ball.vx = -ball.vx * 0.65;
+      } else if (ball.x + ball.r > boardWidth) {
+        ball.x = boardWidth - ball.r;
+        ball.vx = -ball.vx * 0.65;
+      }
+
+      // 핀 충돌
+      for (const pin of pins) {
+        const dx = ball.x - pin.x;
+        const dy = ball.y - pin.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = ball.r + pin.r;
+
+        if (dist < minDist) {
+          const angle = Math.atan2(dy, dx);
+          ball.x = pin.x + Math.cos(angle) * minDist;
+          ball.y = pin.y + Math.sin(angle) * minDist;
+
+          const speed = Math.hypot(ball.vx, ball.vy) * 0.72;
+          ball.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 0.8;
+          ball.vy = Math.sin(angle) * speed;
+        }
+      }
+
+      // 바닥 슬롯 도착
+      const slotY = boardHeight * 0.86;
+      if (ball.y >= slotY) {
+        ball.alive = false;
+        const slotWidth = boardWidth / slots.length;
+        const slotIdx = Math.min(slots.length - 1, Math.max(0, Math.floor(ball.x / slotWidth)));
+        showResult(slots[slotIdx]);
       }
     }
 
-    window.addEventListener('DOMContentLoaded', loadSavedNickname);
+    function showResult(slotName) {
+      document.getElementById('result-slot-name').innerText = `[${slotName}]`;
+      document.getElementById('result-modal').classList.remove('hidden');
+    }
+
+    function closeResultModal() {
+      document.getElementById('result-modal').classList.add('hidden');
+      isDropping = false;
+      ball = null;
+      document.getElementById('drop-btn').disabled = false;
+      document.getElementById('drop-btn').classList.remove('opacity-50');
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, boardWidth, boardHeight);
+
+      // 슬롯 바닥 구분선 및 텍스트 렌더링
+      const slotY = boardHeight * 0.85;
+      const slotW = boardWidth / slots.length;
+
+      for (let i = 0; i < slots.length; i++) {
+        const x = i * slotW;
+        ctx.fillStyle = slotColors[i % slotColors.length] + '22';
+        ctx.fillRect(x, slotY, slotW, boardHeight - slotY);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, slotY, slotW, boardHeight - slotY);
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = `bold ${Math.max(10, Math.floor(slotW * 0.18))}px 'Jua'`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(slots[i], x + slotW / 2, slotY + (boardHeight - slotY) / 2);
+      }
+
+      // 핀 렌더링
+      ctx.fillStyle = '#fbcfe8';
+      for (const pin of pins) {
+        ctx.beginPath();
+        ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 구슬 렌더링
+      if (ball && ball.alive) {
+        ctx.save();
+        ctx.fillStyle = '#f43f5e';
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function openSettingsModal() {
+      const container = document.getElementById('slot-inputs-container');
+      container.innerHTML = '';
+      slots.forEach((s, idx) => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = s;
+        input.className = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white';
+        input.id = `slot-val-${idx}`;
+        container.appendChild(input);
+      });
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      const newSlots = [];
+      for (let i = 0; i < slots.length; i++) {
+        const val = document.getElementById(`slot-val-${i}`).value.trim();
+        newSlots.push(val || `슬롯 ${i + 1}`);
+      }
+      slots = newSlots;
+      closeSettingsModal();
+    }
+
+    window.addEventListener('resize', resizeBoard);
+    window.addEventListener('orientationchange', () => setTimeout(resizeBoard, 200));
+
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeBoard();
+      loop();
+    });
   </script>
 </body>
 </html>

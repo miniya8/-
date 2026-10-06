@@ -120,11 +120,11 @@
     }
   </style>
 </head>
-<body id="app-root" class="text-white flex flex-col justify-between items-center p-1 sm:p-2 overflow-hidden box-border">
+<body id="app-root" class="text-white flex flex-col justify-between items-center p-0.5 overflow-hidden box-border">
 
   <!-- 상단 상태바 -->
-  <header class="w-full max-w-lg flex flex-col gap-1 z-20 flex-shrink-0">
-    <div class="flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-2.5 py-1 sm:py-1.5 rounded-2xl border border-slate-700/80 shadow-xl">
+  <header class="w-full max-w-xl flex flex-col gap-0.5 z-20 flex-shrink-0 px-0.5">
+    <div class="flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-2 py-0.5 sm:py-1 rounded-xl border border-slate-700/80 shadow-xl">
       <!-- 상대 정보 -->
       <div class="flex items-center gap-1.5">
         <div class="relative">
@@ -180,9 +180,9 @@
   </header>
 
   <!-- 메인 장기판 캔버스 영역 -->
-  <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-1 relative min-h-0">
-    <div id="board-container" class="relative rounded-2xl shadow-2xl bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950 p-1 border-2 border-amber-700/80 overflow-hidden flex items-center justify-center transition-all">
-      <canvas id="boardCanvas" class="rounded-xl cursor-pointer block touch-none"></canvas>
+  <main id="main-area" class="w-full flex-1 flex items-center justify-center overflow-hidden my-0 relative min-h-0 px-0">
+    <div id="board-container" class="relative rounded-xl shadow-2xl bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950 p-0 border-2 border-amber-700/80 overflow-hidden flex items-center justify-center transition-all mx-auto">
+      <canvas id="boardCanvas" class="rounded-lg cursor-pointer block touch-none"></canvas>
 
       <!-- 공격 시 시네마틱 샤우팅 멘트 배너 (투명 배경) -->
       <div id="attack-shout-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-[90] w-3/4 max-w-xs bg-transparent border-0">
@@ -200,7 +200,7 @@
           <div class="flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-emerald-300 tracking-tight mb-0.5 text-stroke-comic">
             <span>🔥</span><span id="my-taunt-sender-name">장군</span><span>의 팩폭!</span><span>🔥</span>
           </div>
-          <p id="my-taunt-content-text" class="text-xs sm:text-base font-black text-yellow-200 tracking-tight leading-relaxed break-keep text-stroke-comic"></p>
+          <p id="my-taunt-content-text" class="text-xs sm:text-base font-black text-black tracking-tight leading-relaxed break-keep"></p>
         </div>
       </div>
       <!-- 상대 조롱 말풍선 -->
@@ -209,7 +209,7 @@
           <div class="flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-rose-300 tracking-tight mb-0.5 text-stroke-comic">
             <span>🔥</span><span id="opp-taunt-sender-name">장군</span><span>의 팩폭!</span><span>🔥</span>
           </div>
-          <p id="opp-taunt-content-text" class="text-xs sm:text-base font-black text-yellow-200 tracking-tight leading-relaxed break-keep text-stroke-comic"></p>
+          <p id="opp-taunt-content-text" class="text-xs sm:text-base font-black text-black tracking-tight leading-relaxed break-keep"></p>
         </div>
       </div>
       <!-- 내 턴 10초/5초 중앙 카운트다운 -->
@@ -293,37 +293,37 @@
     </div>
   </main>
 
-  <!-- 하단 컨트롤 바 (대국자용) -->
-  <footer id="player-controls-panel" class="w-full max-w-lg flex flex-col gap-1 sm:gap-1.5 z-20 flex-shrink-0" style="padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));">
-    <div class="grid grid-cols-4 gap-1 sm:gap-1.5">
-      <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-xl py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
+  <!-- 하단 컨트롤 바 (대국자용) - 최소화하여 장기판 공간 최대화 -->
+  <footer id="player-controls-panel" class="w-full max-w-xl flex flex-col gap-0.5 z-20 flex-shrink-0 px-0.5" style="padding-bottom: max(3px, env(safe-area-inset-bottom, 0px));">
+    <div class="grid grid-cols-4 gap-0.5">
+      <button id="taunt-btn-mock" onclick="triggerCooldownTaunt('mock')" class="taunt-action-btn relative bg-rose-950/80 hover:bg-rose-900 active:scale-95 text-rose-200 border border-rose-700/60 rounded-lg py-1 text-[10px] font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
         <span class="btn-label">😏 약올리기</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[9px] text-amber-300 font-bold">4s</div>
       </button>
-      <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-xl py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
+      <button id="taunt-btn-fact" onclick="triggerCooldownTaunt('fact')" class="taunt-action-btn relative bg-purple-950/80 hover:bg-purple-900 active:scale-95 text-purple-200 border border-purple-700/60 rounded-lg py-1 text-[10px] font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
         <span class="btn-label">💣 팩폭도발</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[9px] text-amber-300 font-bold">4s</div>
       </button>
-      <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-xl py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
+      <button id="taunt-btn-rush" onclick="triggerCooldownTaunt('rush')" class="taunt-action-btn relative bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 border border-amber-700/60 rounded-lg py-1 text-[10px] font-bold flex items-center justify-center gap-0.5 shadow overflow-hidden">
         <span class="btn-label">⏰ 재촉/극딜</span>
-        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[10px] text-amber-300 font-bold">4s</div>
+        <div class="cooldown-overlay absolute inset-0 bg-black/60 hidden flex items-center justify-center text-[9px] text-amber-300 font-bold">4s</div>
       </button>
-      <button id="undo-btn" onclick="requestUndoMove()" class="bg-indigo-950/80 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/70 rounded-xl py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center justify-center gap-0.5 shadow">
+      <button id="undo-btn" onclick="requestUndoMove()" class="bg-indigo-950/80 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/70 rounded-lg py-1 text-[10px] font-bold flex items-center justify-center gap-0.5 shadow">
         ↩ 물리기 (<span id="undo-count-badge">2</span>/2)
       </button>
     </div>
-    <div class="grid grid-cols-2 gap-1 sm:gap-1.5">
-      <button onclick="requestPass()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-xl py-1.5 sm:py-2 text-xs font-bold">
+    <div class="grid grid-cols-2 gap-0.5">
+      <button onclick="requestPass()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-600 rounded-lg py-1 text-[10px] font-bold">
         한 수 쉼
       </button>
-      <button onclick="requestResign()" class="bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-xl py-1.5 sm:py-2 text-xs font-bold">
+      <button onclick="requestResign()" class="bg-red-950/80 hover:bg-red-900 active:scale-95 text-rose-200 border border-rose-800 rounded-lg py-1 text-[10px] font-bold">
         기권하기
       </button>
     </div>
   </footer>
 
   <!-- 관전자 전용 하단 응원/채팅 바 -->
-  <footer id="spectator-controls-panel" class="w-full max-w-lg hidden flex-col gap-1.5 z-20 flex-shrink-0" style="padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));">
+  <footer id="spectator-controls-panel" class="w-full max-w-xl hidden flex-col gap-1 z-20 flex-shrink-0 px-0.5" style="padding-bottom: max(3px, env(safe-area-inset-bottom, 0px));">
     <div class="bg-slate-900/95 border border-slate-700 rounded-2xl p-2 flex flex-col gap-1.5 shadow-xl">
       <div class="flex items-center justify-between gap-1 text-[11px] font-bold">
         <span class="text-amber-300 flex items-center gap-1">👀 관전 중: 응원 진영 선택</span>
@@ -1381,9 +1381,11 @@ function getSamgukPieceImage(piece) {
       const mainEl = document.getElementById('main-area');
       const container = document.getElementById('board-container');
       
-      const availableW = mainEl.clientWidth - 10;
-      const availableH = mainEl.clientHeight - 10;
+      // 여백 최소화 + 장기판 중앙 정렬 + 화면을 최대한 채움
+      const availableW = Math.max(1, mainEl.clientWidth);
+      const availableH = Math.max(1, mainEl.clientHeight);
       
+      // 장기 비율 (가로:세로 ≈ 0.86) — 세로 여유를 조금 더 줘서 하단 라벨 확보
       const targetAspect = 8.5 / 10;
       let finalW = availableW;
       let finalH = finalW / targetAspect;
@@ -1393,22 +1395,28 @@ function getSamgukPieceImage(piece) {
         finalW = finalH * targetAspect;
       }
 
-      container.style.width = `${Math.floor(finalW)}px`;
-      container.style.height = `${Math.floor(finalH)}px`;
+      // 컨테이너를 정확히 중앙에 두고 픽셀 단위로 맞춤
+      const fw = Math.floor(finalW);
+      const fh = Math.floor(finalH);
+      container.style.width = fw + 'px';
+      container.style.height = fh + 'px';
+      container.style.marginLeft = 'auto';
+      container.style.marginRight = 'auto';
 
-      const targetW = Math.floor(finalW) - 8;
-      const targetH = Math.floor(finalH) - 8;
+      const targetW = Math.max(1, fw - 2);
+      const targetH = Math.max(1, fh - 2);
 
       canvas.width = targetW * window.devicePixelRatio;
       canvas.height = targetH * window.devicePixelRatio;
-      canvas.style.width = `${targetW}px`;
-      canvas.style.height = `${targetH}px`;
+      canvas.style.width = targetW + 'px';
+      canvas.style.height = targetH + 'px';
 
       ctx.resetTransform();
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-      padX = targetW * 0.065;
-      padY = targetH * 0.055;
+      // 기물·라벨이 잘리지 않을 최소 여백 (과도한 좌우 여백 제거)
+      padX = targetW * 0.070;
+      padY = targetH * 0.095;
       cellW = (targetW - padX * 2) / (COLS - 1);
       cellH = (targetH - padY * 2) / (ROWS - 1);
 
@@ -1539,16 +1547,16 @@ function getSamgukPieceImage(piece) {
       const isKing = piece.type === 'king';
       const baseRad = Math.min(cellW, cellH);
 
-      // 전통 장기 스타일 기물 크기: 장군 최대, 차/포/마/상 중형, 사/졸 소형
-      let pieceSize = baseRad * 1.05;
-      if (isKing) pieceSize = baseRad * 2.00;
+      // 기물 크기 확대 (알아보기 쉽게)
+      let pieceSize = baseRad * 1.22;
+      if (isKing) pieceSize = baseRad * 2.25;
       else if (piece.type === 'sa' || piece.type === 'jol' || piece.type === 'byung') {
-        pieceSize = baseRad * 0.72;
+        pieceSize = baseRad * 0.88;
       } else if (piece.type === 'cha' || piece.type === 'po') {
-        pieceSize = baseRad * 1.15;
+        pieceSize = baseRad * 1.32;
       } else {
         // ma, sang
-        pieceSize = baseRad * 1.10;
+        pieceSize = baseRad * 1.28;
       }
 
       const faction = isCho
@@ -1665,11 +1673,12 @@ function getSamgukPieceImage(piece) {
       // 캐릭터 아래에 기물 이름을 크게 표시 (진영색 라벨로 적/아군 구분)
       const pieceName = getPieceLabel(piece);
       ctx.save();
-      const fs = Math.max(11, baseRad * 0.34);
+      const fs = Math.max(10, baseRad * 0.30);
       ctx.font = `900 ${fs}px 'Noto Sans KR', sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const ly = isKing ? pieceSize * 0.28 : pieceSize * 0.5;
+      // 라벨을 기물에 더 붙여 하단 잘림 방지
+      const ly = isKing ? pieceSize * 0.26 : pieceSize * 0.42;
       const pw = Math.max(fs * 1.5, ctx.measureText(pieceName).width + fs * 0.7);
       const ph = fs * 1.15;
       const rr = ph / 2;

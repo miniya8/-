@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>미니 앤 파이터 (개발중)</title>
+  <title>미니 앤 파이터</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&display=swap');
@@ -12,20 +12,30 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
-      touch-action: none;
       box-sizing: border-box;
     }
-    body {
+    body, html {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
       background-color: #030408;
       font-family: 'Noto Sans KR', sans-serif;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+    #game-stage {
+      position: relative;
       width: 100vw;
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      background-color: #02040a;
     }
     canvas {
       display: block;
@@ -52,8 +62,9 @@
       text-shadow: 0 0 14px rgba(239, 68, 68, 0.95), 0 0 32px rgba(220, 38, 38, 0.85);
     }
     .touch-btn {
-      touch-action: none;
+      touch-action: manipulation;
       transition: transform 0.05s ease, filter 0.1s ease;
+      cursor: pointer;
     }
     .touch-btn:active {
       transform: scale(0.88);
@@ -63,13 +74,12 @@
 </head>
 <body class="relative">
 
-  <div id="game-stage" class="relative w-full h-full flex items-center justify-center overflow-hidden bg-neutral-950">
-    <canvas id="gameCanvas" class="w-full h-full object-contain"></canvas>
+  <div id="game-stage">
+    <canvas id="gameCanvas"></canvas>
 
     <!-- Top Left: Hero Profile & Dynamic HP/MP HUD -->
     <div id="player-profile" class="absolute top-2 left-2 md:top-3 md:left-4 pointer-events-none flex items-center space-x-2 md:space-x-3 z-30">
       <div class="relative w-12 h-12 md:w-16 md:h-16 rounded-2xl border-2 border-cyan-400 bg-neutral-900 shadow-lg shadow-cyan-950/80 overflow-hidden flex items-center justify-center">
-        <!-- White Hair & Blue Demon Arm Portrait -->
         <div class="w-10 h-10 md:w-12 md:h-12 bg-neutral-800 rounded-full relative overflow-hidden border border-neutral-700">
           <div class="absolute inset-0 bg-neutral-900"></div>
           <div class="absolute top-1 left-2 w-7 h-7 bg-amber-100 rounded-full"></div>
@@ -114,7 +124,7 @@
       </button>
     </div>
 
-    <!-- Top Center: Multi-layered Boss Health Bar (x20 Stocks) -->
+    <!-- Top Center: Multi-layered Boss Health Bar -->
     <div id="boss-hud" class="absolute top-2 md:top-4 left-1/2 -translate-x-1/2 pointer-events-none hidden flex-col items-center z-30 w-10/12 max-w-xl transition-all duration-300">
       <div class="w-full flex items-baseline justify-between px-2 mb-1">
         <div class="flex items-center space-x-2">
@@ -158,146 +168,143 @@
     <!-- MOBILE TOUCH CONTROLLER -->
     <div id="touch-controls-layer" class="absolute inset-0 pointer-events-none z-30 select-none">
       
-      <!-- Virtual Joystick with Double-Tap / Swipe indicator -->
-      <div id="joystick-zone" class="absolute bottom-4 left-4 w-40 h-40 md:w-48 md:h-48 rounded-full border-2 border-white/20 bg-neutral-950/40 backdrop-blur-md pointer-events-auto flex items-center justify-center">
+      <!-- Virtual Joystick -->
+      <div id="joystick-zone" class="absolute bottom-4 left-4 w-36 h-36 md:w-48 md:h-48 rounded-full border-2 border-white/20 bg-neutral-950/40 backdrop-blur-md pointer-events-auto flex items-center justify-center">
         <div class="absolute inset-3 rounded-full border border-cyan-500/20"></div>
-        <div id="joystick-knob" class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-cyan-500/80 to-blue-700/80 border-2 border-white/80 shadow-lg shadow-cyan-500/50 transform translate-x-0 translate-y-0 transition-transform duration-75">
-          <div class="w-full h-full flex items-center justify-center text-white text-[10px] font-black opacity-80 text-center leading-tight">MOVE<br><span class="text-[8px] text-amber-300">더블탭:달리기</span></div>
+        <div id="joystick-knob" class="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-cyan-500/80 to-blue-700/80 border-2 border-white/80 shadow-lg shadow-cyan-500/50 transform translate-x-0 translate-y-0 transition-transform duration-75">
+          <div class="w-full h-full flex items-center justify-center text-white text-[9px] md:text-[10px] font-black opacity-80 text-center leading-tight">MOVE<br><span class="text-[7px] md:text-[8px] text-amber-300">더블탭:달리기</span></div>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="absolute bottom-4 right-4 flex items-end space-x-3 pointer-events-auto">
-        <div class="flex flex-col space-y-2 mb-2">
+      <div class="absolute bottom-3 right-3 md:bottom-4 md:right-4 flex items-end space-x-2 md:space-x-3 pointer-events-auto">
+        <div class="flex flex-col space-y-2 mb-1">
           <!-- GHOST SLASH [귀참] PROMINENT BUTTON -->
-          <button id="btn-ghost-slash" class="touch-btn w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-700 via-indigo-800 to-fuchsia-900 border-2 border-purple-400 text-purple-200 font-black text-xs md:text-sm shadow-xl shadow-purple-950/80 flex flex-col items-center justify-center">
-            <span class="korean-title-font text-sm md:text-base text-white glow-purple">귀참</span>
-            <span class="text-[8px] text-cyan-300 font-mono">[A / 1]</span>
+          <button id="btn-ghost-slash" class="touch-btn w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-700 via-indigo-800 to-fuchsia-900 border-2 border-purple-400 text-purple-200 font-black text-xs md:text-sm shadow-xl shadow-purple-950/80 flex flex-col items-center justify-center">
+            <span class="korean-title-font text-xs md:text-base text-white glow-purple">귀참</span>
+            <span class="text-[7px] md:text-[8px] text-cyan-300 font-mono">[A / 1]</span>
           </button>
-          <button id="btn-dash" class="touch-btn w-12 h-12 md:w-14 md:h-14 rounded-full bg-neutral-900/90 border-2 border-amber-500/80 text-amber-300 font-black text-xs md:text-sm shadow-lg shadow-amber-950/60 flex flex-col items-center justify-center">
+          <button id="btn-dash" class="touch-btn w-11 h-11 md:w-14 md:h-14 rounded-full bg-neutral-900/90 border-2 border-amber-500/80 text-amber-300 font-black text-xs md:text-sm shadow-lg shadow-amber-950/60 flex flex-col items-center justify-center">
             <span>대시</span>
-            <span class="text-[8px] text-neutral-400 font-mono">RUN</span>
+            <span class="text-[7px] md:text-[8px] text-neutral-400 font-mono">RUN</span>
           </button>
-          <button id="btn-jump" class="touch-btn w-12 h-12 md:w-14 md:h-14 rounded-full bg-neutral-900/90 border-2 border-sky-500/80 text-sky-200 font-black text-xs md:text-sm shadow-lg shadow-sky-950/60 flex flex-col items-center justify-center">
+          <button id="btn-jump" class="touch-btn w-11 h-11 md:w-14 md:h-14 rounded-full bg-neutral-900/90 border-2 border-sky-500/80 text-sky-200 font-black text-xs md:text-sm shadow-lg shadow-sky-950/60 flex flex-col items-center justify-center">
             <span>점프</span>
-            <span class="text-[8px] text-neutral-400 font-mono">[C]</span>
+            <span class="text-[7px] md:text-[8px] text-neutral-400 font-mono">[C]</span>
           </button>
         </div>
 
-        <button id="btn-attack" class="touch-btn w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-red-600 via-rose-700 to-amber-600 border-3 border-amber-300 text-white font-black text-base md:text-lg shadow-2xl shadow-rose-900/80 flex flex-col items-center justify-center">
-          <span class="korean-title-font text-lg md:text-xl">기본공격</span>
-          <span class="text-[9px] text-amber-200 font-mono">[X] 콤보</span>
+        <button id="btn-attack" class="touch-btn w-18 h-18 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-red-600 via-rose-700 to-amber-600 border-2 md:border-3 border-amber-300 text-white font-black text-sm md:text-lg shadow-2xl shadow-rose-900/80 flex flex-col items-center justify-center">
+          <span class="korean-title-font text-base md:text-xl">기본공격</span>
+          <span class="text-[8px] md:text-[9px] text-amber-200 font-mono">[X] 콤보</span>
         </button>
       </div>
 
       <!-- 10 Awakening Touch Skills Deck -->
       <div id="touch-skill-deck" class="absolute bottom-2 left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center">
         <!-- Row 1: Skills 1 to 5 -->
-        <div class="flex items-center space-x-1.5 md:space-x-2 mb-1.5">
-          <button id="skill-btn-1" data-skill="1" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-950 border-2 border-purple-400/90 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="귀참 (Ghost Slash)">
-            <span class="text-[8px] font-black text-purple-300 font-mono">1</span>
-            <span class="text-[9px] md:text-[10px] font-black text-white leading-tight glow-purple">귀참</span>
-            <span class="text-[7px] text-cyan-300 font-mono">25mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+        <div class="flex items-center space-x-1.5 md:space-x-2 mb-1">
+          <button id="skill-btn-1" data-skill="1" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-950 border-2 border-purple-400/90 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="귀참">
+            <span class="text-[7px] md:text-[8px] font-black text-purple-300 font-mono">1</span>
+            <span class="text-[8px] md:text-[10px] font-black text-white leading-tight glow-purple">귀참</span>
+            <span class="text-[6px] md:text-[7px] text-cyan-300 font-mono">25mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-2" data-skill="2" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-cyan-500/80 shadow-md shadow-cyan-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="극귀검술·폭풍식">
-            <span class="text-[8px] font-black text-cyan-300 font-mono">2</span>
-            <span class="text-[9px] md:text-[10px] font-black text-cyan-200 leading-tight">폭풍식</span>
-            <span class="text-[7px] text-cyan-400 font-mono">35mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-2" data-skill="2" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-cyan-500/80 shadow-md shadow-cyan-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="폭풍식">
+            <span class="text-[7px] md:text-[8px] font-black text-cyan-300 font-mono">2</span>
+            <span class="text-[8px] md:text-[10px] font-black text-cyan-200 leading-tight">폭풍식</span>
+            <span class="text-[6px] md:text-[7px] text-cyan-400 font-mono">35mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-3" data-skill="3" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-purple-500/80 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="광폭의 블라슈">
-            <span class="text-[8px] font-black text-purple-300 font-mono">3</span>
-            <span class="text-[9px] md:text-[10px] font-black text-purple-200 leading-tight">블라슈</span>
-            <span class="text-[7px] text-purple-400 font-mono">50mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-3" data-skill="3" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-purple-500/80 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="블라슈">
+            <span class="text-[7px] md:text-[8px] font-black text-purple-300 font-mono">3</span>
+            <span class="text-[8px] md:text-[10px] font-black text-purple-200 leading-tight">블라슈</span>
+            <span class="text-[6px] md:text-[7px] text-purple-400 font-mono">50mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-4" data-skill="4" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-rose-500/80 shadow-md shadow-rose-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="익스트림 오버킬">
-            <span class="text-[8px] font-black text-rose-300 font-mono">4</span>
-            <span class="text-[9px] md:text-[10px] font-black text-rose-200 leading-tight">오버킬</span>
-            <span class="text-[7px] text-rose-400 font-mono">45mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-4" data-skill="4" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-rose-500/80 shadow-md shadow-rose-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="오버킬">
+            <span class="text-[7px] md:text-[8px] font-black text-rose-300 font-mono">4</span>
+            <span class="text-[8px] md:text-[10px] font-black text-rose-200 leading-tight">오버킬</span>
+            <span class="text-[6px] md:text-[7px] text-rose-400 font-mono">45mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-5" data-skill="5" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-gradient-to-b from-amber-900/90 to-neutral-900/95 border-2 border-amber-400 shadow-lg shadow-amber-900/70 flex flex-col items-center justify-between p-1 overflow-hidden" title="眞 각성·천지개벽">
-            <span class="text-[8px] font-black text-amber-400 font-mono">5★</span>
-            <span class="text-[9px] md:text-[10px] font-black text-amber-300 leading-tight glow-gold">천지개벽</span>
-            <span class="text-[7px] text-amber-400 font-mono">80mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-5" data-skill="5" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-gradient-to-b from-amber-900/90 to-neutral-900/95 border-2 border-amber-400 shadow-lg shadow-amber-900/70 flex flex-col items-center justify-between p-1 overflow-hidden" title="천지개벽">
+            <span class="text-[7px] md:text-[8px] font-black text-amber-400 font-mono">5★</span>
+            <span class="text-[8px] md:text-[10px] font-black text-amber-300 leading-tight glow-gold">천지개벽</span>
+            <span class="text-[6px] md:text-[7px] text-amber-400 font-mono">80mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
         </div>
 
         <!-- Row 2: Skills 6 to 10 -->
         <div class="flex items-center space-x-1.5 md:space-x-2">
-          <button id="skill-btn-6" data-skill="6" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-blue-400/80 shadow-md shadow-blue-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="파동검·귀문반">
-            <span class="text-[8px] font-black text-blue-300 font-mono">6</span>
-            <span class="text-[9px] md:text-[10px] font-black text-blue-200 leading-tight">귀문반</span>
-            <span class="text-[7px] text-blue-400 font-mono">30mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-6" data-skill="6" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-blue-400/80 shadow-md shadow-blue-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="귀문반">
+            <span class="text-[7px] md:text-[8px] font-black text-blue-300 font-mono">6</span>
+            <span class="text-[8px] md:text-[10px] font-black text-blue-200 leading-tight">귀문반</span>
+            <span class="text-[6px] md:text-[7px] text-blue-400 font-mono">30mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-7" data-skill="7" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-indigo-400/80 shadow-md shadow-indigo-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="류심·승">
-            <span class="text-[8px] font-black text-indigo-300 font-mono">7</span>
-            <span class="text-[9px] md:text-[10px] font-black text-indigo-200 leading-tight">류심승</span>
-            <span class="text-[7px] text-indigo-400 font-mono">20mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-7" data-skill="7" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-indigo-400/80 shadow-md shadow-indigo-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="류심승">
+            <span class="text-[7px] md:text-[8px] font-black text-indigo-300 font-mono">7</span>
+            <span class="text-[8px] md:text-[10px] font-black text-indigo-200 leading-tight">류심승</span>
+            <span class="text-[6px] md:text-[7px] text-indigo-400 font-mono">20mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-8" data-skill="8" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-cyan-500/80 shadow-md shadow-cyan-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="귀영섬">
-            <span class="text-[8px] font-black text-cyan-300 font-mono">8</span>
-            <span class="text-[9px] md:text-[10px] font-black text-cyan-200 leading-tight">귀영섬</span>
-            <span class="text-[7px] text-cyan-400 font-mono">40mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-8" data-skill="8" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-cyan-500/80 shadow-md shadow-cyan-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="귀영섬">
+            <span class="text-[7px] md:text-[8px] font-black text-cyan-300 font-mono">8</span>
+            <span class="text-[8px] md:text-[10px] font-black text-cyan-200 leading-tight">귀영섬</span>
+            <span class="text-[6px] md:text-[7px] text-cyan-400 font-mono">40mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-9" data-skill="9" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-teal-400/80 shadow-md shadow-teal-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="극초발도 / 심검">
-            <span class="text-[8px] font-black text-teal-300 font-mono">9</span>
-            <span class="text-[9px] md:text-[10px] font-black text-teal-200 leading-tight">극초발도</span>
-            <span class="text-[7px] text-teal-400 font-mono">35mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-9" data-skill="9" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-teal-400/80 shadow-md shadow-teal-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="극초발도">
+            <span class="text-[7px] md:text-[8px] font-black text-teal-300 font-mono">9</span>
+            <span class="text-[8px] md:text-[10px] font-black text-teal-200 leading-tight">극초발도</span>
+            <span class="text-[6px] md:text-[7px] text-teal-400 font-mono">35mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
-          <button id="skill-btn-10" data-skill="0" class="touch-btn relative w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-neutral-900/95 border border-purple-600/80 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="결정의 사야">
-            <span class="text-[8px] font-black text-purple-300 font-mono">10</span>
-            <span class="text-[9px] md:text-[10px] font-black text-purple-200 leading-tight">사야빙진</span>
-            <span class="text-[7px] text-purple-400 font-mono">40mp</span>
-            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[10px] font-black text-amber-300 font-mono">0.0</div>
+          <button id="skill-btn-10" data-skill="0" class="touch-btn relative w-10 h-10 md:w-13 md:h-13 rounded-xl md:rounded-2xl bg-neutral-900/95 border border-purple-600/80 shadow-md shadow-purple-950/80 flex flex-col items-center justify-between p-1 overflow-hidden" title="사야빙진">
+            <span class="text-[7px] md:text-[8px] font-black text-purple-300 font-mono">10</span>
+            <span class="text-[8px] md:text-[10px] font-black text-purple-200 leading-tight">사야빙진</span>
+            <span class="text-[6px] md:text-[7px] text-purple-400 font-mono">40mp</span>
+            <div class="cooldown-mask absolute inset-0 bg-black/80 hidden items-center justify-center text-[9px] md:text-[10px] font-black text-amber-300 font-mono">0.0</div>
           </button>
         </div>
       </div>
     </div>
 
     <!-- Title Screen -->
-    <div id="start-overlay" class="absolute inset-0 bg-black/92 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 text-center">
-      <div class="max-w-lg w-full bg-neutral-900/95 border border-cyan-800/80 rounded-3xl p-6 md:p-8 shadow-2xl shadow-cyan-950/90 flex flex-col items-center">
+    <div id="start-overlay" class="absolute inset-0 bg-black/92 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 text-center pointer-events-auto" style="touch-action: manipulation;">
+      <div class="max-w-lg w-full bg-neutral-900/95 border border-cyan-800/80 rounded-3xl p-5 md:p-8 shadow-2xl shadow-cyan-950/90 flex flex-col items-center">
         <div class="flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/50 mb-3">
           <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
           <span class="text-[10px] md:text-xs font-black text-cyan-300 tracking-widest">MOBILE 2.5D ACTION ENGINE</span>
         </div>
 
         <h1 class="korean-title-font text-3xl md:text-5xl font-black text-white glow-cyan tracking-wide mb-1">
-          미니 앤 파이터 <span class="text-xs md:text-sm text-amber-400 font-sans tracking-normal font-bold">(개발중)</span>
+          미니 앤 파이터
         </h1>
-        <p class="text-xs text-neutral-300 mb-4 font-medium">푸른 귀수와 붉은 봉인의 룬을 두른 방랑 검사의 4개 던전 토벌</p>
+        <p class="text-xs text-neutral-300 mb-4 font-medium">푸른 귀수의 방랑 검사 4개 던전 토벌전</p>
 
         <div class="w-full bg-neutral-950/90 border border-neutral-800 rounded-2xl p-3 md:p-4 text-left text-xs mb-5 space-y-1.5 text-neutral-300">
           <div class="flex items-center justify-between">
-            <span>🕹️ <b>조작:</b> 조이스틱 또는 방향키</span>
-            <span class="text-amber-400 font-bold">같은 방향 2번 연속 입력 시 달리기(DASH)</span>
+            <span>🕹️ <b>조작:</b> 가상 조이스틱</span>
+            <span class="text-amber-400 font-bold">더블탭 / 대시 버튼: 달리기</span>
           </div>
           <div class="flex items-center justify-between">
-            <span>⚔️️ <b>[X] 버튼:</b> 3단 기본 평타 (대시공격/점프공격 연계)</span>
-            <span class="text-neutral-400 text-[10px]">[C] 점프</span>
+            <span>⚔ <b>[기본공격]:</b> 3단 평타</span>
+            <span class="text-neutral-400 text-[10px]">[점프] 공중 공격</span>
           </div>
           <div class="flex items-center justify-between">
-            <span>🟣 <b>[귀참] 버튼:</b> 원작 GIF 귀참 (암흑 보라 초승달 참격)</span>
-            <span class="text-purple-300 font-bold">[A] 또는 [1]</span>
+            <span>🟣 <b>[귀참]:</b> 초승달 참격</span>
+            <span class="text-purple-300 font-bold">강력한 전방 넉백</span>
           </div>
           <div class="flex items-center justify-between">
-            <span>✨ <b>[1~10] 터치 버튼:</b> 던파 10대 각성 스킬</span>
-            <span class="text-cyan-300 font-bold">폭풍식 / 블라슈 / 천지개벽 등</span>
-          </div>
-          <div class="text-[11px] text-cyan-300 font-bold pt-1 border-t border-neutral-800">
-            방의 모든 적을 섬멸하면 우측 차원문이 열리며 4번째 보스방으로 진출합니다!
+            <span>✨ <b>[1~10]:</b> 10대 각성 스킬</span>
+            <span class="text-cyan-300 font-bold">폭풍식 / 블라슈 / 천지개벽</span>
           </div>
         </div>
 
-        <button id="btn-game-start" class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white korean-title-font text-lg md:text-xl tracking-widest shadow-xl shadow-cyan-600/40 active:scale-95 transition">
+        <button id="btn-game-start" type="button" class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 active:scale-95 text-white korean-title-font text-lg md:text-xl tracking-widest shadow-xl shadow-cyan-600/40 touch-btn cursor-pointer">
           던전 입장 (TOUCH TO ENTER)
         </button>
       </div>
@@ -312,17 +319,21 @@
         this.enabled = false;
       }
       init() {
-        if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
-          this.enabled = true;
-        }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+        try {
+          if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.enabled = true;
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        } catch (e) {
+          console.warn('Audio Init Failed:', e);
         }
       }
       playSlash() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -346,7 +357,7 @@
         osc.stop(ctx.currentTime + 0.12);
       }
       playDash() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -361,11 +372,10 @@
         osc.stop(ctx.currentTime + 0.1);
       }
       playGhostSlash() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const now = ctx.currentTime;
 
-        // Dark demonic low hum
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = 'sawtooth';
@@ -381,7 +391,6 @@
         osc1.start();
         osc1.stop(now + 0.35);
 
-        // High frequency ghostly tear
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
         osc2.type = 'sine';
@@ -397,7 +406,7 @@
         osc2.stop(now + 0.25);
       }
       playHit(isCrit = false) {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const now = ctx.currentTime;
         const osc = ctx.createOscillator();
@@ -430,7 +439,7 @@
         }
       }
       playAwakeningBlast() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const now = ctx.currentTime;
         const osc = ctx.createOscillator();
@@ -450,7 +459,7 @@
         osc.stop(now + 0.7);
       }
       playCosmicChime() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const now = ctx.currentTime;
         const osc = ctx.createOscillator();
@@ -466,7 +475,7 @@
         osc.stop(now + 0.35);
       }
       playClearJingle() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => {
           const osc = ctx.createOscillator();
@@ -483,7 +492,7 @@
         });
       }
       playPortalHum() {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx) return;
         const ctx = this.ctx;
         const now = ctx.currentTime;
         const osc = ctx.createOscillator();
@@ -518,17 +527,21 @@
 
     function handleResize() {
       const container = document.getElementById('game-stage');
-      const cw = container.clientWidth;
-      const ch = container.clientHeight;
+      const cw = container.clientWidth || window.innerWidth;
+      const ch = container.clientHeight || window.innerHeight;
+      
+      if (!cw || !ch) return;
+
       canvasScale = Math.min(cw / V_WIDTH, ch / V_HEIGHT);
       canvas.width = V_WIDTH;
       canvas.height = V_HEIGHT;
-      canvas.style.width = `${V_WIDTH * canvasScale}px`;
-      canvas.style.height = `${V_HEIGHT * canvasScale}px`;
+      canvas.style.width = `${Math.floor(V_WIDTH * canvasScale)}px`;
+      canvas.style.height = `${Math.floor(V_HEIGHT * canvasScale)}px`;
     }
     window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', () => setTimeout(handleResize, 150));
-    handleResize();
+    window.addEventListener('orientationchange', () => setTimeout(handleResize, 200));
+    window.addEventListener('DOMContentLoaded', handleResize);
+    window.addEventListener('load', () => setTimeout(handleResize, 100));
 
     const ARENA = {
       minX: 70,
@@ -616,14 +629,6 @@
       }
     }
 
-    /*
-      Authentic '귀참 (Ghost Slash)' Multi-Layer Crescent Slash Effect:
-      Accurately reflects the uploaded GIF:
-      1. Massive violet/dark purple outer crescent
-      2. Vibrant fluorescent magenta/purple mid-core
-      3. White-hot sharp crescent cutting edge
-      4. Forward sweeping aura and lingering floor ghost flames
-    */
     class GhostSlashEffect {
       constructor(x, y, z, facing) {
         this.x = x;
@@ -632,7 +637,7 @@
         this.facing = facing;
         this.life = 0.32;
         this.maxLife = 0.32;
-        this.radius = 165; // Massive slash matching the GIF
+        this.radius = 165;
       }
       update(dt) {
         this.life -= dt;
@@ -647,11 +652,9 @@
         c.translate(scrX, scrY);
         c.scale(this.facing, 1);
 
-        // Angle sweep of the crescent blade (-70 deg to +75 deg)
         const startAng = -Math.PI * 0.42;
         const currentEnd = startAng + Math.PI * 0.9 * Math.min(1, progress * 1.5);
 
-        // 1. Outer Dark Purple Ghost Energy Arc
         c.beginPath();
         c.arc(25, -15, this.radius + 15, startAng, currentEnd);
         c.strokeStyle = `rgba(147, 51, 234, ${Math.max(0, 1 - progress)})`;
@@ -660,7 +663,6 @@
         c.shadowBlur = 36;
         c.stroke();
 
-        // 2. Middle Fluorescent Violet / Magenta Wave
         c.beginPath();
         c.arc(25, -15, this.radius, startAng, currentEnd);
         c.strokeStyle = `rgba(192, 132, 252, ${Math.max(0, 1 - progress * 0.8)})`;
@@ -669,7 +671,6 @@
         c.shadowBlur = 28;
         c.stroke();
 
-        // 3. Inner White-Hot Sharp Razor Edge
         c.beginPath();
         c.arc(25, -15, this.radius - 8, startAng, currentEnd);
         c.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, 1 - progress * 1.2)})`;
@@ -728,11 +729,6 @@
           c.lineWidth = 32 * (1 - progress * 0.5);
           c.shadowColor = '#f59e0b';
           c.shadowBlur = 36;
-        } else if (this.type === 'frost') {
-          c.strokeStyle = `rgba(165, 243, 252, ${1 - progress})`;
-          c.lineWidth = 15 * (1 - progress * 0.5);
-          c.shadowColor = '#38bdf8';
-          c.shadowBlur = 20;
         } else {
           c.strokeStyle = `rgba(224, 242, 254, ${1 - progress})`;
           c.lineWidth = 10 * (1 - progress * 0.5);
@@ -883,7 +879,6 @@
           c.shadowBlur = 26;
           c.stroke();
         } else if (this.type === 'ghost_fire') {
-          // Lingering ghost flame from Ghost Slash
           c.fillStyle = 'rgba(147, 51, 234, 0.4)';
           c.beginPath();
           c.arc(0, 0, 120, 0, Math.PI * 2);
@@ -998,7 +993,7 @@
         this.mp = 1500;
         this.maxMp = 1500;
 
-        this.state = 'IDLE'; // IDLE, WALK, RUN, JUMP, ATTACK, GHOST_SLASH_CHARGE, GHOST_SLASH_RELEASE, SKILL, HIT
+        this.state = 'IDLE';
         this.isRunning = false;
         this.animTimer = 0;
         this.comboIndex = 0;
@@ -1007,22 +1002,12 @@
         this.superArmor = false;
         this.afterImageTimer = 0;
 
-        // Double-Tap Dash tracking variables
         this.lastTapDir = 0;
         this.lastTapTime = 0;
 
-        // Skills Cooldowns
         this.skillCooldowns = {
-          1: 0, // 귀참
-          2: 0, // 폭풍식
-          3: 0, // 블라슈
-          4: 0, // 오버킬
-          5: 0, // 천지개벽
-          6: 0, // 귀문반
-          7: 0, // 류심승
-          8: 0, // 귀영섬
-          9: 0, // 극초발도
-          0: 0  // 사야빙진
+          1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+          6: 0, 7: 0, 8: 0, 9: 0, 0: 0
         };
 
         this.skillCosts = {
@@ -1058,13 +1043,11 @@
 
         this.animTimer += dt;
 
-        // Blue demon arm aura
         if (Math.random() < 0.5) {
           const armOffsetX = this.facing === 1 ? -12 : 12;
           spawnGhostAura(this.x + armOffsetX, this.y, this.z);
         }
 
-        // Running motion blur afterimages
         if (this.isRunning && (this.state === 'RUN' || this.state === 'ATTACK')) {
           this.afterImageTimer += dt;
           if (this.afterImageTimer >= 0.05) {
@@ -1081,7 +1064,6 @@
           runBadge.classList.add('hidden');
         }
 
-        // FSM Logic
         if (this.state === 'IDLE' || this.state === 'WALK' || this.state === 'RUN') {
           let moveX = input.joyX;
           let moveZ = input.joyY;
@@ -1154,7 +1136,6 @@
         else if (this.state === 'GHOST_SLASH_CHARGE') {
           this.vx *= 0.8;
           this.vz *= 0.8;
-          // Spawn swirling dark ether particles on blade tip
           for (let i = 0; i < 2; i++) {
             particles.push(new Particle(
               this.x - this.facing * 18 + (Math.random() - 0.5) * 12,
@@ -1250,12 +1231,6 @@
         this.performHitCheck(85, 170, false, 40, 90);
       }
 
-      /* 
-        귀참 (Ghost Slash) Implementation matching uploaded GIF:
-        1. Pre-charge stance
-        2. Massive crescent slash with violet flame shockwave
-        3. Lingering floor ghost fire domain
-      */
       startGhostSlash() {
         if (this.skillCooldowns[1] > 0 || this.mp < this.skillCosts[1]) return;
         this.mp -= this.skillCosts[1];
@@ -1271,21 +1246,18 @@
       releaseGhostSlash() {
         this.state = 'GHOST_SLASH_RELEASE';
         this.animTimer = 0;
-        this.vx = this.facing * 220; // Step forward while slashing
+        this.vx = this.facing * 220;
         sound.playGhostSlash();
         camera.shake(9, 250);
-        triggerFlash('#3b0764', 0.4); // Dark violet screen tint flash
+        triggerFlash('#3b0764', 0.4);
         triggerHaptic(50);
 
-        // Spawn massive crescent blade effect matching GIF
         slashEffects.push(new GhostSlashEffect(this.x + this.facing * 60, this.y + 35, this.z, this.facing));
 
-        // Spawn lingering floor ghost flame domain
         fieldDomains.push(new GroundDomain(this.x + this.facing * 85, this.z, 'ghost_fire', 1.8, (h) => {
           this.performAreaHit(h.x, h.z, 120, 90, false, 20);
         }));
 
-        // Execute wide-range hit check with airborne knockback
         this.performHitCheck(200, 850, true, 48, 380);
       }
 
@@ -1317,7 +1289,6 @@
         }
       }
 
-      // 2. 극귀검술·폭풍식 (Tempest)
       castBladeTempest() {
         this.state = 'SKILL';
         this.stateDuration = 1.0;
@@ -1337,7 +1308,6 @@
         }
       }
 
-      // 3. 제7의 귀신·블라슈 (Ghost 7 Blache)
       castBlache() {
         this.state = 'SKILL';
         this.stateDuration = 1.0;
@@ -1352,7 +1322,6 @@
         }));
       }
 
-      // 4. 혈기왕성·익스트림 오버킬 (Extreme Overkill)
       castExtremeOverkill() {
         this.state = 'SKILL';
         this.stateDuration = 0.75;
@@ -1365,7 +1334,6 @@
         this.performHitCheck(210, 1400, true, 65, 500);
       }
 
-      // 5. 眞 각성·천지개벽 (Cosmic Sundering)
       castTrueAwakening() {
         this.state = 'SKILL';
         this.stateDuration = 1.25;
@@ -1387,7 +1355,6 @@
         }, 330);
       }
 
-      // 6. 파동검·귀문반 (Ghost Orb Wave)
       castGhostOrbWave() {
         this.state = 'SKILL';
         this.stateDuration = 0.65;
@@ -1413,7 +1380,6 @@
         this.performAreaHit(this.x + this.facing * 85, this.z, 145, 540, true, 170);
       }
 
-      // 7. 류심·승/쾌 (Flowing Stance)
       castFlowingStance() {
         this.state = 'SKILL';
         this.stateDuration = 0.55;
@@ -1425,7 +1391,6 @@
         this.performHitCheck(130, 480, true, 45, 500);
       }
 
-      // 8. 귀영섬 (Ghost Flash)
       castGhostFlash() {
         this.state = 'SKILL';
         this.stateDuration = 0.75;
@@ -1444,7 +1409,6 @@
         }, 180);
       }
 
-      // 9. 극초발도 / 심검 (Ultimate Draw Slash)
       castUltimateDrawSlash() {
         this.state = 'SKILL';
         this.stateDuration = 0.6;
@@ -1457,7 +1421,6 @@
         this.performHitCheck(280, 580, true, 55, 190);
       }
 
-      // 0. 결정의 사야 (Saya Glacial Circle)
       castSayaGlacial() {
         this.state = 'SKILL';
         this.stateDuration = 0.65;
@@ -1541,7 +1504,6 @@
         const scrY = (this.z - this.y) - camera.y;
         const shadowScrY = this.z - camera.y;
 
-        // Dynamic 2.5D Shadow
         const shadowScale = Math.max(0.25, 1 - (this.y / 320));
         c.save();
         c.translate(scrX, shadowScrY);
@@ -1552,7 +1514,6 @@
         c.fill();
         c.restore();
 
-        // Render Hero Sprite matching user's concept image
         c.save();
         c.translate(scrX, scrY);
         c.scale(this.facing, 1);
@@ -1569,7 +1530,6 @@
         } else if (this.state === 'ATTACK') {
           armAngle = this.comboIndex === 2 ? -0.8 : 0.6;
         } else if (this.state === 'GHOST_SLASH_CHARGE') {
-          // Low crouch charge pose holding blade back
           bodyDip = 6;
           armAngle = -1.2;
           hairSway = -8;
@@ -1580,7 +1540,7 @@
 
         c.translate(0, bodyDip);
 
-        // Sheath and Katana on Hip
+        // Katana
         c.save();
         c.translate(-10, -32);
         c.rotate(0.6 + Math.sin(t * 0.2) * 0.05);
@@ -1591,7 +1551,7 @@
         c.fillRect(-6, -6, 12, 3);
         c.restore();
 
-        // Lower Body: Ragged Indigo Samurai Trousers & Wrapped Legs
+        // Trousers
         c.fillStyle = '#1e293b';
         c.beginPath();
         c.moveTo(-4, -30);
@@ -1608,7 +1568,7 @@
         c.lineTo(4, 0);
         c.fill();
 
-        // Leg Bandages
+        // Bandages
         c.strokeStyle = '#e7e5e4';
         c.lineWidth = 3;
         [-10, -6, -2].forEach(offY => {
@@ -1622,12 +1582,12 @@
           c.stroke();
         });
 
-        // Bare feet
+        // Feet
         c.fillStyle = '#fed7aa';
         c.fillRect(-10 - legSwing * 0.7, -1, 9, 3);
         c.fillRect(4 + legSwing * 0.7, -1, 9, 3);
 
-        // Torso: Muscular Chest with scars & Dark Indigo Robe
+        // Body
         c.fillStyle = '#fed7aa';
         c.beginPath();
         c.moveTo(-10, -58);
@@ -1637,7 +1597,6 @@
         c.closePath();
         c.fill();
 
-        // Chest slash scars
         c.strokeStyle = '#f87171';
         c.lineWidth = 1.5;
         c.beginPath();
@@ -1645,7 +1604,6 @@
         c.lineTo(5, -42);
         c.stroke();
 
-        // Martial haori/robe draped over right shoulder and waist
         c.fillStyle = '#0f172a';
         c.beginPath();
         c.moveTo(-8, -58);
@@ -1655,19 +1613,17 @@
         c.closePath();
         c.fill();
 
-        // Orange/Gold square insignia on back
         c.fillStyle = '#d97706';
         c.fillRect(2, -48, 6, 6);
         c.fillStyle = '#0f172a';
         c.fillRect(4, -46, 2, 2);
 
-        // Beige Waist Sash
         c.fillStyle = '#f5f5f4';
         c.fillRect(-9, -32, 18, 5);
         c.fillStyle = '#e7e5e4';
         c.fillRect(2, -30, 6, 12);
 
-        // BLUE GHOST ARM (푸른 귀수)
+        // Ghost Arm
         c.save();
         const armGlow = c.createLinearGradient(-12, -58, -26, -34);
         armGlow.addColorStop(0, '#0284c7');
@@ -1682,7 +1638,6 @@
         c.rect(-20, -54, 10, 26);
         c.fill();
 
-        // Crimson Seal Bandages with Runes
         c.strokeStyle = '#dc2626';
         c.lineWidth = 3;
         c.shadowBlur = 0;
@@ -1699,7 +1654,7 @@
         c.fill();
         c.restore();
 
-        // Right Arm & Katana
+        // Right Arm
         c.save();
         c.translate(8, -52);
         c.rotate(armAngle);
@@ -1711,17 +1666,15 @@
         c.fillRect(3, 8, 5, 2);
         c.restore();
 
-        // Head: Pale Blonde / White Hair
+        // Head
         c.fillStyle = '#fed7aa';
         c.beginPath();
         c.arc(0, -64, 7, 0, Math.PI * 2);
         c.fill();
 
-        // Amber Eye
         c.fillStyle = '#f59e0b';
         c.fillRect(2, -65, 2, 2);
 
-        // Long flowing pale white hair
         c.fillStyle = '#fdf4dc';
         c.beginPath();
         c.moveTo(-6, -72);
@@ -1741,7 +1694,6 @@
         c.lineTo(3, -60);
         c.stroke();
 
-        // Super Armor Aura
         if (this.superArmor) {
           c.strokeStyle = '#fbbf24';
           c.lineWidth = 3;
@@ -1791,7 +1743,7 @@
             break;
 
           case 'shadow_archer':
-            this.name = '그림자 궁병 (Ranged)';
+            this.name = '그림자 궁병';
             this.maxHp = 520;
             this.hp = 520;
             this.boxWidth = 32;
@@ -1804,7 +1756,7 @@
             break;
 
           case 'dark_knight_elite':
-            this.name = '타락한 흑기사 (ELITE)';
+            this.name = '타락한 흑기사';
             this.maxHp = 2500;
             this.hp = 2500;
             this.boxWidth = 46;
@@ -1817,7 +1769,7 @@
             break;
 
           case 'minotaur_brute':
-            this.name = '타우 비스트 (Mini-Boss)';
+            this.name = '타우 비스트';
             this.maxHp = 5200;
             this.hp = 5200;
             this.boxWidth = 60;
@@ -1830,7 +1782,7 @@
             break;
 
           case 'abyss_boss':
-            this.name = '심연의 귀검군주 (FINAL BOSS)';
+            this.name = '심연의 귀검군주';
             this.maxHp = 22000;
             this.hp = 22000;
             this.boxWidth = 72;
@@ -2401,48 +2353,45 @@
       }
     }
 
-    joyZone.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); handleJoyStart(e); });
+    joyZone.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); handleJoyStart(e); }, { passive: false });
     window.addEventListener('touchmove', handleJoyMove, { passive: false });
     window.addEventListener('touchend', handleJoyEnd);
     window.addEventListener('touchcancel', handleJoyEnd);
 
-    // Main Buttons
-    const btnAttack = document.getElementById('btn-attack');
-    const btnJump = document.getElementById('btn-jump');
-    const btnDash = document.getElementById('btn-dash');
-    const btnGhostSlash = document.getElementById('btn-ghost-slash');
+    // Bind Buttons with Pointer Events
+    function bindButton(id, onDown, onUp) {
+      const el = document.getElementById(id);
+      if (!el) return;
 
-    btnAttack.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); input.attack = true; });
-    btnAttack.addEventListener('touchend', (e) => { e.preventDefault(); input.attack = false; });
-    btnAttack.addEventListener('mousedown', () => { sound.init(); input.attack = true; });
-    btnAttack.addEventListener('mouseup', () => { input.attack = false; });
+      const downHandler = (e) => {
+        if (e.cancelable) e.preventDefault();
+        sound.init();
+        if (onDown) onDown();
+      };
 
-    btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); input.jump = true; });
-    btnJump.addEventListener('touchend', (e) => { e.preventDefault(); input.jump = false; });
-    btnJump.addEventListener('mousedown', () => { sound.init(); input.jump = true; });
-    btnJump.addEventListener('mouseup', () => { input.jump = false; });
+      const upHandler = (e) => {
+        if (e.cancelable) e.preventDefault();
+        if (onUp) onUp();
+      };
 
-    btnDash.addEventListener('touchstart', (e) => { e.preventDefault(); input.dash = true; });
-    btnDash.addEventListener('touchend', (e) => { e.preventDefault(); input.dash = false; });
-    btnDash.addEventListener('mousedown', () => { input.dash = true; });
-    btnDash.addEventListener('mouseup', () => { input.dash = false; });
+      el.addEventListener('pointerdown', downHandler);
+      el.addEventListener('pointerup', upHandler);
+      el.addEventListener('pointercancel', upHandler);
+    }
 
-    btnGhostSlash.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); player.startGhostSlash(); });
-    btnGhostSlash.addEventListener('click', () => { sound.init(); player.startGhostSlash(); });
+    bindButton('btn-attack', () => { input.attack = true; }, () => { input.attack = false; });
+    bindButton('btn-jump', () => { input.jump = true; }, () => { input.jump = false; });
+    bindButton('btn-dash', () => { input.dash = true; }, () => { input.dash = false; });
+    bindButton('btn-ghost-slash', () => { player.startGhostSlash(); }, null);
 
     // 10 Awakening Touch Skill Buttons
     for (let i = 1; i <= 10; i++) {
       const btn = document.getElementById(`skill-btn-${i}`);
       if (btn) {
         const skillKey = parseInt(btn.dataset.skill, 10);
-        const triggerSkill = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          sound.init();
+        bindButton(`skill-btn-${i}`, () => {
           player.tryCastSkill(skillKey);
-        };
-        btn.addEventListener('touchstart', triggerSkill);
-        btn.addEventListener('click', triggerSkill);
+        }, null);
       }
     }
 
@@ -2646,13 +2595,26 @@
     let lastTimestamp = performance.now();
     let isRunning = false;
 
-    document.getElementById('btn-game-start').addEventListener('click', () => {
+    // Direct game launcher handler
+    function launchGame(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (isRunning) return;
+
       sound.init();
       triggerHaptic(50);
       document.getElementById('start-overlay').style.display = 'none';
       isRunning = true;
       stageNavigator.loadRoom(1);
-    });
+      handleResize();
+    }
+
+    const startBtn = document.getElementById('btn-game-start');
+    startBtn.addEventListener('pointerdown', launchGame);
+    startBtn.addEventListener('touchstart', launchGame, { passive: false });
+    startBtn.addEventListener('click', launchGame);
 
     function gameLoop(time) {
       const dt = Math.min(0.06, (time - lastTimestamp) / 1000);
@@ -2711,7 +2673,6 @@
       dustParticles.forEach(d => d.draw(ctx));
       afterImages.forEach(ai => ai.draw(ctx));
 
-      // 2.5D Y-Sorting by floor depth Z
       const renderQueue = [];
       renderQueue.push({ z: player.z, obj: player });
       enemies.forEach(e => renderQueue.push({ z: e.z, obj: e }));
@@ -2736,9 +2697,9 @@
       requestAnimationFrame(gameLoop);
     }
 
-    window.onload = () => {
-      requestAnimationFrame(gameLoop);
-    };
+    // 초기 실행
+    handleResize();
+    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>

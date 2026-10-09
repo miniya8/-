@@ -129,29 +129,39 @@ function aiDone(d){if(d.id!=aiId||over||anim||busy||turn==me)return;clearTimeout
 /* ---------- P2P (친구 초대 1:1) ---------- */
 function lib(){if(window.Peer)return true;toast('P2P 모듈을 불러오지 못했어요. 인터넷 연결 확인 후 새로고침해 주세요');return false}
 function closeNet(){try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}conn=peer=null}
-let code='',rmS=false,rmO=false,isHost=false,hostDice=false,hostReady=null,dTok=0,dTimer=0,gs=null;
-function mkRoom(){if(!lib())return;closeNet();code=String(1000+Math.random()*9000|0);peer=new Peer('sjg-'+code);
-peer.on('open',()=>{$('rc').textContent=code;$('rs').textContent='친구를 기다리는 중… 코드를 알려주세요';$('rm').style.display='flex'});
-peer.on('connection',c=>{if(conn){c.close();return}conn=c;netEvents(c);c.on('open',()=>{isHost=true;oppNick='상대';hostStart()})});
-peer.on('error',e=>{if(e.type=='unavailable-id'){closeNet();mkRoom()}else toast('연결 오류: '+e.type)})}
+let code='',rmS=false,rmO=false,isHost=false,hostDice=false,hostReady=null,dTok=0,dTimer=0,gs=null,mc=0,sid='',dropT=0,jTok=0,jLast=0,RESUMED=false;
+function keepAlive(pr){pr.on('disconnected',()=>{setTimeout(()=>{if(peer===pr&&!pr.destroyed){try{pr.reconnect()}catch(e){}}},1000)})}
+function mkRoom(c0,tries){if(!lib())return;tries=tries||0;closeNet();code=c0||String(1000+Math.random()*9000|0);isHost=true;const pr=peer=new Peer('sjg-'+code);keepAlive(pr);
+pr.on('open',()=>{if(peer!==pr)return;$('rc').textContent=code;if(!(inGame&&!over)){$('rs').textContent='친구를 기다리는 중… 코드를 알려주세요';$('rm').style.display='flex'}save()});
+pr.on('connection',c=>{if(peer!==pr)return;const resumeMode=inGame&&!over&&cfg.mode=='mp';if(conn&&conn.open){netEvents(c);return}conn=c;netEvents(c);clearTimeout(dropT);c.on('open',()=>{if(resumeMode)sendSync();else{isHost=true;oppNick='상대';hostStart()}})});
+pr.on('error',e=>{if(peer!==pr)return;if(e.type=='unavailable-id'){if(c0){if(tries<15)setTimeout(()=>{if(peer===pr)mkRoom(c0,tries+1)},2000);else toast('방을 다시 열지 못했어요. 로비에서 새로 만들어 주세요',5000)}else mkRoom()}else toast('연결 오류: '+e.type)})}
 function inviteText(){const u=location.protocol.startsWith('http')?location.href.split('#')[0]+'#'+code:'';return{title:'세미니의 전설장기',text:`장기 한판 해요! 🎲\n방 코드: ${code}`+(u?`\n${u}`:''),url:u||undefined}}
 $('rsh').onclick=()=>{const d=inviteText();if(navigator.share)navigator.share(d).catch(()=>{});else $('rcp').click()};
 $('rcp').onclick=()=>{const t=inviteText().text;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('복사했어요! 카카오톡에 붙여넣어 보내세요')).catch(()=>toast('방 코드: '+code))};
-$('rx').onclick=()=>{$('rm').style.display='none';closeNet()};
-function joinRoom(c){if(!lib())return;if(!/^\d{4}$/.test(c||''))return toast('받은 코드 4자리를 입력하세요');closeNet();isHost=false;peer=new Peer();
-peer.on('open',()=>{conn=peer.connect('sjg-'+c,{reliable:true});netEvents(conn);toast('접속 중…',6000);setTimeout(()=>{if(conn&&!conn.open&&!inGame)toast('방을 찾지 못했어요. 코드를 확인하세요')},9000)});
-peer.on('error',e=>toast(e.type=='peer-unavailable'?'해당 코드의 방이 없어요':'연결 오류: '+e.type))}
-function netEvents(c){c.on('data',onData);c.on('close',()=>{if(inGame&&!over){end(me,'상대가 나가서 승리!')}else if(!inGame){$('rm').style.display='none';if($('dc').style.display=='flex'){dTok++;clearInterval(dTimer);$('dc').style.display='none';toast('상대가 나갔어요')}if(over){$('oa').style.display='none';$('os').textContent='상대가 나갔어요'}}})}
+$('rx').onclick=()=>{$('rm').style.display='none';closeNet();save()};
+function doJoin(resume){const tok=++jTok;jLast=Date.now();try{peer&&peer.destroy()}catch(e){}const pr=peer=new Peer();keepAlive(pr);let tries=0;
+const go=()=>{if(tok!=jTok||peer!==pr)return;const c=conn=pr.connect('sjg-'+code,{reliable:true});netEvents(c);c.on('open',()=>{if(tok!=jTok)return;if(resume){c.send({k:'hello',sid});sendSync()}})};
+pr.on('open',()=>{if(tok==jTok)go()});
+pr.on('error',e=>{if(tok!=jTok)return;if(e.type=='peer-unavailable'){const max=resume?25:7;if(++tries<max){if(!resume)toast(`방을 찾는 중… (${tries}/${max-1})`,1800);setTimeout(()=>{if(tok==jTok&&!(conn&&conn.open))go()},2000)}else toast('방을 찾지 못했어요. 코드를 확인하고, 방을 만든 친구 화면이 켜져 있는지 확인하세요',5000)}else toast('연결 오류: '+e.type)})}
+function joinRoom(c){if(!lib())return;if(!/^\d{4}$/.test(c||''))return toast('받은 코드 4자리를 입력하세요');closeNet();isHost=false;code=c;toast('접속 중…',4000);doJoin(false)}
+function sendSync(){try{if(conn&&conn.open)conn.send({k:'sync',mc,B,turn:anim?anim.o:turn,lm,over})}catch(e){}}
+function onSync(d){clearTimeout(dropT);if(!inGame||over)return;if(d.mc>mc){anim=null;busy=false;jang=null;sel=null;B=d.B;mc=d.mc;lm=d.lm;setTurn(d.turn);toast('상대와 다시 연결됐어요',2500)}else if(d.mc<mc)sendSync();else toast('상대와 다시 연결됐어요',2500)}
+function netEvents(c){c.on('data',d=>{if(c!==conn){if(d&&d.k=='hello'&&d.sid&&d.sid==sid){const o=conn;conn=c;try{o&&o.close()}catch(e){}clearTimeout(dropT);sendSync()}else{try{c.close()}catch(e){}return}}onData(d)});
+c.on('close',()=>{if(c!==conn)return;
+if(inGame&&!over&&cfg.mode=='mp'){toast('상대 연결이 끊겼어요. 다시 연결을 기다리는 중…',4000);clearTimeout(dropT);dropT=setTimeout(()=>{if(inGame&&!over&&!(conn&&conn.open))end(me,'상대가 나가서 승리!')},60000);if(!isHost)setTimeout(()=>{if(inGame&&!over&&!(conn&&conn.open))doJoin(true)},1500);return}
+if(!inGame){$('rm').style.display='none';if($('dc').style.display=='flex'){dTok++;clearInterval(dTimer);$('dc').style.display='none';toast('상대가 나갔어요')}if(over){$('oa').style.display='none';$('os').textContent='상대가 나갔어요'}}})}
 let oppNick='상대';
-function onData(d){if(d.k=='start'){cfg.time=d.time;oppNick=d.nick;const mine=SETUPS[cfg.si][2];conn.send({k:'ready',nick:nick(),setup:mine});const[hd,gd]=d.dice;gs={mine,setup:d.setup,done:false,g:null};
+function onData(d){if(d.k=='start'){cfg.time=d.time;oppNick=d.nick;sid=d.sid||'';const mine=SETUPS[cfg.si][2];conn.send({k:'ready',nick:nick(),setup:mine});const[hd,gd]=d.dice;gs={mine,setup:d.setup,done:false,g:null};
 diceShow(gd,hd,false,f=>{if(!gs)return;gs.done=true;if(f)pickFirst(first=>{if(!gs)return;gs.g=first?'c':'h';conn.send({k:'pick',hs:first?'h':'c'});guestGo()});else guestGo()})}
 else if(d.k=='ready'){oppNick=d.nick;if($('dc').style.display=='flex')$('dn2').textContent=oppNick;hostReady=d.setup;hostGo()}
 else if(d.k=='pick'){if(isHost){hostSide=d.hs;hostDice=true;hostGo()}else if(gs){gs.g=d.hs=='c'?'h':'c';guestGo()}}
 else if(d.k=='rm'){rmO=true;if(rmS&&isHost)hostStart();else if(over&&!rmS)$('os').textContent='상대가 다시하기를 원해요'}
+else if(d.k=='hello'){}
+else if(d.k=='sync')onSync(d)
 else if(d.k=='mv'&&inGame&&!over&&!anim&&legal(turn).some(z=>z.join()==d.m.join()))doMove(d.m)}
 function guestGo(){if(!gs||!gs.done||gs.g==null)return;const{g,mine,setup}=gs;gs=null;begin(g,g=='c'?mine:setup,g=='h'?mine:setup,'mp')}
 function hostStart(){const c=conn;if(!c||!c.open)return;rmS=rmO=false;const[hd,gd]=dicePair();hostSide=null;hostDice=false;hostReady=null;$('rm').style.display='none';
-c.send({k:'start',time:cfg.time,nick:nick(),setup:SETUPS[cfg.si][2],dice:[hd,gd]});
+sid=Math.random().toString(36).slice(2,10);c.send({k:'start',time:cfg.time,nick:nick(),setup:SETUPS[cfg.si][2],dice:[hd,gd],sid});
 diceShow(hd,gd,false,f=>{if(f)pickFirst(first=>{hostSide=first?'c':'h';c.send({k:'pick',hs:hostSide});hostDice=true;hostGo()})})}
 function hostGo(){if(!hostDice||hostReady==null||!hostSide)return;const mine=SETUPS[cfg.si][2],o=hostReady;hostReady=null;hostDice=false;begin(hostSide,hostSide=='c'?mine:o,hostSide=='h'?mine:o,'mp')}
 /* ---------- 주사위 (선공 정하기) ---------- */
@@ -204,27 +214,27 @@ const go=()=>{if(tok!=dTok)return;$('drb').style.display='none';$('drx').style.d
 arena(a,b,tok,()=>{if(tok!=dTok)return;const f=a>b;$('dp').textContent=`${a} vs ${b}`;$('dres').textContent=f?'🎉 내가 이겼어요!':'😮 상대가 이겼어요… 상대가 고르는 중';cb(f)})};
 if(manual){$('dp').textContent='주사위를 굴려 선공/후공 선택권을 가져오세요 (높은 숫자가 승리)';$('drb').style.display='';$('drx').style.display='';$('drb').onclick=go;$('drx').onclick=()=>{dTok++;$('dc').style.display='none';if(onCancel)onCancel()}}
 else{$('drb').style.display='none';$('drx').style.display='none';go()}}
-if(/^#\d{4}$/.test(location.hash)){cI.value=location.hash.slice(1);setMode('mp');setTimeout(()=>{toast('초대 링크로 입장합니다…');joinRoom(cI.value)},900)}
+if(/^#\d{4}$/.test(location.hash)){cI.value=location.hash.slice(1);setMode('mp');setTimeout(()=>{if(RESUMED)return;toast('초대 링크로 입장합니다…');joinRoom(cI.value)},900)}
 /* ---------- 게임 ---------- */
 function startAI(){const o=SETUPS[Math.random()*4|0],mine=SETUPS[cfg.si][2];oppNick='COM('+cfg.lv+')';const[a,b]=dicePair();
 const go=first=>{const m=first?'c':'h';toast(`COM 포진: ${o[0]}`,2500);begin(m,m=='c'?mine:o[2],m=='h'?mine:o[2],'ai')};
 diceShow(a,b,true,f=>{if(f)pickFirst(go);else{const comFirst=Math.random()<.75;$('dres').textContent=`😮 COM이 이겨서 ${comFirst?'선공(초나라)':'후공(한나라)'}을 선택했어요`;setTimeout(()=>go(!comFirst),1700)}})}
-function begin(m,sc,sh,mode){sfxLoad();dTok++;$('dc').style.display='none';rmS=rmO=false;$('oa').disabled=false;$('os').textContent='';cfg.mode=mode;me=m;flip=m=='h';init(sc,sh);turn='c';over=false;inGame=true;busy=false;sel=null;lm=null;anim=null;jang=null;aiId++;$('st').style.display='none';$('g').style.display='block';$('ov').style.display='none';
+function begin(m,sc,sh,mode){mc=0;sfxLoad();dTok++;$('dc').style.display='none';rmS=rmO=false;$('oa').disabled=false;$('os').textContent='';cfg.mode=mode;me=m;flip=m=='h';init(sc,sh);turn='c';over=false;inGame=true;busy=false;sel=null;lm=null;anim=null;jang=null;aiId++;$('st').style.display='none';$('g').style.display='block';$('ov').style.display='none';
 const n=nick();$('nc').textContent='초 '+(m=='c'?n:oppNick);$('nh').textContent='한 '+(m=='h'?n:oppNick);cv=$('cv');cx2=cv.getContext('2d');if(!wk&&mode=='ai')mkWorker();resize();setTurn('c');if(!looping){looping=true;requestAnimationFrame(loop)}}
 function resize(){if(!cv||!cv.offsetWidth)return;const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx2.setTransform(d,0,0,d,0,0);cx2.imageSmoothingQuality='high';
 const top=46,mx=Math.max(18,W*.055),aH=H-top-8-sab();let cx=(W-2*mx)/8,cy=aH/9.9;if(cy>cx*1.55)cy=cx*1.55;else if(cx>cy*1.25)cx=cy*1.25;
 CX=cx;CY=cy;C=Math.min(cx,cy);OX=(W-8*cx)/2;OY=top+(aH-9*cy)/2;bc=document.createElement('canvas');bc.width=W*d;bc.height=H*d;const g=bc.getContext('2d');g.setTransform(d,0,0,d,0,0);board(g)}addEventListener('resize',resize);
 const px=(x,y)=>{const[a,b]=flip?[8-x,9-y]:[x,y];return[OX+a*CX,OY+b*CY]};
-function setTurn(s){turn=s;tleft=cfg.time;$('nc').classList.toggle('on',s=='c');$('nh').classList.toggle('on',s=='h');$('tn').textContent=s==me?'내 차례':'상대 차례';clearInterval(tint);$('tm').textContent='0:'+String(cfg.time).padStart(2,'0');
+function setTurn(s){turn=s;save();tleft=cfg.time;$('nc').classList.toggle('on',s=='c');$('nh').classList.toggle('on',s=='h');$('tn').textContent=s==me?'내 차례':'상대 차례';clearInterval(tint);$('tm').textContent='0:'+String(cfg.time).padStart(2,'0');
 tint=setInterval(()=>{if(over||anim||busy)return;tleft--;$('tm').textContent='0:'+String(Math.max(tleft,0)).padStart(2,'0');if(tleft<=0){tleft=cfg.time;if(turn==me){const L=legal(turn);if(L.length){toast('시간 초과! 자동으로 한 수 둡니다');play(L[Math.random()*L.length|0])}}}},1000);
 if(cfg.mode=='ai'&&s!=me){const id=aiId;setTimeout(()=>{if(!over&&!anim&&!busy&&turn==s&&id==aiId)aiThink(s)},500)}}
-function play(m){if(cfg.mode=='mp'&&conn&&conn.open)conn.send({k:'mv',m});doMove(m)}
-function doMove(m){if(anim||over)return;const p=B[m[1]][m[0]],q=mk(m);sel=null;lm=m;const dist=Math.max(Math.abs(m[2]-m[0]),Math.abs(m[3]-m[1])),D=420+90*dist,A=q?700:0;anim={p,m,q,t0:performance.now(),D,A,dist,o:turn=='c'?'h':'c',T:[380,380+D,380+D+A,380+D+A+480]}}
+function play(m){if(cfg.mode=='mp'){if(!(conn&&conn.open)){toast('상대와 다시 연결하는 중이에요…',2500);return}conn.send({k:'mv',m})}doMove(m)}
+function doMove(m){if(anim||over)return;mc++;const p=B[m[1]][m[0]],q=mk(m);sel=null;lm=m;const dist=Math.max(Math.abs(m[2]-m[0]),Math.abs(m[3]-m[1])),D=420+90*dist,A=q?700:0;anim={p,m,q,t0:performance.now(),D,A,dist,o:turn=='c'?'h':'c',T:[380,380+D,380+D+A,380+D+A+480]};save()}
 function fin(){const o=anim.o,s=anim.p.s,t=anim.p.t;anim=null;clearInterval(tint);turn=o;const L=legal(o),ck=chk(o);
 if(!L.length){if(ck){busy=true;jang={t0:performance.now(),s,t,mate:1};boom();setTimeout(()=>{busy=false;end(s)},1500)}else if(!legal(s).length)end(null);else{toast((o=='c'?'초':'한')+' 한수쉼 (둘 곳이 없어 차례를 넘깁니다)');setTurn(s)}return}
 if(ck){busy=true;jang={t0:performance.now(),s,t};boom();setTimeout(()=>{busy=false;if(!over)setTurn(o)},1300)}else setTurn(o)}
-function end(w,msg){over=true;inGame=false;clearInterval(tint);$('ot').textContent=msg||(w?(w=='c'?'초':'한')+'나라 승리!'+(w==me?' 🎉':''):'무승부');$('oa').style.display=(cfg.mode=='ai'||(conn&&conn.open))?'':'none';$('oa').disabled=false;$('os').textContent='';$('ov').style.display='flex'}
-function lobby(){clearInterval(tint);over=true;inGame=false;aiId++;closeNet();$('g').style.display='none';$('rm').style.display='none';$('st').style.display='flex';cv.style.transform=''}
+function end(w,msg){over=true;inGame=false;save();clearInterval(tint);$('ot').textContent=msg||(w?(w=='c'?'초':'한')+'나라 승리!'+(w==me?' 🎉':''):'무승부');$('oa').style.display=(cfg.mode=='ai'||(conn&&conn.open))?'':'none';$('oa').disabled=false;$('os').textContent='';$('ov').style.display='flex'}
+function lobby(){clearInterval(tint);over=true;inGame=false;aiId++;closeNet();save();$('g').style.display='none';$('rm').style.display='none';$('st').style.display='flex';cv.style.transform=''}
 $('ob').onclick=$('bl').onclick=lobby;
 $('oa').onclick=()=>{if(cfg.mode=='ai'){startAI();return}if(!(conn&&conn.open)){toast('상대가 나가서 다시 할 수 없어요');$('oa').style.display='none';return}rmS=true;conn.send({k:'rm'});$('oa').disabled=true;$('os').textContent='상대의 응답을 기다리는 중…';if(rmO&&isHost)hostStart()};
 function boom(){try{AC=AC||new(window.AudioContext||webkitAudioContext)();const a=AC,o=a.createOscillator(),g=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(260,a.currentTime);o.frequency.exponentialRampToValueAtTime(40,a.currentTime+.6);g.gain.setValueAtTime(.3,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.7);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.75)}catch(e){}}
@@ -271,4 +281,17 @@ else if(t<d){const u=ez((t-c)/(d-c));spr(p,'walk',0,X1,Y1,{feet:1,a:1-u,fl});spr
 else fin()}
 if(jang)drawJang(now)}
 function loop(now){if($('g').style.display!='block'){looping=false;return}try{frame(now)}catch(e){console.error(e)}requestAnimationFrame(loop)}
+/* ---------- 상태 저장·복원 (화면 회전/재로딩 대비) ---------- */
+function save(){try{const g=(inGame&&!over)?{mode:cfg.mode,B,turn:anim?anim.o:turn,me,lm,mc,oppNick,time:cfg.time,hostSide,isHost,code,sid}:null;
+const o={t:Date.now(),cfg:{lv:cfg.lv,time:cfg.time,si:cfg.si,mode:cfg.mode},room:(peer&&isHost&&code&&!g)?{code}:null,game:g},j=JSON.stringify(o);try{localStorage.setItem('jg_st',j)}catch(e){}try{sessionStorage.setItem('jg_st',j)}catch(e){}}catch(e){}}
+function resumeGame(g){oppNick=g.oppNick||'상대';cfg.time=g.time||cfg.time;isHost=!!g.isHost;code=g.code||'';sid=g.sid||'';hostSide=g.hostSide;
+begin(g.me,'RNBG.GNBR','RNBG.GNBR',g.mode);B=g.B;lm=g.lm||null;mc=g.mc||0;setTurn(g.turn);toast('화면이 다시 불러와져서 대국을 이어갑니다',3500);
+if(g.mode=='mp'&&lib()){if(isHost)mkRoom(code);else doJoin(true)}}
+function boot(){let o=null;try{o=JSON.parse(localStorage.getItem('jg_st')||sessionStorage.getItem('jg_st')||'null')}catch(e){}if(!o)return;
+const c=o.cfg||{};if(c.lv&&lvB[c.lv]){cfg.lv=c.lv;for(const k in lvB)lvB[k].classList.toggle('on',k==c.lv)}if(c.time&&tB[c.time]){cfg.time=c.time;for(const k in tB)tB[k].classList.toggle('on',k==c.time)}if(c.si>=0&&c.si<4){cfg.si=c.si;showSetup()}if(c.mode=='ai'||c.mode=='mp')setMode(c.mode);
+if(Date.now()-o.t>20*60*1000)return;const g=o.game;
+if(g&&g.B&&(g.mode=='ai'||g.mode=='mp')){RESUMED=true;resumeGame(g)}else if(o.room&&o.room.code&&lib()){RESUMED=true;mkRoom(o.room.code)}}
+function wake(){if(peer&&peer.disconnected&&!peer.destroyed){try{peer.reconnect()}catch(e){}}if(inGame&&!over&&cfg.mode=='mp'&&!isHost&&!(conn&&conn.open)&&Date.now()-jLast>5000)doJoin(true)}
+document.addEventListener('visibilitychange',()=>{save();if(!document.hidden)wake()});addEventListener('online',wake);addEventListener('pageshow',wake);addEventListener('pagehide',save);addEventListener('resize',save);addEventListener('orientationchange',save);
+boot();setInterval(save,2000);
 </script></body></html>
